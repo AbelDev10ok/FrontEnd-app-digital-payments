@@ -1,6 +1,7 @@
 import React from 'react';
 import { LogOut, User, Shield } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
+import { useTokenRefresh } from '../hooks/useTokenRefresh';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -9,6 +10,9 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   const { user, logout } = useAuthStore();
+  
+  // Hook para manejar el refresh automático de tokens
+  useTokenRefresh();
 
   const handleLogout = () => {
     logout();

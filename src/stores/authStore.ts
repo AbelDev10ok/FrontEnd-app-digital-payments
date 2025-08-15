@@ -17,6 +17,8 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   setLoading: (loading: boolean) => void;
+  setTokens: (accessToken: string, refreshToken: string) => void;
+  checkTokenExpiration: () => void;
 }
 
 // DECODIFICAMOS EL JWT
@@ -49,6 +51,26 @@ const extractRoleFromToken = (token: string): string => {
   return '';
 };
 
+// VERIFICAMOS SI EL TOKEN ESTÁ PRÓXIMO A EXPIRAR (5 minutos antes)
+const isTokenExpiringSoon = (token: string): boolean => {
+  const decoded = decodeJWT(token);
+  if (!decoded || !decoded.exp) return true;
+  
+  const currentTime = Date.now() / 1000;
+  const timeUntilExpiry = decoded.exp - currentTime;
+  
+  // Si expira en menos de 5 minutos (300 segundos)
+  return timeUntilExpiry < 300;
+};
+
+// VERIFICAMOS SI EL TOKEN YA EXPIRÓ
+const isTokenExpired = (token: string): boolean => {
+  const decoded = decodeJWT(token);
+  if (!decoded || !decoded.exp) return true;
+  
+  const currentTime = Date.now() / 1000;
+  return decoded.exp < currentTime;
+};
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -96,6 +118,42 @@ export const useAuthStore = create<AuthState>()(
 
       setLoading: (loading: boolean) => {
         set({ isLoading: loading });
+      },
+
+      setTokens: (accessToken: string, refreshToken: string) => {
+        const role = extractRoleFromToken(accessToken);
+        const decoded = decodeJWT(accessToken);
+        const email = decoded?.sub || get().user?.email || '';
+
+        set({
+          accessToken,
+          refreshToken,
+          user: { email, role },
+          isAuthenticated: true,
+        });
+      },
+
+      checkTokenExpiration: async () => {
+        const { accessToken, refreshToken: currentRefreshToken } = get();
+        
+        if (!accessToken || !currentRefreshToken) {
+          return;
+        }
+
+        // Si el access token ya expiró o está próximo a expirar
+        if (isTokenExpired(accessToken) || isTokenExpiringSoon(accessToken)) {
+          try {
+            const { refreshToken: refreshTokenService } = await import('../services/authServices');
+            const refreshResult = await refreshTokenService(currentRefreshToken);
+            
+            // Actualizar tokens
+            get().setTokens(refreshResult.accessToken, currentRefreshToken);
+          } catch (error) {
+            // Si el refresh falla, hacer logout
+            console.error('Token refresh failed:', error);
+            get().logout();
+          }
+        }
       },
     }),
     {

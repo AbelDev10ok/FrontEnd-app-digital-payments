@@ -5,12 +5,14 @@ import Login from './components/Login';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
 import ProtectedRoute from './components/ProtectedRoute';
+import TokenRefreshHandler from './components/TokenRefreshHandler';
 
 function App() {
   const { isAuthenticated, user } = useAuthStore();
 
   return (
     <Router>
+      <TokenRefreshHandler />
       <div className="App">
         <Routes>
           {/* Ruta de login */}
