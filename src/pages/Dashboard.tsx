@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart3, Users, TrendingUp, Activity } from 'lucide-react';
-import Layout from '../components/Layout';
+import DashboardLayout from '../components/DashBoardLayout';
 
 const Dashboard: React.FC = () => {
   const stats = [
@@ -39,7 +39,7 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <Layout title="Dashboard de Usuario">
+    <DashboardLayout title="Dashboard">
       <div className="space-y-6">
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-8 text-white">
@@ -84,7 +84,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 };
 

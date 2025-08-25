@@ -98,6 +98,7 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
         });
 
         return retryResponse;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (refreshError) {
         // Si el refresh falla, hacer logout y redirigir al login
         logout();

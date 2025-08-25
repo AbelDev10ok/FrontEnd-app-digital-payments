@@ -1,11 +1,16 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
 import Login from './components/Login';
 import Dashboard from './pages/Dashboard';
+import Clientes from './pages/Clientes';
+import CrearCliente from './pages/CrearCliente';
+import ClienteDetalle from './pages/ClienteDetalle';
+import Ventas from './pages/Ventas';
+import CrearVenta from './pages/CrearVenta';
 import AdminPanel from './pages/AdminPanel';
 import ProtectedRoute from './components/ProtectedRoute';
 import TokenRefreshHandler from './components/TokenRefreshHandler';
+import EditarCliente from './pages/EditarCliente';
 
 function App() {
   const { isAuthenticated, user } = useAuthStore();
@@ -40,6 +45,59 @@ function App() {
             element={
               <ProtectedRoute requiredRole="ROLE_USER">
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Rutas protegidas para clientes */}
+          <Route
+            path="/dashboard/clientes"
+            element={
+              <ProtectedRoute requiredRole="ROLE_USER">
+                <Clientes />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/clientes/crear"
+            element={
+              <ProtectedRoute requiredRole="ROLE_USER">
+                <CrearCliente />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/clientes/:id"
+            element={
+              <ProtectedRoute requiredRole="ROLE_USER">
+                <ClienteDetalle />
+              </ProtectedRoute>
+            }
+          />
+
+                    <Route
+            path="/dashboard/clientes/editar/:id"
+            element={
+              <ProtectedRoute requiredRole="ROLE_USER">
+                <EditarCliente />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Rutas protegidas para ventas */}
+          <Route
+            path="/dashboard/ventas"
+            element={
+              <ProtectedRoute requiredRole="ROLE_USER">
+                <Ventas />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/ventas/crear"
+            element={
+              <ProtectedRoute requiredRole="ROLE_USER">
+                <CrearVenta />
               </ProtectedRoute>
             }
           />
