@@ -9,6 +9,8 @@ export interface Client {
   telefono: string;
   email: string;
   direccion: string;
+  sellerName?: string;
+  vendedor: boolean;
 }
 
 export interface ClientRequest {
@@ -77,6 +79,26 @@ export const clientService = {
     return response.json();
   },
 
+  // Habilitar cliente como vendedor
+  async habilitarVendedor(id: number): Promise<void> {
+    const response = await authenticatedFetch(`${API_BASE_URL}/${id}/habilitar`, {
+      method: 'PUT',
+    });
+    if (!response.ok) {
+      throw new Error('Error al habilitar como vendedor');
+    }
+  },
+
+  // Desabilitar cliente como vendedor
+  async desabilitarVendedor(id: number):Promise<void>{
+    const response = await authenticatedFetch(`${API_BASE_URL}/${id}/desabilitar`, {
+      method: 'PUT',
+    });
+    if (!response.ok) {
+      throw new Error('Error al deshabilitar como vendedor');
+    }
+  },
+
   // Crear nuevo cliente
   async createClient(clientData: ClientRequest): Promise<Client> {
     const response = await authenticatedFetch(API_BASE_URL, {
@@ -119,8 +141,21 @@ export const clientService = {
       method: 'DELETE',
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error('Error al eliminar el cliente');
+      throw new Error(data.message || 'Error al eliminar el cliente');
     }
   },
+
+
+  // obtener vendedores
+  async getVendedores(): Promise<Client[]> {
+    const response = await authenticatedFetch(`${API_BASE_URL}/vendedores`);
+    if (!response.ok) {
+      throw new Error('Error al obtener los vendedores');
+    }
+    return response.json();
+  },
+
 };

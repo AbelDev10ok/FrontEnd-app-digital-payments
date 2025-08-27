@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Phone, Mail, MapPin, DollarSign, CreditCard, Banknote, TrendingUp, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Phone, Mail, MapPin, DollarSign, CreditCard, Banknote, TrendingUp, Loader2, AlertCircle, User2 } from 'lucide-react';
 import DashboardLayout from '../components/DashBoardLayout';
 import { clientService, Client } from '../services/clientServices';
 
 const ClienteDetalle: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [client, setClient] = useState<Client | null>(null);
+  // const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [financialStats, setFinancialStats] = useState({
@@ -24,6 +25,49 @@ const ClienteDetalle: React.FC = () => {
     }).format(amount);
   };
 
+  const handleHabilitarVendedor  = async () => {
+    // Aseguramos que tenemos el id y el cliente antes de continuar
+    if (!id || !client) return;
+    
+    try {
+      // Opcional: podrías mostrar un spinner en el botón mientras se procesa
+      await clientService.habilitarVendedor(parseInt(id));
+
+      console.log(client + "asdasdasd")
+      
+      // Actualizamos el estado del cliente localmente para reflejar el cambio.
+      // Esto hará que la UI se actualice instantáneamente sin recargar la página.
+      setClient({ ...client, vendedor: true });
+    } catch (err) {
+      // Mejoramos el manejo de errores para obtener más detalles si es posible.
+      // A menudo, los errores de API vienen con un objeto `response` que contiene más información.
+      let errorMessage = 'Ocurrió un error inesperado.';
+      if (err && typeof err === 'object' && 'message' in err) {
+        errorMessage = err.message as string;
+      }
+      
+      setError(`Error al habilitar como vendedor: ${errorMessage}`);
+      // Hacemos un console.error del objeto de error completo para tener más contexto en la consola.
+      console.error("Detalles del error al habilitar como vendedor:", err);
+    }
+  }
+
+  const handleDeshabilitarVendedor = async () => {
+    if (!id || !client) return;
+    try {
+      // TODO: Asegúrate de que `deshabilitarVendedor` exista en tu clientService.
+      await clientService.desabilitarVendedor(parseInt(id));
+      setClient({ ...client, vendedor: false });
+    } catch (err) {
+      let errorMessage = 'Ocurrió un error inesperado.';
+      if (err && typeof err === 'object' && 'message' in err) {
+        errorMessage = err.message as string;
+      }
+      setError(`Error al deshabilitar como vendedor: ${errorMessage}`);
+      console.error("Detalles del error al deshabilitar como vendedor:", err);
+    }
+  };
+
   useEffect(() => {
     const fetchClientData = async () => {
       if (!id) return;
@@ -31,10 +75,15 @@ const ClienteDetalle: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
+
+
         
         const clientData = await clientService.getClientById(parseInt(id));
         setClient(clientData);
         
+        console.log(clientData.vendedor + "asdasdasdas");
+
+
         // Cargar estadísticas financieras del cliente
         setLoadingStats(true);
         const [deudaVentas, ventasPagadas, deudaPrestamos, prestamosPagados] = await Promise.all([
@@ -155,6 +204,37 @@ const ClienteDetalle: React.FC = () => {
                 <p className="font-medium text-gray-900">{client.direccion || 'No especificada'}</p>
               </div>
             </div>
+
+            {/* si es cliente tiene vendedor */}
+            {client.sellerName && (
+              <div className="md:col-span-2 flex items-center space-x-4 bg-blue-50 border border-blue-200 p-4 rounded-xl">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <Mail className="w-6 h-6 text-blue-700" />
+                </div>
+                <div>
+                  <p className="font-semibold text-blue-800">Este cliente tiene un vendedor asignado</p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <User2 className="w-5 h-5 text-blue-600" />
+                    <p className="text-sm text-gray-600">{client.sellerName.toUpperCase()}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+
+            {/* si es vendedor */}
+            {client.vendedor && (
+              <div className="md:col-span-2 flex items-center space-x-4 bg-teal-50 border border-teal-200 p-4 rounded-xl">
+                <div className="bg-teal-100 p-3 rounded-full">
+                  <TrendingUp className="w-6 h-6 text-teal-700" />
+                </div>
+                <div>
+                  <p className="font-semibold text-teal-800">Este cliente también es vendedor</p>
+                  <p className="text-sm text-gray-600">Tiene acceso a funciones de venta en la plataforma.</p>
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
 
@@ -281,9 +361,22 @@ const ClienteDetalle: React.FC = () => {
               className="px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors duration-200"
           >Editar Cliente
           </Link>
-          <button className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors duration-200">
+          {client.vendedor ? (
+            <button
+              onClick={handleDeshabilitarVendedor}
+              className="px-6 py-3 border border-red-200 text-red-700 bg-red-50 rounded-xl hover:bg-red-100 transition-colors duration-200">
+              Deshabilitar Vendedor
+            </button>
+          ) : (
+            <button
+              onClick={handleHabilitarVendedor}
+              className="px-6 py-3 border border-green-200 text-green-700 bg-green-50 rounded-xl hover:bg-green-100 transition-colors duration-200">
+              Habilitar como Vendedor
+            </button>
+          )}
+          {/* <button className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors duration-200">
             Nueva Transacción
-          </button>
+          </button> */}
         </div>
       </div>
     </DashboardLayout>

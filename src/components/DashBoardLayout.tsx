@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, User, Shield, Menu, X } from 'lucide-react';
+import { LogOut, User, Menu, X } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useTokenRefresh } from '../hooks/useTokenRefresh';
 import Sidebar from './SideBar';

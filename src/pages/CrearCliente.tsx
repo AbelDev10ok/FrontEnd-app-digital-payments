@@ -1,8 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { UserPlus, ArrowLeft, Save, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashBoardLayout';
 import { useClients } from '../hooks/useClients';
+import { clientService } from '../services/clientServices';
+
+// Asumimos que esta es la interfaz que representa tanto a un cliente como a un vendedor
+export interface Client {
+  id: number;
+  name: string;
+  telefono: string;
+  email: string;
+  direccion: string;
+  sellerId?: number;
+  vendedor: boolean;
+}
 
 const CrearCliente: React.FC = () => {
   const navigate = useNavigate();
@@ -16,9 +28,32 @@ const CrearCliente: React.FC = () => {
     email: '',
     telefono: '',
     direccion: '',
+    sellerId: '', // Nuevo campo para el ID del vendedor
   });
 
+  // Estado para la lista de vendedores y su carga
+  const [sellers, setSellers] = useState<Client[]>([]);
+  const [sellersLoading, setSellersLoading] = useState(true);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // useEffect para cargar los vendedores cuando el componente se monta
+  useEffect(() => {
+    const fetchSellers = async () => {
+      try {
+        // AQUÍ DEBES HACER EL FETCH REAL A TU API PARA OBTENER LOS VENDEDORES
+        const response = await clientService.getVendedores()
+        setSellers(response);
+        console.log("Cargando vendedores..."); // Simulación
+      } catch (err) {
+        console.error("Error al cargar los vendedores:", err);
+      } finally {
+        setSellersLoading(false);
+      }
+    };
+
+    fetchSellers();
+  }, []); // El array vacío asegura que se ejecute solo una vez
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -74,12 +109,22 @@ const CrearCliente: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const clientData = {
+      const clientData: {
+        name: string;
+        telefono: string;
+        email: string;
+        direccion: string;
+        sellerId?: number;
+      } = {
         name: formData.name.trim(),
         telefono: formData.telefono.trim(),
         email: formData.email.trim() || '',
         direccion: formData.direccion.trim() || '',
       };
+
+      if (formData.sellerId) {
+        clientData.sellerId = parseInt(formData.sellerId, 10);
+      }
 
       await createClient(clientData);
       
@@ -230,6 +275,31 @@ const CrearCliente: React.FC = () => {
               {errors.direccion && (
                 <p className="mt-1 text-sm text-red-600">{errors.direccion}</p>
               )}
+            </div>
+
+            {/* Vendedor (Opcional) */}
+            <div>
+              <label htmlFor="sellerId" className="block text-sm font-medium text-gray-700 mb-2">
+                Vendedor (Opcional)
+              </label>
+              <select
+                id="sellerId"
+                name="sellerId"
+                value={formData.sellerId}
+                onChange={handleInputChange}
+                disabled={sellersLoading}
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors bg-white ${
+                  sellersLoading ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-200 focus:ring-indigo-500 focus:border-indigo-500'
+                }`}
+              >
+                <option value="">-- Sin Vendedor --</option>
+                {sellers.map((seller) => (
+                  <option key={seller.id} value={seller.id}>
+                    {seller.name}
+                  </option>
+                ))}
+              </select>
+              {sellersLoading && <p className="text-sm text-gray-500 mt-1">Cargando vendedores...</p>}
             </div>
 
             {/* Buttons */}
