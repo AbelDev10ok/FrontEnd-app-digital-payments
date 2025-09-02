@@ -7,6 +7,7 @@ import CrearCliente from './pages/CrearCliente';
 import ClienteDetalle from './pages/ClienteDetalle';
 import Ventas from './pages/Ventas';
 import CrearVenta from './pages/CrearVenta';
+import VentaDetalle from './pages/VentaDetalle';
 import AdminPanel from './pages/AdminPanel';
 import ProtectedRoute from './components/ProtectedRoute';
 import TokenRefreshHandler from './components/TokenRefreshHandler';
@@ -98,6 +99,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="ROLE_USER">
                 <CrearVenta />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/ventas/:id"
+            element={
+              <ProtectedRoute requiredRole="ROLE_USER">
+                <VentaDetalle />
               </ProtectedRoute>
             }
           />
