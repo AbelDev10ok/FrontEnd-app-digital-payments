@@ -11,6 +11,7 @@ export interface Client {
   direccion: string;
   sellerName?: string;
   vendedor: boolean;
+  dni?: string;
 }
 
 export interface ClientRequest {
@@ -19,6 +20,7 @@ export interface ClientRequest {
   email: string;
   direccion: string;
   sellerId?: number;
+  dni?: string
 }
 
 export const clientService = {
@@ -101,6 +103,7 @@ export const clientService = {
 
   // Crear nuevo cliente
   async createClient(clientData: ClientRequest): Promise<Client> {
+    console.log('CREANDO  Client data:', clientData);
     const response = await authenticatedFetch(API_BASE_URL, {
       method: 'POST',
       headers: {
@@ -141,10 +144,10 @@ export const clientService = {
       method: 'DELETE',
     });
 
-    const data = await response.json();
+    // const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Error al eliminar el cliente');
+      throw new Error('Error al eliminar el cliente');
     }
   },
 

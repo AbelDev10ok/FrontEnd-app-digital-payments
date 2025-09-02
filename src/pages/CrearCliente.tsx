@@ -28,7 +28,8 @@ const CrearCliente: React.FC = () => {
     email: '',
     telefono: '',
     direccion: '',
-    sellerId: '', // Nuevo campo para el ID del vendedor
+    sellerId: '', 
+    dni: ''
   });
 
   // Estado para la lista de vendedores y su carga
@@ -94,6 +95,10 @@ const CrearCliente: React.FC = () => {
       newErrors.direccion = 'La dirección no puede exceder los 20 caracteres';
     }
 
+    if (!/^[0-9]{7,8}$/.test(formData.dni)) {
+      newErrors.dni = 'El DNI debe contener solo números y tener entre 7 y 8 dígitos';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -115,7 +120,9 @@ const CrearCliente: React.FC = () => {
         email: string;
         direccion: string;
         sellerId?: number;
+        dni?: string;
       } = {
+        dni: formData.dni.trim().toLowerCase().replace(/\s+/g, ''),
         name: formData.name.trim(),
         telefono: formData.telefono.trim(),
         email: formData.email.trim() || '',
@@ -206,6 +213,30 @@ const CrearCliente: React.FC = () => {
                   <p className="mt-1 text-sm text-red-600">{errors.name}</p>
                 )}
               </div>
+
+              <div>
+                <label htmlFor="dni" className="block text-sm font-medium text-gray-700 mb-2">
+                  DNI *
+                </label>
+                <input
+                  type="text"
+                  id="dni"
+                  name="dni"
+                  value={formData.dni}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
+                    errors.dni
+                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                      : 'border-gray-200 focus:ring-indigo-500 focus:border-indigo-500'
+                  }`}
+                  placeholder="Ingresa el DNI"
+                />
+                {errors.dni && (
+                  <p className="mt-1 text-sm text-red-600">{errors.dni}</p>
+                )}
+              </div>
+
+
 
               {/* Email */}
               <div>

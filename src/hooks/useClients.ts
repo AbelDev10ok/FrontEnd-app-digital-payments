@@ -103,8 +103,6 @@ export const useClients = () => {
       await clientService.deleteClient(id);
       const updatedClients = clients.filter(client => client.id !== id);
       setClients(updatedClients);
-      // Recalcular estadísticas después de eliminar un cliente
-      await calculateFinancialStats(updatedClients);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al eliminar el cliente';
       setError(errorMessage);
