@@ -268,7 +268,7 @@ const VentaDetalle: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-500">Tipo de Pago</p>
                   <p className="font-medium text-gray-900">
-                    {transaction.typePayments === 'CASH' ? 'Pago Único' : 'Cuotas'}
+                    {transaction.typePayments === 'SEMANAL' ? 'Pago Único' : 'Cuotas'}
                   </p>
                 </div>
               </div>
@@ -277,7 +277,7 @@ const VentaDetalle: React.FC = () => {
         </div>
 
         {/* Fees Section */}
-        {transaction.typePayments === 'INSTALLMENTS' && transaction.fees.length > 0 && (
+        {transaction.typePayments === 'MENSUAL' && transaction.fees.length > 0 && (
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Cronograma de Cuotas</h3>
             <div className="overflow-x-auto">
@@ -350,7 +350,7 @@ const VentaDetalle: React.FC = () => {
         )}
 
         {/* Progress Bar */}
-        {transaction.typePayments === 'INSTALLMENTS' && (
+        {transaction.typePayments === 'QUINCENAL' && (
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Progreso de Pago</h3>
             <div className="space-y-4">

@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useMemo } from 'react';
 import { ShoppingCart, Search, Filter, Plus, TrendingUp, Loader2, AlertCircle, Calendar, DollarSign, CreditCard, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../components/DashBoardLayout';
 import { useSales } from '../hooks/useSales';
+import { ProductTypeDto } from '../services/salesServices';
 
 const Ventas: React.FC = () => {
   const { allTransactions, loading, error, stats, deleteSale } = useSales();
@@ -291,7 +293,7 @@ const Ventas: React.FC = () => {
 
                       {/* Progreso */}
                       <td className="px-6 py-4 block md:table-cell text-right md:text-left relative border-b border-gray-200 md:border-b-0 before:content-[attr(data-label)] before:absolute before:left-6 before:text-sm before:font-bold before:text-gray-500 md:before:content-none" data-label="Progreso:">
-                        {transaction.typePayments === 'INSTALLMENTS' ? (
+                        {transaction.typePayments === 'SEMANAL' ? (
                           <div>
                             <div className="text-sm font-medium text-gray-900">
                               {transaction.paidFeesCount}/{transaction.totalFees} cuotas

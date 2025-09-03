@@ -76,7 +76,7 @@ function App() {
             }
           />
 
-                    <Route
+          <Route
             path="/dashboard/clientes/editar/:id"
             element={
               <ProtectedRoute requiredRole="ROLE_USER">

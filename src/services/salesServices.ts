@@ -1,6 +1,6 @@
 import { authenticatedFetch } from './authServices';
 
-const API_BASE_URL = 'http://localhost:8080/api/sales';
+const API_BASE_URL = 'http://localhost:8080/api/loans';
 
 export interface ClientDto {
   id: number;
@@ -29,7 +29,7 @@ export interface FeeDto {
   paymentDate?: string;
   postponed: boolean;
   productDescription: string;
-  status: 'PENDING' | 'PAID' | 'POSTPONED' | 'LATE';
+  status: 'PENDING' | 'PAID';
 }
 
 export interface SaleResponseDto {
@@ -39,7 +39,7 @@ export interface SaleResponseDto {
   priceTotal: number;
   dateSale: string;
   finalPaymentDate: string;
-  typePayments: 'CASH' | 'INSTALLMENTS';
+  typePayments: 'SEMANAL' | 'MENSUAL' | 'QUINCENAL' | 'UNICO';
   daysLate: number;
   quantityFees: number;
   completed: boolean;
@@ -58,7 +58,7 @@ export interface CreateSaleRequest {
   priceTotal: number;
   dateSale: string;
   finalPaymentDate?: string;
-  typePayments: 'CASH' | 'INSTALLMENTS';
+  typePayments: 'SEMANAL' | 'MENSUAL' | 'QUINCENAL' | 'UNICO';
   quantityFees?: number;
   amountFe?: number;
   cost: number;
@@ -67,10 +67,57 @@ export interface CreateSaleRequest {
 
 export const salesService = {
   // Obtener todas las ventas (excluyendo préstamos por defecto)
-  async getAllSales(productType: string = 'PRESTAMO'): Promise<SaleResponseDto[]> {
-    const response = await authenticatedFetch(`${API_BASE_URL}?productType=${productType}`);
+  // async getAllSales(productType: string = 'PRESTAMO'): Promise<SaleResponseDto[] | []> {
+  //   const response = await authenticatedFetch(`${API_BASE_URL}?productType=${productType}`);
+
+  //   // imprimir response en consola
+  //   console.log('Response:', response);
+
+  //   if (!response.ok) {
+  //     throw new Error('Error al obtener las ventas');
+  //   }
+  //   return response.json();
+  // },
+
+  // Obtener cuotas a cobrar hoy o fecha especificada con request param date
+  async getFeesDueOnPrestamo(productType:string ,date: string): Promise<SaleResponseDto[]> {
+    const url = new URL(API_BASE_URL+'/fees-to-charge-today');
+    if (date) {
+      url.searchParams.append('date', date);    
+    }
+    if (productType) {
+      url.searchParams.append('productType', productType);
+    }
+    const response = await authenticatedFetch(url.toString());
+
+      // imprimir response en consola
+    const data = await response.clone().json().catch(() => null);
+    console.log('Response:', response);
+    console.log('Data:', data);
+
     if (!response.ok) {
-      throw new Error('Error al obtener las ventas');
+      throw new Error('Error al obtener las cuotas');
+    }
+    return response.json();
+  },
+
+    // Obtener cuotas a cobrar hoy o fecha especificada con request param date
+  async getFeesDueOnVenta(date: string): Promise<SaleResponseDto[]> {
+    const url = new URL(API_BASE_URL+'/fees-to-charge-today');
+    if (date) {
+      url.searchParams.append('date', date);    
+      console.log("datatadada" + date)
+    }
+
+    const response = await authenticatedFetch(url.toString());
+
+      // imprimir response en consola
+    const data = await response.clone().json().catch(() => null);
+    console.log('Response:', response);
+    console.log('Data:', data);
+
+    if (!response.ok) {
+      throw new Error('Error al obtener las cuotas');
     }
     return response.json();
   },
@@ -90,6 +137,7 @@ export const salesService = {
     if (!response.ok) {
       throw new Error('Error al obtener la venta');
     }
+    console.log('Response:', response);
     return response.json();
   },
 
@@ -151,7 +199,6 @@ export const salesService = {
     }
   },
 
-  // Posponer cuota
   async postponeFee(saleId: number, feeId: number, newDate: string): Promise<void> {
     const response = await authenticatedFetch(`${API_BASE_URL}/${saleId}/fees/${feeId}/postpone`, {
       method: 'PUT',

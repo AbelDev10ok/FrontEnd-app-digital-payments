@@ -15,17 +15,21 @@ export const useSales = () => {
     totalOutstanding: 0,
   });
 
-  const fetchSales = async () => {
+  const fetchSalesToChargeToday = async () => {
     try {
       setLoading(true);
       setError(null);
+      // fecha en formato año-mes-día
+      const today = new Date().toISOString().split('T')[0];
+      console.log('Today:', today);
       
       // Obtener ventas y préstamos en paralelo
       const [salesData, loansData] = await Promise.all([
-        salesService.getAllSales('PRESTAMO'), // Excluye préstamos, obtiene ventas
-        salesService.getAllLoans(), // Excluye ventas, obtiene préstamos
+        salesService.getFeesDueOnVenta(today), // Excluye préstamos, obtiene ventas
+        salesService.getFeesDueOnPrestamo('PRESTAMO', today) // Excluye ventas, obtiene préstamos
       ]);
-      
+      console.log('Sales Data:', salesData);
+      console.log('Loans Data:', loansData);
       setSales(salesData);
       setLoans(loansData);
       
@@ -66,7 +70,7 @@ export const useSales = () => {
     try {
       await salesService.markFeeAsPaid(saleId, feeId);
       // Refrescar datos después de marcar como pagada
-      await fetchSales();
+      await fetchSalesToChargeToday();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al marcar la cuota como pagada');
       throw err;
@@ -77,7 +81,7 @@ export const useSales = () => {
     try {
       await salesService.postponeFee(saleId, feeId, newDate);
       // Refrescar datos después de posponer
-      await fetchSales();
+      await fetchSalesToChargeToday();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al posponer la cuota');
       throw err;
@@ -101,7 +105,7 @@ export const useSales = () => {
   };
 
   useEffect(() => {
-    fetchSales();
+    fetchSalesToChargeToday();
   }, []);
 
   return {
@@ -111,7 +115,7 @@ export const useSales = () => {
     loading,
     error,
     stats,
-    fetchSales,
+    fetchSalesToChargeToday,
     markFeeAsPaid,
     postponeFee,
     deleteSale,
