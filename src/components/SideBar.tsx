@@ -9,7 +9,12 @@ import {
   UserPlus,
   Eye,
   Plus,
-  TrendingUp
+  TrendingUp,
+  CreditCard,
+  Clock,
+  AlertTriangle,
+  Calendar,
+  DollarSign
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -19,6 +24,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   const [clientesExpanded, setClientesExpanded] = useState(false);
   const [ventasExpanded, setVentasExpanded] = useState(false);
+  const [prestamosExpanded, setPrestamosExpanded] = useState(false);
 
   const menuItems = [
     {
@@ -47,16 +53,31 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       ]
     },
     {
-      title: 'Ventas/Préstamos',
+      title: 'Ventas',
       icon: ShoppingCart,
       hasSubmenu: true,
       expanded: ventasExpanded,
       onToggle: () => setVentasExpanded(!ventasExpanded),
       submenu: [
         {
-          title: 'Ver Ventas',
-          icon: TrendingUp,
-          path: '/dashboard/ventas'
+          title: 'Todas las Ventas',
+          icon: Eye,
+          path: '/dashboard/ventas/todas'
+        },
+        {
+          title: 'Ventas a Cobrar Hoy',
+          icon: Calendar,
+          path: '/dashboard/ventas/cobrar-hoy'
+        },
+        {
+          title: 'Ventas Atrasadas',
+          icon: AlertTriangle,
+          path: '/dashboard/ventas/atrasadas'
+        },
+        {
+          title: 'Cuotas Atrasadas',
+          icon: Clock,
+          path: '/dashboard/ventas/cuotas-atrasadas'
         },
         {
           title: 'Nueva Venta',
@@ -64,8 +85,57 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
           path: '/dashboard/ventas/crear'
         }
       ]
+    },
+    {
+      title: 'Préstamos',
+      icon: CreditCard,
+      hasSubmenu: true,
+      expanded: prestamosExpanded,
+      onToggle: () => setPrestamosExpanded(!prestamosExpanded),
+      submenu: [
+        {
+          title: 'Todos los Préstamos',
+          icon: Eye,
+          path: '/dashboard/prestamos/todos'
+        },
+        {
+          title: 'Préstamos a Cobrar Hoy',
+          icon: Calendar,
+          path: '/dashboard/prestamos/cobrar-hoy'
+        },
+        {
+          title: 'Préstamos Atrasados',
+          icon: AlertTriangle,
+          path: '/dashboard/prestamos/atrasados'
+        },
+        {
+          title: 'Cuotas Atrasadas',
+          icon: Clock,
+          path: '/dashboard/prestamos/cuotas-atrasadas'
+        },
+        {
+          title: 'Nuevo Préstamo',
+          icon: Plus,
+          path: '/dashboard/prestamos/crear'
+        }
+      ]
     }
   ];
+
+  const getTypeBadge = (productType: any) => {
+    const isLoan = productType.name === 'PRESTAMO';
+    return (
+      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+        isLoan ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+      }`}>
+        {isLoan ? 'Préstamo' : 'Venta'}
+      </span>
+    );
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES');
+  };
 
   return (
     <aside className={`
@@ -111,20 +181,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                   
                   {/* Submenu */}
                   {item.expanded && isOpen && item.submenu && (
-                    <div className="ml-4 mt-2 space-y-1">
+                    <div className="ml-6 mt-2 space-y-1 border-l-2 border-gray-100 pl-4">
                       {item.submenu.map((subItem, subIndex) => (
                         <NavLink
                           key={subIndex}
                           to={subItem.path}
                           className={({ isActive }) => `
-                            flex items-center space-x-3 p-2 rounded-lg text-sm transition-colors duration-200
+                            flex items-center space-x-3 p-3 rounded-lg text-sm transition-colors duration-200
                             ${isActive 
-                              ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-500' 
+                              ? 'bg-indigo-50 text-indigo-700 shadow-sm' 
                               : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                             }
                           `}
                         >
-                          <subItem.icon className="w-4 h-4" />
+                          <subItem.icon className="w-4 h-4 flex-shrink-0" />
                           <span>{subItem.title}</span>
                         </NavLink>
                       ))}
