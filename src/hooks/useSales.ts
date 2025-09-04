@@ -3,12 +3,10 @@ import { salesService, SaleResponseDto } from '../services/salesServices';
 
 export const useSales = () => {
   const [sales, setSales] = useState<SaleResponseDto[]>([]);
-  const [loans, setLoans] = useState<SaleResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalSales: 0,
-    totalLoans: 0,
     completedSales: 0,
     pendingSales: 0,
     totalRevenue: 0,
@@ -24,17 +22,15 @@ export const useSales = () => {
       console.log('Today:', today);
       
       // Obtener ventas y préstamos en paralelo
-      const [salesData, loansData] = await Promise.all([
-        salesService.getFeesDueOnVenta(today), // Excluye préstamos, obtiene ventas
-        salesService.getFeesDueOnPrestamo('PRESTAMO', today) // Excluye ventas, obtiene préstamos
+      const [salesData] = await Promise.all([
+        salesService.getFeesDueOn('VENTAS',today),
       ]);
       console.log('Sales Data:', salesData);
-      console.log('Loans Data:', loansData);
       setSales(salesData);
-      setLoans(loansData);
+      // setLoans(loansData);
       
       // Calcular estadísticas localmente
-      calculateStats(salesData, loansData);
+      calculateStats(salesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar las transacciones');
     } finally {
@@ -42,11 +38,10 @@ export const useSales = () => {
     }
   };
 
-  const calculateStats = (salesData: SaleResponseDto[], loansData: SaleResponseDto[]) => {
-    const allTransactions = [...salesData, ...loansData];
+  const calculateStats = (salesData: SaleResponseDto[]) => {
+    const allTransactions = [...salesData];
     
     const totalSales = salesData.length;
-    const totalLoans = loansData.length;
     const completedSales = allTransactions.filter(t => t.completed).length;
     const pendingSales = allTransactions.filter(t => !t.completed).length;
     const totalRevenue = allTransactions
@@ -58,7 +53,6 @@ export const useSales = () => {
 
     setStats({
       totalSales,
-      totalLoans,
       completedSales,
       pendingSales,
       totalRevenue,
@@ -93,11 +87,9 @@ export const useSales = () => {
       await salesService.deleteSale(id);
       // Actualizar estado local
       setSales(prev => prev.filter(sale => sale.id !== id));
-      setLoans(prev => prev.filter(loan => loan.id !== id));
       // Recalcular estadísticas
       const updatedSales = sales.filter(sale => sale.id !== id);
-      const updatedLoans = loans.filter(loan => loan.id !== id);
-      calculateStats(updatedSales, updatedLoans);
+      calculateStats(updatedSales);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al eliminar la transacción');
       throw err;
@@ -110,8 +102,7 @@ export const useSales = () => {
 
   return {
     sales,
-    loans,
-    allTransactions: [...sales, ...loans],
+    allTransactions: [...sales],
     loading,
     error,
     stats,

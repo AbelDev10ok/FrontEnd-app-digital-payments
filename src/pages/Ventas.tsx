@@ -148,7 +148,6 @@ const Ventas: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Préstamos</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalLoans}</p>
               </div>
               <div className="bg-blue-50 p-3 rounded-xl">
                 <CreditCard className="w-6 h-6 text-blue-600" />

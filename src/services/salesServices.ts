@@ -80,7 +80,7 @@ export const salesService = {
   // },
 
   // Obtener cuotas a cobrar hoy o fecha especificada con request param date
-  async getFeesDueOnPrestamo(productType:string ,date: string): Promise<SaleResponseDto[]> {
+  async getFeesDueOn(productType:string ,date: string): Promise<SaleResponseDto[]> {
     const url = new URL(API_BASE_URL+'/fees-to-charge-today');
     if (date) {
       url.searchParams.append('date', date);    
@@ -102,25 +102,25 @@ export const salesService = {
   },
 
     // Obtener cuotas a cobrar hoy o fecha especificada con request param date
-  async getFeesDueOnVenta(date: string): Promise<SaleResponseDto[]> {
-    const url = new URL(API_BASE_URL+'/fees-to-charge-today');
-    if (date) {
-      url.searchParams.append('date', date);    
-      console.log("datatadada" + date)
-    }
+  // async getFeesDueOnVenta(date: string): Promise<SaleResponseDto[]> {
+  //   const url = new URL(API_BASE_URL+'/fees-to-charge-today');
+  //   if (date) {
+  //     url.searchParams.append('date', date);    
+  //     console.log("datatadada" + date)
+  //   }
 
-    const response = await authenticatedFetch(url.toString());
+  //   const response = await authenticatedFetch(url.toString());
 
-      // imprimir response en consola
-    const data = await response.clone().json().catch(() => null);
-    console.log('Response:', response);
-    console.log('Data:', data);
+  //     // imprimir response en consola
+  //   const data = await response.clone().json().catch(() => null);
+  //   console.log('Response:', response);
+  //   console.log('Data:', data);
 
-    if (!response.ok) {
-      throw new Error('Error al obtener las cuotas');
-    }
-    return response.json();
-  },
+  //   if (!response.ok) {
+  //     throw new Error('Error al obtener las cuotas');
+  //   }
+  //   return response.json();
+  // },
 
   // Obtener todos los préstamos
   async getAllLoans(): Promise<SaleResponseDto[]> {
