@@ -37,8 +37,7 @@ const PrestamosACobrarHoy: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const today = new Date().toISOString().split('T')[0];
-      const loansData = await salesService.getFeesDueOn('PRESTAMO', today);
+      const loansData = await salesService.getFeesDueOn('VENTA', '2025-09-01'); // Usar today en producción
       setLoans(loansData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar los préstamos');

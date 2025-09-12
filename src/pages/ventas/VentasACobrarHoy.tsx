@@ -20,10 +20,10 @@ const VentasACobrarHoy: React.FC = () => {
     return new Date(dateString).toLocaleDateString('es-ES');
   };
 
-  const handleMarkAsPaid = async (saleId: number, feeId: number) => {
+  const handleMarkAsPaid = async (feeId: number, amount: number) => {
     try {
       setProcessingFee(feeId);
-      await salesService.markFeeAsPaid(saleId, feeId);
+      await salesService.markFeeAsPaid(feeId, amount);
       // Recargar datos
       await fetchSalesToday();
     } catch (err) {
@@ -37,7 +37,12 @@ const VentasACobrarHoy: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const today = new Date().toISOString().split('T')[0];
+      // Obtener fecha local de Argentina en formato YYYY-MM-DD
+      const todayDate = new Date();
+      const today = todayDate.getFullYear() + '-' +
+        String(todayDate.getMonth() + 1).padStart(2, '0') + '-' +
+        String(todayDate.getDate()).padStart(2, '0');
+      console.log("Hoy es (local Argentina): "+today);
       const salesData = await salesService.getFeesDueOn('VENTAS', today);
       setSales(salesData);
     } catch (err) {
@@ -166,7 +171,7 @@ const VentasACobrarHoy: React.FC = () => {
                             <div className="flex items-center space-x-3">
                               <span className="font-medium">{formatCurrency(fee.amount)}</span>
                               <button
-                                onClick={() => handleMarkAsPaid(sale.id, fee.id)}
+                                onClick={() => handleMarkAsPaid(fee.id,2000)}
                                 disabled={processingFee === fee.id}
                                 className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                               >

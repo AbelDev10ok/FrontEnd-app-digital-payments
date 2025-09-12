@@ -1,17 +1,33 @@
 import React, { useState } from 'react';
-import { Plus, ArrowLeft, Save } from 'lucide-react';
+import { Plus, ArrowLeft, Save, Tv, Watch, Sofa } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashBoardLayout';
+import { CreateSaleRequest, salesService } from '../services/salesServices';
+import { useClients } from '../hooks/useClients';
 
 const CrearVenta: React.FC = () => {
+  const { clients} = useClients();
+    // ...existing code...
+  const [clientSearch, setClientSearch] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Filtra clientes por nombre
+  const filteredClients = clients.filter(client =>
+    client.name.toLowerCase().includes(clientSearch.toLowerCase())
+  );
+
+
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    cliente: '',
-    tipo: 'Venta',
-    monto: '',
+    cliente: 0, // ID del cliente
+    tipo: 'VENTA', // "Venta" o "Préstamo"
     descripcion: '',
-    fecha: new Date().toISOString().split('T')[0],
-    estado: 'Pendiente'
+    fecha: new Date().toISOString().split('T')[0], // Fecha actual en formato YYYY-MM-DD
+    payments: '', // ejemplo
+    quantityFees: 1,
+    amountFee: '',
+    cost: '',
+    productCategory: '', // Nuevo campo para tipo de producto
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -22,12 +38,34 @@ const CrearVenta: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aquí iría la lógica para crear la venta/préstamo
-    console.log('Crear transacción:', formData);
-    // Redirigir a la lista de ventas después de crear
-    navigate('/dashboard/ventas');
+    // Construir el objeto SaleRequestDto
+    const saleRequest: CreateSaleRequest = {
+      clientId: Number(formData.cliente), // Debe ser el ID del cliente
+      descriptionProduct: formData.descripcion,
+      payments: formData.payments as 'SEMANAL' | 'MENSUAL' | 'QUINCENAL' | 'CONTADO',
+      quantityFees: Number(formData.quantityFees),
+      amountFee: Number(formData.amountFee),
+      cost: Number(formData.cost),
+      productType: {
+        id:3,
+        name: 'VENTA'
+      },
+      dateSale: formData.fecha,
+      // Puedes agregar otros campos opcionales aquí si los necesitas
+    };
+
+    try {
+      // Aquí deberías llamar a tu servicio para crear la venta
+      console.log('Sale Request:', saleRequest);  
+      await salesService.createSale(saleRequest);
+      console.log('Crear transacción:', saleRequest);
+      navigate('/dashboard/ventas');
+    } catch (err) {
+      // Manejo de error
+      console.error(err);
+  }
   };
 
   return (
@@ -45,7 +83,7 @@ const CrearVenta: React.FC = () => {
             <Plus className="w-8 h-8 text-indigo-600" />
             <div>
               <h2 className="text-xl font-semibold text-gray-900">Nueva Transacción</h2>
-              <p className="text-sm text-gray-500">Crear nueva venta o préstamo</p>
+              <p className="text-sm text-gray-500">Crear nueva venta</p>
             </div>
           </div>
         </div>
@@ -54,24 +92,31 @@ const CrearVenta: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Tipo */}
+              {/* Tipo de producto */}
               <div>
-                <label htmlFor="tipo" className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo de Transacción *
+                <label htmlFor="productCategory" className="block text-sm font-medium text-gray-700 mb-2">
+                  Tipo de producto *
                 </label>
                 <select
-                  id="tipo"
-                  name="tipo"
-                  value={formData.tipo}
+                  id="productCategory"
+                  name="productCategory"
+                  value={formData.productCategory}
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
-                  <option value="Venta">Venta</option>
-                  <option value="Préstamo">Préstamo</option>
+                  <option value="">Selecciona un tipo</option>
+                  <option value="SMART TV">Smart TV</option>
+                  <option value="RELOJ">Reloj</option>
+                  <option value="MUEBLE">Mueble</option>
                 </select>
+                {/* Icono dinámico según selección */}
+                <div className="mt-2 min-h-[28px]">
+                  {formData.productCategory === 'SMART TV' && <Tv className="inline w-6 h-6 text-indigo-500" />}
+                  {formData.productCategory === 'RELOJ' && <Watch className="inline w-6 h-6 text-indigo-500" />}
+                  {formData.productCategory === 'MUEBLE' && <Sofa className="inline w-6 h-6 text-indigo-500" />}
+                </div>
               </div>
-
               {/* Cliente */}
               <div>
                 <label htmlFor="cliente" className="block text-sm font-medium text-gray-700 mb-2">
@@ -81,31 +126,34 @@ const CrearVenta: React.FC = () => {
                   type="text"
                   id="cliente"
                   name="cliente"
-                  value={formData.cliente}
-                  onChange={handleInputChange}
+                  value={clientSearch}
+                  onChange={e => {
+                    setClientSearch(e.target.value);
+                    setShowDropdown(true);
+                  }}
+                  onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                   required
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Nombre del cliente"
+                  placeholder="Buscar cliente por nombre"
+                  autoComplete="off"
                 />
-              </div>
-
-              {/* Monto */}
-              <div>
-                <label htmlFor="monto" className="block text-sm font-medium text-gray-700 mb-2">
-                  Monto *
-                </label>
-                <input
-                  type="number"
-                  id="monto"
-                  name="monto"
-                  value={formData.monto}
-                  onChange={handleInputChange}
-                  required
-                  min="0"
-                  step="0.01"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="0.00"
-                />
+                {showDropdown && filteredClients.length > 0 && (
+                  <ul className="absolute z-10 bg-white border border-gray-200 rounded-xl mt-1 w-full max-h-40 overflow-y-auto">
+                    {filteredClients.map(client => (
+                      <li
+                        key={client.id}
+                        className="px-4 py-2 cursor-pointer hover:bg-indigo-100"
+                        onMouseDown={() => {
+                          setFormData(prev => ({ ...prev, cliente: client.id }));
+                          setClientSearch(client.name);
+                          setShowDropdown(false);
+                        }}
+                      >
+                        {client.name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {/* Fecha */}
@@ -123,39 +171,96 @@ const CrearVenta: React.FC = () => {
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
-
-              {/* Estado */}
+              {/* Tipo de pago */}
               <div>
-                <label htmlFor="estado" className="block text-sm font-medium text-gray-700 mb-2">
-                  Estado
+                <label htmlFor="payments" className="block text-sm font-medium text-gray-700 mb-2">
+                  Tipo de pago *
                 </label>
                 <select
-                  id="estado"
-                  name="estado"
-                  value={formData.estado}
+                  id="payments"
+                  name="payments"
+                  value={formData.payments}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
-                  <option value="Pendiente">Pendiente</option>
-                  <option value="Completada">Completada</option>
-                  <option value="Cancelada">Cancelada</option>
+                  <option value="SEMANAL">Semanal</option>
+                  <option value="QUINCENAL">Quincenal</option>
+                  <option value="MENSUAL">Mensual</option>
+                  <option value="CONTADO">Contado</option>
                 </select>
               </div>
+              {/* Cantidad de cuotas */}
+              <div>
+                <label htmlFor="quantityFees" className="block text-sm font-medium text-gray-700 mb-2">
+                  Cantidad de cuotas *
+                </label>
+                <input
+                  type="number"
+                  id="quantityFees"
+                  name="quantityFees"
+                  value={formData.quantityFees}
+                  onChange={handleInputChange}
+                  required
+                  min="1"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Ej: 12"
+                />
+              </div>
+              {/* Valor de la cuota */}
+              <div>
+                <label htmlFor="amountFee" className="block text-sm font-medium text-gray-700 mb-2">
+                  Valor de la cuota *
+                </label>
+                <input
+                  type="number"
+                  id="amountFee"
+                  name="amountFee"
+                  value={formData.amountFee}
+                  onChange={handleInputChange}
+                  required
+                  min="0"
+                  step="0.01"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="0.00"
+                />
+              </div>
+
+              {/* Costo */}
+              <div>
+                <label htmlFor="cost" className="block text-sm font-medium text-gray-700 mb-2">
+                  Costo *
+                </label>
+                <input
+                  type="number"
+                  id="cost"
+                  name="cost"
+                  value={formData.cost}
+                  onChange={handleInputChange}
+                  required
+                  min="0"
+                  step="0.01"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="0.00"
+                />
+              </div>
             </div>
+
+            
 
             {/* Descripción */}
             <div>
               <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-2">
-                Descripción
+                Descripción de producto *
               </label>
               <textarea
                 id="descripcion"
                 name="descripcion"
                 value={formData.descripcion}
                 onChange={handleInputChange}
-                rows={4}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Descripción de la transacción..."
+                rows={2}
+                className="w-1/3 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Tv samsung 32'..."
               />
             </div>
 
@@ -170,6 +275,7 @@ const CrearVenta: React.FC = () => {
               <button
                 type="submit"
                 className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors duration-200"
+                
               >
                 <Save className="w-4 h-4 mr-2" />
                 Crear Transacción

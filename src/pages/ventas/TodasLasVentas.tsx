@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, Loader2, AlertCircle, DollarSign, TrendingUp, Clock, Plus } from 'lucide-react';
+import { ShoppingCart, Search, Loader2, AlertCircle, DollarSign, TrendingUp, Clock, Plus, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/DashBoardLayout';
 import { salesService, SaleResponseDto } from '../../services/salesServices';
@@ -57,8 +57,8 @@ const TodasLasVentas: React.FC = () => {
       setError(null);
       // Aquí necesitarías un endpoint específico para todas las ventas
       // Por ahora usamos el endpoint general
-      const today = new Date().toISOString().split('T')[0];
-      const salesData = await salesService.getFeesDueOn('VENTAS', today);
+      // const today = new Date().toISOString().split('T')[0];
+      const salesData = await salesService.getAllSales();
       setSales(salesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar las ventas');

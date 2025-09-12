@@ -55,32 +55,36 @@ export interface SaleResponseDto {
 export interface CreateSaleRequest {
   clientId: number;
   descriptionProduct: string;
-  priceTotal: number;
   dateSale: string;
   finalPaymentDate?: string;
-  typePayments: 'SEMANAL' | 'MENSUAL' | 'QUINCENAL' | 'UNICO';
+  payments: 'SEMANAL' | 'MENSUAL' | 'QUINCENAL' | 'CONTADO';
   quantityFees?: number;
-  amountFe?: number;
+  amountFee?: number;
   cost: number;
-  productTypeId: number;
+  productType: {
+    id: number,
+    name: string
+  }
 }
+
 
 export const salesService = {
   // Obtener todas las ventas (excluyendo préstamos por defecto)
-  // async getAllSales(productType: string = 'PRESTAMO'): Promise<SaleResponseDto[] | []> {
-  //   const response = await authenticatedFetch(`${API_BASE_URL}?productType=${productType}`);
+  async getAllSales(productType: string = 'PRESTAMO'): Promise<SaleResponseDto[] | []> {
+    const response = await authenticatedFetch(`${API_BASE_URL}?productType=${productType}`);
 
-  //   // imprimir response en consola
-  //   console.log('Response:', response);
+    // imprimir response en consola
+    console.log('Response:', response);
 
-  //   if (!response.ok) {
-  //     throw new Error('Error al obtener las ventas');
-  //   }
-  //   return response.json();
-  // },
+    if (!response.ok) {
+      throw new Error('Error al obtener las ventas');
+    }
+    return response.json();
+  },
 
   // Obtener cuotas a cobrar hoy o fecha especificada con request param date
   async getFeesDueOn(productType:string ,date: string): Promise<SaleResponseDto[]> {
+    console.log("data"+ date)
     const url = new URL(API_BASE_URL+'/fees-to-charge-today');
     if (date) {
       url.searchParams.append('date', date);    
@@ -100,27 +104,6 @@ export const salesService = {
     }
     return response.json();
   },
-
-    // Obtener cuotas a cobrar hoy o fecha especificada con request param date
-  // async getFeesDueOnVenta(date: string): Promise<SaleResponseDto[]> {
-  //   const url = new URL(API_BASE_URL+'/fees-to-charge-today');
-  //   if (date) {
-  //     url.searchParams.append('date', date);    
-  //     console.log("datatadada" + date)
-  //   }
-
-  //   const response = await authenticatedFetch(url.toString());
-
-  //     // imprimir response en consola
-  //   const data = await response.clone().json().catch(() => null);
-  //   console.log('Response:', response);
-  //   console.log('Data:', data);
-
-  //   if (!response.ok) {
-  //     throw new Error('Error al obtener las cuotas');
-  //   }
-  //   return response.json();
-  // },
 
   // Obtener todos los préstamos
   async getAllLoans(): Promise<SaleResponseDto[]> {
@@ -143,6 +126,7 @@ export const salesService = {
 
   // Crear nueva venta
   async createSale(saleData: CreateSaleRequest): Promise<SaleResponseDto> {
+    console.log('Creating sale with data:', saleData);
     const response = await authenticatedFetch(API_BASE_URL, {
       method: 'POST',
       headers: {
@@ -189,12 +173,24 @@ export const salesService = {
   },
 
   // Marcar cuota como pagada
-  async markFeeAsPaid(saleId: number, feeId: number): Promise<void> {
-    const response = await authenticatedFetch(`${API_BASE_URL}/${saleId}/fees/${feeId}/pay`, {
-      method: 'PUT',
+    //   @PostMapping("/{feeId}/pay")
+    // public ResponseEntity<Void> registerPayment(
+    //         @PathVariable Long feeId,
+    //         @RequestParam Double amount) {
+    //     feeServices.registerPayment(feeId, amount);
+    //     return ResponseEntity.ok().build();
+    //     // return ResponseEntity.(feeServices.registerPaymentFee(feeId, amount));
+    // }
+  async markFeeAsPaid(feeId: number, amount: number): Promise<void> {
+    console.log("Marking fee as paid: feeId=" + feeId + ", amount=" + amount, typeof amount);
+    const url = `${API_BASE_URL}/collects-fee/${feeId}/pay?amount=${amount}`;
+    const response = await authenticatedFetch(url, {
+      method: 'POST'
+      // No agregues headers ni body aquí
     });
-
     if (!response.ok) {
+      const text = await response.text();
+      console.error('Error response:', text);
       throw new Error('Error al marcar la cuota como pagada');
     }
   },
