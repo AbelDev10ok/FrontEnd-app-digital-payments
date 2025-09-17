@@ -352,12 +352,12 @@ const VentaDetalle: React.FC = () => {
                             className="text-indigo-600 hover:text-indigo-900 disabled:opacity-50"
                           >
                             {processingFee === fee.id ? (
-                              <div className="text-green-600 text-sm">
-                                <div className="font-medium flex items-center">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  {formatCurrency(fee.paidAmount || fee.amount)}
-                                </div>
-                                <div className="text-xs text-gray-500 mt-1">
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              'Marcar como pagada'
+                            )}
+                          </button>
+                        )}
                         {fee.paid && (
                           <span className="text-green-600 text-sm font-medium">
                             ✓ Completada
