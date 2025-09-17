@@ -172,15 +172,6 @@ export const salesService = {
     }
   },
 
-  // Marcar cuota como pagada
-    //   @PostMapping("/{feeId}/pay")
-    // public ResponseEntity<Void> registerPayment(
-    //         @PathVariable Long feeId,
-    //         @RequestParam Double amount) {
-    //     feeServices.registerPayment(feeId, amount);
-    //     return ResponseEntity.ok().build();
-    //     // return ResponseEntity.(feeServices.registerPaymentFee(feeId, amount));
-    // }
   async markFeeAsPaid(feeId: number, amount: number): Promise<void> {
     console.log("Marking fee as paid: feeId=" + feeId + ", amount=" + amount, typeof amount);
     const url = `${API_BASE_URL}/collects-fee/${feeId}/pay?amount=${amount}`;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Loader2, AlertCircle, DollarSign, Clock, CheckCircle, X } from 'lucide-react';
 import DashboardLayout from '../../components/DashBoardLayout';
 import { salesService, SaleResponseDto } from '../../services/salesServices';
+import { ModalPay } from '../../components/ModalPay';
 
 const VentasACobrarHoy: React.FC = () => {
   const [sales, setSales] = useState<SaleResponseDto[]>([]);
@@ -12,6 +13,11 @@ const VentasACobrarHoy: React.FC = () => {
   const [selectedFee, setSelectedFee] = useState<{ id: number; amount: number; numberFee: number } | null>(null);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [remainingDebt, setRemainingDebt] = useState(0);
+
+  // mostras un console log del valor de fee.amount cuando se abre el modal de pago
+  // para verificar que no sea null o undefined
+  // y si lo es, manejar el error adecuadamente
+  console.log("selectedFee amount:", sales);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -24,10 +30,12 @@ const VentasACobrarHoy: React.FC = () => {
     return new Date(dateString).toLocaleDateString('es-ES');
   };
 
-  const openPaymentModal = (fee: { id: number; amount: number; numberFee: number }) => {
+  const openPaymentModal = (fee: { id: number; amount: number; numberFee: number }, remainingDebt: number) => {
+      const str = fee.amount != null ? fee.amount.toString() : '';
+      console.log(fee.amount)
     setSelectedFee(fee);
-    setPaymentAmount(fee.amount.toString());
-    setRemainingDebt(fee.amount);
+    setPaymentAmount(str);
+    setRemainingDebt(remainingDebt);
     setShowPaymentModal(true);
   };
 
@@ -200,7 +208,7 @@ const VentasACobrarHoy: React.FC = () => {
                             <div className="flex items-center space-x-3">
                               <span className="font-medium">{formatCurrency(fee.amount)}</span>
                               <button
-                                onClick={() => openPaymentModal({ id: fee.id, amount: fee.amount, numberFee: fee.numberFee })}
+                                onClick={() => openPaymentModal({ id: fee.id, amount: sale.amountFe , numberFee: fee.numberFee },sale.remainingAmount)}
                                 disabled={processingFee === fee.id}
                                 className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                               >
@@ -224,84 +232,17 @@ const VentasACobrarHoy: React.FC = () => {
 
         {/* Payment Modal */}
         {showPaymentModal && selectedFee && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Pagar Cuota #{selectedFee.numberFee}
-                </h3>
-                <button
-                  onClick={closePaymentModal}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-600">Monto total de la cuota:</span>
-                    <span className="font-medium">{formatCurrency(selectedFee.amount)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Deuda restante:</span>
-                    <span className={`font-medium ${remainingDebt > 0 ? 'text-orange-600' : 'text-green-600'}`}>
-                      {formatCurrency(remainingDebt)}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="paymentAmount" className="block text-sm font-medium text-gray-700 mb-2">
-                    Monto a pagar *
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">€</span>
-                    <input
-                      type="number"
-                      id="paymentAmount"
-                      value={paymentAmount}
-                      onChange={(e) => handlePaymentAmountChange(e.target.value)}
-                      min="0"
-                      max={selectedFee.amount}
-                      step="0.01"
-                      className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  {parseFloat(paymentAmount) > selectedFee.amount && (
-                    <p className="mt-1 text-sm text-red-600">
-                      El monto no puede ser mayor al total de la cuota
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    onClick={closePaymentModal}
-                    className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleConfirmPayment}
-                    disabled={!paymentAmount || parseFloat(paymentAmount) <= 0 || parseFloat(paymentAmount) > selectedFee.amount || processingFee === selectedFee.id}
-                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {processingFee === selectedFee.id ? (
-                      <div className="flex items-center justify-center">
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        Procesando...
-                      </div>
-                    ) : (
-                      'Confirmar Pago'
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ModalPay 
+            open={showPaymentModal}
+            onClose={closePaymentModal}
+            selectedFee={selectedFee}
+            paymentAmount={paymentAmount}
+            onPaymentAmountChange={handlePaymentAmountChange}
+            remainingDebt={remainingDebt}
+            onConfirm={handleConfirmPayment}
+            processingFeeId={processingFee}
+            formatCurrency={formatCurrency}
+          />
         )}
       </div>
     </DashboardLayout>

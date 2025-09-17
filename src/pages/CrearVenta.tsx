@@ -41,6 +41,7 @@ const CrearVenta: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Construir el objeto SaleRequestDto
+    console.log("valor de cuuota" + formData.amountFee)
     const saleRequest: CreateSaleRequest = {
       clientId: Number(formData.cliente), // Debe ser el ID del cliente
       descriptionProduct: formData.descripcion,
