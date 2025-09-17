@@ -300,6 +300,9 @@ const VentaDetalle: React.FC = () => {
                       Estado
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Información de Pago
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Acciones
                     </th>
                   </tr>
@@ -325,6 +328,23 @@ const VentaDetalle: React.FC = () => {
                         {getStatusBadge(fee.status)}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                        {fee.paid ? (
+                          <div className="text-green-600">
+                            <div className="font-medium flex items-center">
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              {formatCurrency(fee.paidAmount || fee.amount)}
+                            </div>
+                            {fee.paymentDate && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                Pagado el {formatDate(fee.paymentDate)}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">Pendiente</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                         {!fee.paid && (
                           <button
                             onClick={() => handleMarkAsPaid(fee.id)}
@@ -332,15 +352,15 @@ const VentaDetalle: React.FC = () => {
                             className="text-indigo-600 hover:text-indigo-900 disabled:opacity-50"
                           >
                             {processingFee === fee.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin inline" />
-                            ) : (
-                              'Marcar como Pagada'
-                            )}
-                          </button>
-                        )}
-                        {fee.paid && fee.paymentDate && (
-                          <span className="text-green-600 text-sm">
-                            Pagada el {formatDate(fee.paymentDate)}
+                              <div className="text-green-600 text-sm">
+                                <div className="font-medium flex items-center">
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  {formatCurrency(fee.paidAmount || fee.amount)}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                        {fee.paid && (
+                          <span className="text-green-600 text-sm font-medium">
+                            ✓ Completada
                           </span>
                         )}
                       </td>

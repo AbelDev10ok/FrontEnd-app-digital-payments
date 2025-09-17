@@ -27,6 +27,7 @@ export interface FeeDto {
   expirationDate: string;
   paid: boolean;
   paymentDate?: string;
+  paidAmount?: number;
   postponed: boolean;
   productDescription: string;
   status: 'PENDING' | 'PAID';
