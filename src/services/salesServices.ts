@@ -27,6 +27,7 @@ export interface FeeDto {
   expirationDate: string;
   paid: boolean;
   paymentDate?: string;
+  paidAmount?: number;
   postponed: boolean;
   productDescription: string;
   status: 'PENDING' | 'PAID';
@@ -205,6 +206,7 @@ export const salesService = {
     totalSales: number;
     totalLoans: number;
     completedSales: number;
+    
     pendingSales: number;
     totalRevenue: number;
     totalOutstanding: number;
