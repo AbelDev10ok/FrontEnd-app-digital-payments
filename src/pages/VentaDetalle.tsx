@@ -187,6 +187,30 @@ const VentaDetalle: React.FC = () => {
               </div>
             </div>
           </div>
+          {/* Cuotas pagadas */}
+          {transaction.fees && transaction.fees.length > 0 && transaction.fees && transaction.fees.filter(fee => fee.paid).length > 0 && (
+            <div className="mt-2">
+              <h5 className="text-sm font-semibold text-green-700 mb-1">Cuotas pagadas:</h5>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr>
+                    <th className="text-left">#</th>
+                    <th className="text-left">Monto</th>
+                    <th className="text-left">Fecha de pago</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transaction.fees.filter(fee => fee.paid).map(fee => (
+                    <tr key={fee.id}>
+                      <td>{fee.numberFee}</td>
+                      <td>{formatCurrency(fee.amount)}</td>
+                      <td>{fee.paymentDate ? formatDate(fee.paymentDate) : 'Sin fecha'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
