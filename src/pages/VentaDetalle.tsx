@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { 
-  ArrowLeft, 
-  Calendar, 
-  DollarSign, 
-  User, 
-  Package, 
-  CreditCard, 
   Clock, 
   CheckCircle, 
   AlertTriangle,
-  Loader2,
-  AlertCircle
 } from 'lucide-react';
-import DashboardLayout from '../components/DashBoardLayout';
+import DashboardLayout from '../components/dashboard/DashBoardLayout';
 import { salesService, SaleResponseDto } from '../services/salesServices';
+import CronogramaFees from '../shared/CronogramaFees';
+import Load from '../shared/Load';
+import HeaderDetalleTransaction from '../shared/HeaderDetalleTransaction';
+import StateDetalleTransaction from '../shared/StateDetalleTransaction';
+import ClientInfoDetalle from '../shared/ClientInfoDetalle';
+import InfoTransactionDetalle from '../shared/InfoTransactionDetalle';
+import ErrorMessage from '../shared/ErrorMessage';
 
 const VentaDetalle: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,13 +25,18 @@ const VentaDetalle: React.FC = () => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
-      currency: 'EUR'
+      currency: 'ARS'
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES');
+    return new Date(dateString).toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   };
+
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -103,12 +107,7 @@ const VentaDetalle: React.FC = () => {
   if (loading) {
     return (
       <DashboardLayout title="Detalle de Transacción">
-        <div className="flex items-center justify-center h-64">
-          <div className="flex items-center space-x-3">
-            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-            <span className="text-gray-600">Cargando información de la transacción...</span>
-          </div>
-        </div>
+        <Load message="Cargando transacción..." />
       </DashboardLayout>
     );
   }
@@ -116,7 +115,7 @@ const VentaDetalle: React.FC = () => {
   if (error || !transaction) {
     return (
       <DashboardLayout title="Detalle de Transacción">
-        <div className="space-y-6">
+        {/* <div className="space-y-6">
           <div className="flex items-center space-x-3">
             <Link
               to="/dashboard/ventas"
@@ -133,7 +132,8 @@ const VentaDetalle: React.FC = () => {
               <span className="text-sm">{error || 'Transacción no encontrada'}</span>
             </div>
           </div>
-        </div>
+        </div> */}
+        <ErrorMessage message={error ||'Error en la transaccion'} />
       </DashboardLayout>
     );
   }
@@ -143,297 +143,38 @@ const VentaDetalle: React.FC = () => {
   return (
     <DashboardLayout title={`${isLoan ? 'Préstamo' : 'Venta'} #${transaction.id}`}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center space-x-3">
-          <Link
-            to="/dashboard/ventas"
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </Link>
-          <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-            <Package className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-900">
-              {isLoan ? 'Préstamo' : 'Venta'} #{transaction.id}
-            </h2>
-            <p className="text-sm text-gray-500">{transaction.descriptionProduct}</p>
-          </div>
-        </div>
 
-        {/* Transaction Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Monto Total</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(transaction.priceTotal)}</p>
-              </div>
-              <div className="bg-blue-50 p-3 rounded-xl">
-                <DollarSign className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Monto Pendiente</p>
-                <p className="text-2xl font-bold text-orange-600">{formatCurrency(transaction.remainingAmount)}</p>
-              </div>
-              <div className="bg-orange-50 p-3 rounded-xl">
-                <CreditCard className="w-6 h-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-          {/* Cuotas pagadas */}
-          {transaction.fees && transaction.fees.length > 0 && transaction.fees && transaction.fees.filter(fee => fee.paid).length > 0 && (
-            <div className="mt-2">
-              <h5 className="text-sm font-semibold text-green-700 mb-1">Cuotas pagadas:</h5>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr>
-                    <th className="text-left">#</th>
-                    <th className="text-left">Monto</th>
-                    <th className="text-left">Fecha de pago</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transaction.fees.filter(fee => fee.paid).map(fee => (
-                    <tr key={fee.id}>
-                      <td>{fee.numberFee}</td>
-                      <td>{formatCurrency(fee.amount)}</td>
-                      <td>{fee.paymentDate ? formatDate(fee.paymentDate) : 'Sin fecha'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Cuotas Pagadas</p>
-                <p className="text-2xl font-bold text-green-600">{transaction.paidFeesCount}/{transaction.totalFees}</p>
-              </div>
-              <div className="bg-green-50 p-3 rounded-xl">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Días de Atraso</p>
-                <p className={`text-2xl font-bold ${transaction.daysLate > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                  {transaction.daysLate}
-                </p>
-              </div>
-              <div className={`${transaction.daysLate > 0 ? 'bg-red-50' : 'bg-green-50'} p-3 rounded-xl`}>
-                <Clock className={`w-6 h-6 ${transaction.daysLate > 0 ? 'text-red-600' : 'text-green-600'}`} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Client and Transaction Info */}
+        <HeaderDetalleTransaction transaction={transaction} isLoan={isLoan} />
+        
+        {/* Transaction state */}
+        <StateDetalleTransaction
+          transaction={transaction}
+          formatCurrency={formatCurrency}
+        />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
           {/* Client Info */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Información del Cliente</h3>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <User className="w-5 h-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-500">Nombre</p>
-                  <p className="font-medium text-gray-900">{transaction.client.name}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <CreditCard className="w-5 h-5 text-gray-400" />
-                {/* si tengo dni */}
-                <div>
-                  <p className="text-sm text-gray-500">DNI</p>
-                  <p className="font-medium text-gray-900">{transaction.client.dni || 'N/A'}</p>
-                </div>
-
-              </div>
-              <div className="flex items-center space-x-3">
-                <Calendar className="w-5 h-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-500">Teléfono</p>
-                  <p className="font-medium text-gray-900">{transaction.client.telefono}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* Tipo de producto */}
-
+          <ClientInfoDetalle transaction={transaction} />
+        
           {/* Transaction Info */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Información de la Transacción</h3>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <Calendar className="w-5 h-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-500">Fecha de {isLoan ? 'Préstamo' : 'Venta'}</p>
-                  <p className="font-medium text-gray-900">{formatDate(transaction.dateSale)}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Clock className="w-5 h-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-500">Fecha Final de Pago</p>
-                  <p className="font-medium text-gray-900">{formatDate(transaction.finalPaymentDate)}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Package className="w-5 h-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-500">Tipo de Pago</p>
-                  <p className="font-medium text-gray-900">
-                    {transaction.typePayments === 'SEMANAL' ? 'Pago Único' : 'Cuotas'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <InfoTransactionDetalle
+            transaction={transaction}
+            isLoan={isLoan}
+            formatDate={formatDate}
+          />
         </div>
 
-        {/* Fees Section */}
-        {transaction.typePayments === 'MENSUAL' && transaction.fees.length > 0 && (
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Cronograma de Cuotas</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Cuota
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Monto
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Vencimiento
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Estado
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Información de Pago
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {transaction.fees.map((fee) => (
-                    <tr key={fee.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          {getStatusIcon(fee.status)}
-                          <span className="ml-2 text-sm font-medium text-gray-900">
-                            Cuota {fee.numberFee}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {formatCurrency(fee.amount)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(fee.expirationDate)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        {getStatusBadge(fee.status)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                        {fee.paid ? (
-                          <div className="text-green-600">
-                            <div className="font-medium flex items-center">
-                              <CheckCircle className="w-4 h-4 mr-2" />
-                              {formatCurrency(fee.paidAmount || fee.amount)}
-                            </div>
-                            {fee.paymentDate && (
-                              <div className="text-xs text-gray-500 mt-1">
-                                Pagado el {formatDate(fee.paymentDate)}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 text-sm">Pendiente</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                        {!fee.paid && (
-                          <button
-                            onClick={() => handleMarkAsPaid(fee.id)}
-                            disabled={processingFee === fee.id}
-                            className="text-indigo-600 hover:text-indigo-900 disabled:opacity-50"
-                          >
-                            {processingFee === fee.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              'Marcar como pagada'
-                            )}
-                          </button>
-                        )}
-                        {fee.paid && (
-                          <span className="text-green-600 text-sm font-medium">
-                            ✓ Completada
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Progress Bar */}
-        {transaction.typePayments === 'QUINCENAL' && (
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Progreso de Pago</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>Progreso: {transaction.paidFeesCount} de {transaction.totalFees} cuotas</span>
-                <span>{Math.round((transaction.paidFeesCount / transaction.totalFees) * 100)}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-500"
-                  style={{ width: `${(transaction.paidFeesCount / transaction.totalFees) * 100}%` }}
-                ></div>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-green-600 font-medium">
-                  Pagado: {formatCurrency(transaction.priceTotal - transaction.remainingAmount)}
-                </span>
-                <span className="text-orange-600 font-medium">
-                  Pendiente: {formatCurrency(transaction.remainingAmount)}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-            <div className="flex items-center text-red-800">
-              <AlertCircle className="w-5 h-5 mr-3" />
-              <span className="text-sm">{error}</span>
-            </div>
-          </div>
-        )}
-      </div>
-    </DashboardLayout>
+        <CronogramaFees
+            transaction={transaction}
+            formatDate={formatDate}
+            getStatusIcon={getStatusIcon}
+            formatCurrency={formatCurrency}
+            getStatusBadge={getStatusBadge}
+            handleMarkAsPaid={handleMarkAsPaid}
+            processingFee={processingFee}
+        />
+        </div>
+      </DashboardLayout>
   );
 };
 

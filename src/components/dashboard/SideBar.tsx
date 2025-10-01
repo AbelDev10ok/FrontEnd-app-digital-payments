@@ -10,13 +10,10 @@ import {
   UserPlus,
   Eye,
   Plus,
-  TrendingUp,
-  CreditCard,
+  // CreditCard,
   Clock,
   AlertTriangle,
-  Calendar,
-  DollarSign
-} from 'lucide-react';
+  Calendar} from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -25,7 +22,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   const [clientesExpanded, setClientesExpanded] = useState(false);
   const [ventasExpanded, setVentasExpanded] = useState(false);
-  const [prestamosExpanded, setPrestamosExpanded] = useState(false);
+  // const [prestamosExpanded, setPrestamosExpanded] = useState(false);
 
   const menuItems = [
     {
@@ -85,58 +82,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
           icon: Plus,
           path: '/dashboard/ventas/crear'
         }
+        // ,
+        // {
+        //   title: 'Nuevo Préstamo',
+        //   icon: Plus,
+        //   path: '/dashboard/prestamos/crear'
+        // }
       ]
     },
-    {
-      title: 'Préstamos',
-      icon: CreditCard,
-      hasSubmenu: true,
-      expanded: prestamosExpanded,
-      onToggle: () => setPrestamosExpanded(!prestamosExpanded),
-      submenu: [
-        {
-          title: 'Todos los Préstamos',
-          icon: Eye,
-          path: '/dashboard/prestamos/todos'
-        },
-        {
-          title: 'Préstamos a Cobrar Hoy',
-          icon: Calendar,
-          path: '/dashboard/prestamos/cobrar-hoy'
-        },
-        {
-          title: 'Préstamos Atrasados',
-          icon: AlertTriangle,
-          path: '/dashboard/prestamos/atrasados'
-        },
-        {
-          title: 'Cuotas Atrasadas',
-          icon: Clock,
-          path: '/dashboard/prestamos/cuotas-atrasadas'
-        },
-        {
-          title: 'Nuevo Préstamo',
-          icon: Plus,
-          path: '/dashboard/prestamos/crear'
-        }
-      ]
-    }
+
   ];
-
-  const getTypeBadge = (productType: any) => {
-    const isLoan = productType.name === 'PRESTAMO';
-    return (
-      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-        isLoan ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-      }`}>
-        {isLoan ? 'Préstamo' : 'Venta'}
-      </span>
-    );
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES');
-  };
 
   return (
     <aside className={`

@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { ShoppingCart, Search, Filter, Plus, TrendingUp, Loader2, AlertCircle, Calendar, DollarSign, CreditCard, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import DashboardLayout from '../components/DashBoardLayout';
+import DashboardLayout from '../components/dashboard/DashBoardLayout';
 import { useSales } from '../hooks/useSales';
 import { ProductTypeDto } from '../services/salesServices';
 

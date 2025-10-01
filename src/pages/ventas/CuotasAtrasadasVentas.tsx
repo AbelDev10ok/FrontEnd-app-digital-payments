@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Loader2, AlertCircle, DollarSign, Calendar, CheckCircle, User } from 'lucide-react';
-import DashboardLayout from '../../components/DashBoardLayout';
-import { salesService, SaleResponseDto, FeeDto } from '../../services/salesServices';
+import { Clock, Loader2, AlertCircle, DollarSign, Calendar, CheckCircle, User, Link } from 'lucide-react';
+import DashboardLayout from '../../components/dashboard/DashBoardLayout';
+import { salesService, FeeDto } from '../../services/salesServices';
 
 interface OverdueFee extends FeeDto {
   clientName: string;

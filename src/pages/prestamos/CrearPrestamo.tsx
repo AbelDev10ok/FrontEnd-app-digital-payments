@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CreditCard, ArrowLeft, Save } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import DashboardLayout from '../../components/DashBoardLayout';
+import DashboardLayout from '../../components/dashboard/DashBoardLayout';
 
 const CrearPrestamo: React.FC = () => {
   const navigate = useNavigate();

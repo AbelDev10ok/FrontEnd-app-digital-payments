@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Loader2, AlertCircle, DollarSign, Clock, User, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import DashboardLayout from '../../components/DashBoardLayout';
+import DashboardLayout from '../../components/dashboard/DashBoardLayout';
 import { salesService, SaleResponseDto } from '../../services/salesServices';
 
 const VentasAtrasadas: React.FC = () => {

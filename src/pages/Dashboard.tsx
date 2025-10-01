@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart3, Users, TrendingUp, Activity } from 'lucide-react';
-import DashboardLayout from '../components/DashBoardLayout';
+import DashboardLayout from '../components/dashboard/DashBoardLayout';
 
 const Dashboard: React.FC = () => {
   const stats = [

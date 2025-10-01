@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { UserPlus, ArrowLeft, Save, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import DashboardLayout from '../components/DashBoardLayout';
+import DashboardLayout from '../components/dashboard/DashBoardLayout';
 import { useClients } from '../hooks/useClients';
 import { clientService } from '../services/clientServices';
 

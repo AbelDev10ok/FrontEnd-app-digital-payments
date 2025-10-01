@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Phone, Mail, MapPin, DollarSign, CreditCard, Banknote, TrendingUp, Loader2, AlertCircle, User2 } from 'lucide-react';
-import DashboardLayout from '../components/DashBoardLayout';
+import DashboardLayout from '../components/dashboard/DashBoardLayout';
 import { clientService, Client } from '../services/clientServices';
 
 const ClienteDetalle: React.FC = () => {

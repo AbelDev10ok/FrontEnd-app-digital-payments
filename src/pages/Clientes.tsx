@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Users, Search, Filter, Plus, Loader2, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import DashboardLayout from '../components/DashBoardLayout';
+import DashboardLayout from '../components/dashboard/DashBoardLayout';
 import { useClients } from '../hooks/useClients';
 
 const Clientes: React.FC = () => {

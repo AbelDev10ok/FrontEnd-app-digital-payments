@@ -1,10 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, Loader2, AlertCircle, DollarSign, TrendingUp, Clock, Plus, CheckCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search} from 'lucide-react';
 import { Link } from 'react-router-dom';
-import DashboardLayout from '../../components/DashBoardLayout';
+import DashboardLayout from '../../components/dashboard/DashBoardLayout';
 import { salesService, SaleResponseDto } from '../../services/salesServices';
+import Load from '../../shared/Load';
+import ErrorMessage from '../../shared/ErrorMessage';
+import HeaderTransaction from '../../shared/HeaderTransaction';
 
-const TodasLasVentas: React.FC = () => {
+interface TodasLasVentasProps {
+  transaction?: string;
+}
+
+const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
   const [sales, setSales] = useState<SaleResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,8 +65,9 @@ const TodasLasVentas: React.FC = () => {
       // Aquí necesitarías un endpoint específico para todas las ventas
       // Por ahora usamos el endpoint general
       // const today = new Date().toISOString().split('T')[0];
-      const salesData = await salesService.getAllSales();
+      const salesData = await salesService.getAllSales(transaction?'PRESTAMO':'VENTA');
       setSales(salesData);
+      console.log(salesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar las ventas');
     } finally {
@@ -69,17 +77,12 @@ const TodasLasVentas: React.FC = () => {
 
   useEffect(() => {
     fetchAllSales();
-  }, []);
+  }, [transaction]);
 
   if (loading) {
     return (
       <DashboardLayout title="Todas las Ventas">
-        <div className="flex items-center justify-center h-64">
-          <div className="flex items-center space-x-3">
-            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-            <span className="text-gray-600">Cargando ventas...</span>
-          </div>
-        </div>
+        <Load />
       </DashboardLayout>
     );
   }
@@ -88,36 +91,14 @@ const TodasLasVentas: React.FC = () => {
     <DashboardLayout title="Todas las Ventas">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center space-x-3">
-            <ShoppingCart className="w-8 h-8 text-green-600" />
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Todas las Ventas</h2>
-              <p className="text-sm text-gray-500">Gestión completa de ventas</p>
-            </div>
-          </div>
-          
-          <Link
-            to="/dashboard/ventas/crear"
-            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors duration-200"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nueva Venta
-          </Link>
-        </div>
-
+        <HeaderTransaction title="Todas las Ventas" />
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-            <div className="flex items-center text-red-800">
-              <AlertCircle className="w-5 h-5 mr-3" />
-              <span className="text-sm">{error}</span>
-            </div>
-          </div>
+          <ErrorMessage message={error} />
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
@@ -171,7 +152,7 @@ const TodasLasVentas: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Search and Filters */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">

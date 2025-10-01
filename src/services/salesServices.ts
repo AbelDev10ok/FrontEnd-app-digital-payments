@@ -16,7 +16,6 @@ export interface ClientDto {
 export interface ProductTypeDto {
   id: number;
   name: string;
-  description?: string;
 }
 
 export interface FeeDto {
@@ -62,14 +61,21 @@ export interface CreateSaleRequest {
   quantityFees?: number;
   amountFee?: number;
   cost: number;
-  productType: {
-    id: number,
-    name: string
-  }
+  productType: number;
 }
 
 
 export const salesService = {
+
+  async getProductTypes(): Promise<ProductTypeDto[]> {
+    const response = await authenticatedFetch('http://localhost:8080/api/product-types/all');
+    if (!response.ok) {
+      throw new Error('Error al obtener los tipos de productos');
+    }
+    return response.json();
+  },
+
+
   // Obtener todas las ventas (excluyendo préstamos por defecto)
   async getAllSales(productType: string = 'PRESTAMO'): Promise<SaleResponseDto[] | []> {
     const response = await authenticatedFetch(`${API_BASE_URL}?productType=${productType}`);

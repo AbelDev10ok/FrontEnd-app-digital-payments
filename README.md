@@ -1,1 +1,8 @@
 # FrontEnd-app-digital-payments
+
+
+# TAREAS 🔨
+
+# COMPONETIZAR: 
+    - ELIMINAR COMPONENTES TODOS LOS PRESTAMOS 🔨
+    - COMPONETIZAR CREAR VENTA Y PRESTAMOS 🔨

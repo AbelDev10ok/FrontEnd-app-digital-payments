@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Loader2, AlertCircle, DollarSign, Clock, CheckCircle, X } from 'lucide-react';
-import DashboardLayout from '../../components/DashBoardLayout';
+import { Calendar, Loader2, AlertCircle, DollarSign, Clock, CheckCircle} from 'lucide-react';
+import DashboardLayout from '../../components/dashboard/DashBoardLayout';
 import { salesService, SaleResponseDto } from '../../services/salesServices';
-import { ModalPay } from '../../components/ModalPay';
+import { ModalPay } from '../../components/pay/ModalPay';
 
 const VentasACobrarHoy: React.FC = () => {
   const [sales, setSales] = useState<SaleResponseDto[]>([]);

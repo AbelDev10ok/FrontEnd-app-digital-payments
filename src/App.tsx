@@ -1,29 +1,24 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
-import Login from './components/Login';
+import Login from './components/login/Login';
 import Dashboard from './pages/Dashboard';
 import Clientes from './pages/Clientes';
 import CrearCliente from './pages/CrearCliente';
 import ClienteDetalle from './pages/ClienteDetalle';
 import Ventas from './pages/Ventas';
-import CrearVenta from './pages/CrearVenta';
+import CrearVenta from './pages/ventas/CrearTransaccion';
 import VentaDetalle from './pages/VentaDetalle';
 import AdminPanel from './pages/AdminPanel';
-import ProtectedRoute from './components/ProtectedRoute';
-import TokenRefreshHandler from './components/TokenRefreshHandler';
+import ProtectedRoute from './shared/ProtectedRoute';
+import TokenRefreshHandler from './shared/TokenRefreshHandler';
 import EditarCliente from './pages/EditarCliente';
 
-// Importar nuevas páginas de ventas
 import TodasLasVentas from './pages/ventas/TodasLasVentas';
 import VentasACobrarHoy from './pages/ventas/VentasACobrarHoy';
 import VentasAtrasadas from './pages/ventas/VentasAtrasadas';
 import CuotasAtrasadasVentas from './pages/ventas/CuotasAtrasadasVentas';
 
-// Importar nuevas páginas de préstamos
-import TodosLosPrestamos from './pages/prestamos/TodosLosPrestamos';
-import PrestamosACobrarHoy from './pages/prestamos/PrestamosACobrarHoy';
-import PrestamosAtrasados from './pages/prestamos/PrestamosAtrasados';
-import CuotasAtrasadasPrestamos from './pages/prestamos/CuotasAtrasadasPrestamos';
+
 import CrearPrestamo from './pages/prestamos/CrearPrestamo';
 
 function App() {
@@ -113,7 +108,7 @@ function App() {
             path="/dashboard/ventas/todas"
             element={
               <ProtectedRoute requiredRole="ROLE_USER">
-                <TodasLasVentas />
+                <TodasLasVentas/>
               </ProtectedRoute>
             }
           />
@@ -145,7 +140,7 @@ function App() {
             path="/dashboard/ventas/crear"
             element={
               <ProtectedRoute requiredRole="ROLE_USER">
-                <CrearVenta />
+                <CrearVenta type={'VENTA'} />
               </ProtectedRoute>
             }
           />
@@ -159,38 +154,6 @@ function App() {
           />
           
           {/* Nuevas rutas para préstamos */}
-          <Route
-            path="/dashboard/prestamos/todos"
-            element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <TodosLosPrestamos />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/prestamos/cobrar-hoy"
-            element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <PrestamosACobrarHoy />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/prestamos/atrasados"
-            element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <PrestamosAtrasados />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/prestamos/cuotas-atrasadas"
-            element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <CuotasAtrasadasPrestamos />
-              </ProtectedRoute>
-            }
-          />
           <Route
             path="/dashboard/prestamos/crear"
             element={

@@ -1,14 +1,22 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, ArrowLeft, Save, Tv, Watch, Sofa } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import DashboardLayout from '../components/DashBoardLayout';
-import { CreateSaleRequest, salesService } from '../services/salesServices';
-import { useClients } from '../hooks/useClients';
+import DashboardLayout from '../../components/dashboard/DashBoardLayout';
+import { CreateSaleRequest, salesService } from '../../services/salesServices';
+import { useClients } from '../../hooks/useClients';
+import { ProductTypeDto } from '../../services/salesServices';
 
-const CrearVenta: React.FC = () => {
+interface CrearTransaccionProps {
+  type: 'VENTA' | 'PRESTAMO';
+}
+
+
+
+const CrearTransaccion = ({type}:CrearTransaccionProps) => {
   const { clients} = useClients();
-    // ...existing code...
+
   const [clientSearch, setClientSearch] = useState('');
+  const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
   // Filtra clientes por nombre
@@ -16,18 +24,19 @@ const CrearVenta: React.FC = () => {
     client.name.toLowerCase().includes(clientSearch.toLowerCase())
   );
 
-
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     cliente: 0, // ID del cliente
-    tipo: 'VENTA', // "Venta" o "Préstamo"
-    descripcion: '',
+    tipo: type, // "Venta" o "Préstamo"
+    descripcion: type === 'PRESTAMO' ? 'Préstamo personal' : '',
     fecha: new Date().toISOString().split('T')[0], // Fecha actual en formato YYYY-MM-DD
-    payments: '', // ejemplo
+    payments: 'SEMANAL', // "SEMANAL", "MENSUAL", "QUINCENAL", "CONTADO"
     quantityFees: 1,
     amountFee: '',
     cost: '',
-    productCategory: '', // Nuevo campo para tipo de producto
+    productCategory: type === 'PRESTAMO' ? 'PRESTAMO' : '', // "SMART TV", "RELOJ", "MUEBLE"
+    productTypeId: '', // id del tipo de producto seleccionado
+
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -49,10 +58,7 @@ const CrearVenta: React.FC = () => {
       quantityFees: Number(formData.quantityFees),
       amountFee: Number(formData.amountFee),
       cost: Number(formData.cost),
-      productType: {
-        id:3,
-        name: 'VENTA'
-      },
+      productType: Number(formData.productTypeId), // solo el id
       dateSale: formData.fecha,
       // Puedes agregar otros campos opcionales aquí si los necesitas
     };
@@ -68,6 +74,20 @@ const CrearVenta: React.FC = () => {
       console.error(err);
   }
   };
+
+  useEffect(() => {
+    // obtenemos los tipos de productos al cargar el componente
+    const fetchProductTypes = async () => {
+      try {
+        const productTypes = await salesService.getProductTypes();
+        setProductTypes(productTypes);
+        console.log('Tipos de productos:', productTypes);
+      } catch (error) {
+        console.error('Error al obtener los tipos de productos:', error);
+      }
+    };
+    fetchProductTypes();
+  }, []);
 
   return (
     <DashboardLayout title="Nueva Transacción">
@@ -99,17 +119,17 @@ const CrearVenta: React.FC = () => {
                   Tipo de producto *
                 </label>
                 <select
-                  id="productCategory"
-                  name="productCategory"
-                  value={formData.productCategory}
-                  onChange={handleInputChange}
+                  id="productTypeId"
+                  name="productTypeId"
+                  value={formData.productTypeId}
+                  onChange={e => setFormData(prev => ({ ...prev, productTypeId: e.target.value }))}
                   required
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="">Selecciona un tipo</option>
-                  <option value="SMART TV">Smart TV</option>
-                  <option value="RELOJ">Reloj</option>
-                  <option value="MUEBLE">Mueble</option>
+                  {productTypes.map((type) => (
+                    <option key={type.id} value={type.id}>{type.name}</option>
+                  ))}
                 </select>
                 {/* Icono dinámico según selección */}
                 <div className="mt-2 min-h-[28px]">
@@ -184,6 +204,7 @@ const CrearVenta: React.FC = () => {
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  defaultValue={formData.payments}
                 >
                   <option value="SEMANAL">Semanal</option>
                   <option value="QUINCENAL">Quincenal</option>
@@ -247,8 +268,6 @@ const CrearVenta: React.FC = () => {
               </div>
             </div>
 
-            
-
             {/* Descripción */}
             <div>
               <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-2">
@@ -289,4 +308,4 @@ const CrearVenta: React.FC = () => {
   );
 };
 
-export default CrearVenta;
+export default CrearTransaccion;
