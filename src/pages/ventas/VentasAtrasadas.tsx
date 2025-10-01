@@ -2,12 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Loader2, AlertCircle, DollarSign, Clock, User, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/dashboard/DashBoardLayout';
-import { salesService, SaleResponseDto } from '../../services/salesServices';
+import { salesService, SaleResponseDto, ProductTypeDto } from '../../services/salesServices';
+import SalesFilters from '../../components/filters/SalesFilters';
+import { useSalesFilters } from '../../hooks/useSalesFilters';
 
 const VentasAtrasadas: React.FC = () => {
   const [sales, setSales] = useState<SaleResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    selectedStatus,
+    setSelectedStatus,
+    selectedProductType,
+    setSelectedProductType,
+    filteredSales
+  } = useSalesFilters(sales);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -38,7 +51,17 @@ const VentasAtrasadas: React.FC = () => {
   };
 
   useEffect(() => {
+    const fetchProductTypes = async () => {
+      try {
+        const types = await salesService.getProductTypes();
+        setProductTypes(types);
+      } catch (err) {
+        console.error('Error al cargar tipos de productos:', err);
+      }
+    };
+
     fetchOverdueSales();
+    fetchProductTypes();
   }, []);
 
   if (loading) {
@@ -76,13 +99,25 @@ const VentasAtrasadas: React.FC = () => {
           </div>
         )}
 
+        {/* Filters */}
+        <SalesFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          selectedStatus={selectedStatus}
+          onStatusChange={setSelectedStatus}
+          selectedProductType={selectedProductType}
+          onProductTypeChange={setSelectedProductType}
+          productTypes={productTypes}
+          statusOptions={['Todos', 'Atrasada']}
+        />
+
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Ventas Atrasadas</p>
-                <p className="text-2xl font-bold text-red-600">{sales.length}</p>
+                <p className="text-2xl font-bold text-red-600">{filteredSales.length}</p>
               </div>
               <div className="bg-red-50 p-3 rounded-xl">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
@@ -95,7 +130,7 @@ const VentasAtrasadas: React.FC = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Monto en Atraso</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {formatCurrency(sales.reduce((sum, sale) => sum + sale.remainingAmount, 0))}
+                  {formatCurrency(filteredSales.reduce((sum, sale) => sum + sale.remainingAmount, 0))}
                 </p>
               </div>
               <div className="bg-red-50 p-3 rounded-xl">
@@ -109,7 +144,7 @@ const VentasAtrasadas: React.FC = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Días Promedio Atraso</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {sales.length > 0 ? Math.round(sales.reduce((sum, sale) => sum + sale.daysLate, 0) / sales.length) : 0}
+                  {filteredSales.length > 0 ? Math.round(filteredSales.reduce((sum, sale) => sum + sale.daysLate, 0) / filteredSales.length) : 0}
                 </p>
               </div>
               <div className="bg-red-50 p-3 rounded-xl">
@@ -123,14 +158,18 @@ const VentasAtrasadas: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Lista de Ventas Atrasadas</h3>
-            {sales.length === 0 ? (
+            {filteredSales.length === 0 ? (
               <div className="text-center py-8">
                 <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
-                <p className="text-gray-500">¡Excelente! No hay ventas atrasadas</p>
+                <p className="text-gray-500">
+                  {searchTerm || selectedProductType
+                    ? 'No se encontraron ventas que coincidan con los filtros'
+                    : '¡Excelente! No hay ventas atrasadas'}
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {sales.map((sale) => (
+                {filteredSales.map((sale) => (
                   <div key={sale.id} className="border border-red-200 rounded-xl p-4 bg-red-50">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center space-x-3">

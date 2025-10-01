@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Loader2, AlertCircle, DollarSign, Calendar, CheckCircle, User, Link } from 'lucide-react';
 import DashboardLayout from '../../components/dashboard/DashBoardLayout';
-import { salesService, FeeDto } from '../../services/salesServices';
+import { salesService, FeeDto, ProductTypeDto } from '../../services/salesServices';
+import FeesFilters from '../../components/filters/FeesFilters';
+import { useFeesFilters } from '../../hooks/useFeesFilters';
 
 interface OverdueFee extends FeeDto {
   clientName: string;
   saleDescription: string;
+  productDescription: string;
+  productTypeId: number;
 }
 
 const CuotasAtrasadasVentas: React.FC = () => {
@@ -13,6 +17,15 @@ const CuotasAtrasadasVentas: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingFee, setProcessingFee] = useState<number | null>(null);
+  const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    selectedProductType,
+    setSelectedProductType,
+    filteredFees
+  } = useFeesFilters(overdueFees);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -64,7 +77,9 @@ const CuotasAtrasadasVentas: React.FC = () => {
               overdueFeesData.push({
                 ...fee,
                 clientName: sale.client.name,
-                saleDescription: sale.descriptionProduct
+                saleDescription: sale.descriptionProduct,
+                productDescription: sale.productType.name,
+                productTypeId: sale.productType.id
               });
             }
           });
@@ -85,7 +100,17 @@ const CuotasAtrasadasVentas: React.FC = () => {
   };
 
   useEffect(() => {
+    const fetchProductTypes = async () => {
+      try {
+        const types = await salesService.getProductTypes();
+        setProductTypes(types);
+      } catch (err) {
+        console.error('Error al cargar tipos de productos:', err);
+      }
+    };
+
     fetchOverdueFees();
+    fetchProductTypes();
   }, []);
 
   if (loading) {
@@ -123,13 +148,22 @@ const CuotasAtrasadasVentas: React.FC = () => {
           </div>
         )}
 
+        {/* Filters */}
+        <FeesFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          selectedProductType={selectedProductType}
+          onProductTypeChange={setSelectedProductType}
+          productTypes={productTypes}
+        />
+
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Cuotas Atrasadas</p>
-                <p className="text-2xl font-bold text-red-600">{overdueFees.length}</p>
+                <p className="text-2xl font-bold text-red-600">{filteredFees.length}</p>
               </div>
               <div className="bg-red-50 p-3 rounded-xl">
                 <Clock className="w-6 h-6 text-red-600" />
@@ -142,7 +176,7 @@ const CuotasAtrasadasVentas: React.FC = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Monto Total Atrasado</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {formatCurrency(overdueFees.reduce((sum, fee) => sum + fee.amount, 0))}
+                  {formatCurrency(filteredFees.reduce((sum, fee) => sum + fee.amount, 0))}
                 </p>
               </div>
               <div className="bg-red-50 p-3 rounded-xl">
@@ -156,8 +190,8 @@ const CuotasAtrasadasVentas: React.FC = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Días Promedio Atraso</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {overdueFees.length > 0 ? 
-                    Math.round(overdueFees.reduce((sum, fee) => sum + calculateDaysLate(fee.expirationDate), 0) / overdueFees.length) : 0}
+                  {filteredFees.length > 0 ?
+                    Math.round(filteredFees.reduce((sum, fee) => sum + calculateDaysLate(fee.expirationDate), 0) / filteredFees.length) : 0}
                 </p>
               </div>
               <div className="bg-red-50 p-3 rounded-xl">
@@ -171,14 +205,18 @@ const CuotasAtrasadasVentas: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Cuotas Vencidas</h3>
-            {overdueFees.length === 0 ? (
+            {filteredFees.length === 0 ? (
               <div className="text-center py-8">
                 <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
-                <p className="text-gray-500">¡Excelente! No hay cuotas atrasadas</p>
+                <p className="text-gray-500">
+                  {searchTerm || selectedProductType
+                    ? 'No se encontraron cuotas que coincidan con los filtros'
+                    : '¡Excelente! No hay cuotas atrasadas'}
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {overdueFees.map((fee) => (
+                {filteredFees.map((fee) => (
                   <div key={fee.id} className="border border-red-200 rounded-xl p-4 bg-red-50">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center space-x-3">

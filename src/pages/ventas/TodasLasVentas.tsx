@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Search} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/dashboard/DashBoardLayout';
-import { salesService, SaleResponseDto } from '../../services/salesServices';
+import { salesService, SaleResponseDto, ProductTypeDto } from '../../services/salesServices';
 import Load from '../../shared/Load';
 import ErrorMessage from '../../shared/ErrorMessage';
 import HeaderTransaction from '../../shared/HeaderTransaction';
+import SalesFilters from '../../components/filters/SalesFilters';
+import { useSalesFilters } from '../../hooks/useSalesFilters';
 
 interface TodasLasVentasProps {
   transaction?: string;
@@ -15,8 +16,17 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
   const [sales, setSales] = useState<SaleResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('Todos');
+  const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    selectedStatus,
+    setSelectedStatus,
+    selectedProductType,
+    setSelectedProductType,
+    filteredSales
+  } = useSalesFilters(sales);
 
   const statusOptions = ['Todos', 'Completada', 'Pendiente', 'Atrasada'];
 
@@ -41,23 +51,6 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
     return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>;
   };
 
-  const filteredSales = sales.filter(sale => {
-    const searchMatch = 
-      sale.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sale.descriptionProduct.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sale.id.toString().includes(searchTerm);
-
-    const statusMatch = (() => {
-      if (selectedStatus === 'Todos') return true;
-      if (selectedStatus === 'Completada') return sale.completed;
-      if (selectedStatus === 'Pendiente') return !sale.completed && sale.daysLate === 0;
-      if (selectedStatus === 'Atrasada') return !sale.completed && sale.daysLate > 0;
-      return true;
-    })();
-
-    return searchMatch && statusMatch;
-  });
-
   const fetchAllSales = async () => {
     try {
       setLoading(true);
@@ -76,7 +69,17 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
   };
 
   useEffect(() => {
+    const fetchProductTypes = async () => {
+      try {
+        const types = await salesService.getProductTypes();
+        setProductTypes(types);
+      } catch (err) {
+        console.error('Error al cargar tipos de productos:', err);
+      }
+    };
+
     fetchAllSales();
+    fetchProductTypes();
   }, [transaction]);
 
   if (loading) {
@@ -155,29 +158,16 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
         </div> */}
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Buscar ventas..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              />
-            </div>
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            >
-              {statusOptions.map(status => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <SalesFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          selectedStatus={selectedStatus}
+          onStatusChange={setSelectedStatus}
+          selectedProductType={selectedProductType}
+          onProductTypeChange={setSelectedProductType}
+          productTypes={productTypes}
+          statusOptions={statusOptions}
+        />
 
         {/* Sales Table */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100">

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Loader2, AlertCircle, DollarSign, Clock, CheckCircle} from 'lucide-react';
 import DashboardLayout from '../../components/dashboard/DashBoardLayout';
-import { salesService, SaleResponseDto } from '../../services/salesServices';
+import { salesService, SaleResponseDto, ProductTypeDto } from '../../services/salesServices';
 import { ModalPay } from '../../components/pay/ModalPay';
+import SalesFilters from '../../components/filters/SalesFilters';
+import { useSalesFilters } from '../../hooks/useSalesFilters';
 
 const VentasACobrarHoy: React.FC = () => {
   const [sales, setSales] = useState<SaleResponseDto[]>([]);
@@ -13,6 +15,17 @@ const VentasACobrarHoy: React.FC = () => {
   const [selectedFee, setSelectedFee] = useState<{ id: number; amount: number; numberFee: number } | null>(null);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [remainingDebt, setRemainingDebt] = useState(0);
+  const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    selectedStatus,
+    setSelectedStatus,
+    selectedProductType,
+    setSelectedProductType,
+    filteredSales
+  } = useSalesFilters(sales);
 
   // mostras un console log del valor de fee.amount cuando se abre el modal de pago
   // para verificar que no sea null o undefined
@@ -90,7 +103,17 @@ const VentasACobrarHoy: React.FC = () => {
   };
 
   useEffect(() => {
+    const fetchProductTypes = async () => {
+      try {
+        const types = await salesService.getProductTypes();
+        setProductTypes(types);
+      } catch (err) {
+        console.error('Error al cargar tipos de productos:', err);
+      }
+    };
+
     fetchSalesToday();
+    fetchProductTypes();
   }, []);
 
   if (loading) {
@@ -128,13 +151,25 @@ const VentasACobrarHoy: React.FC = () => {
           </div>
         )}
 
+        {/* Filters */}
+        <SalesFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          selectedStatus={selectedStatus}
+          onStatusChange={setSelectedStatus}
+          selectedProductType={selectedProductType}
+          onProductTypeChange={setSelectedProductType}
+          productTypes={productTypes}
+          statusOptions={['Todos', 'Completada', 'Pendiente', 'Atrasada']}
+        />
+
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Ventas Hoy</p>
-                <p className="text-2xl font-bold text-gray-900">{sales.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{filteredSales.length}</p>
               </div>
               <div className="bg-green-50 p-3 rounded-xl">
                 <Calendar className="w-6 h-6 text-green-600" />
@@ -147,7 +182,7 @@ const VentasACobrarHoy: React.FC = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Monto Total</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(sales.reduce((sum, sale) => sum + sale.priceTotal, 0))}
+                  {formatCurrency(filteredSales.reduce((sum, sale) => sum + sale.priceTotal, 0))}
                 </p>
               </div>
               <div className="bg-blue-50 p-3 rounded-xl">
@@ -161,7 +196,7 @@ const VentasACobrarHoy: React.FC = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Pendiente Cobro</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(sales.reduce((sum, sale) => sum + sale.remainingAmount, 0))}
+                  {formatCurrency(filteredSales.reduce((sum, sale) => sum + sale.remainingAmount, 0))}
                 </p>
               </div>
               <div className="bg-orange-50 p-3 rounded-xl">
@@ -175,14 +210,18 @@ const VentasACobrarHoy: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Ventas del Día</h3>
-            {sales.length === 0 ? (
+            {filteredSales.length === 0 ? (
               <div className="text-center py-8">
                 <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No hay ventas para cobrar hoy</p>
+                <p className="text-gray-500">
+                  {searchTerm || selectedStatus !== 'Todos' || selectedProductType
+                    ? 'No se encontraron ventas que coincidan con los filtros'
+                    : 'No hay ventas para cobrar hoy'}
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {sales.map((sale) => (
+                {filteredSales.map((sale) => (
                   <div key={sale.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
                     <div className="flex justify-between items-start mb-3">
                       <div>
