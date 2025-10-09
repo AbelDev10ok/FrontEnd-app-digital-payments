@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Loader2, AlertCircle, DollarSign, Clock, CheckCircle} from 'lucide-react';
+import { Calendar, Loader2, AlertCircle, CheckCircle} from 'lucide-react';
 import DashboardLayout from '../../components/dashboard/DashBoardLayout';
 import { salesService, SaleResponseDto, ProductTypeDto } from '../../services/salesServices';
 import { ModalPay } from '../../components/pay/ModalPay';
@@ -18,14 +18,14 @@ const VentasACobrarHoy: React.FC = () => {
   const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
 
   const {
-    searchTerm,
-    setSearchTerm,
+    searchDescription,
+    setSearchDescription,
     selectedStatus,
     setSelectedStatus,
     selectedProductType,
     setSelectedProductType,
     filteredSales
-  } = useSalesFilters(sales);
+  } = useSalesFilters({ sales ,setSales});
 
   // mostras un console log del valor de fee.amount cuando se abre el modal de pago
   // para verificar que no sea null o undefined
@@ -88,12 +88,12 @@ const VentasACobrarHoy: React.FC = () => {
       setLoading(true);
       setError(null);
       // Obtener fecha local de Argentina en formato YYYY-MM-DD
-      const todayDate = new Date();
-      const today = todayDate.getFullYear() + '-' +
-        String(todayDate.getMonth() + 1).padStart(2, '0') + '-' +
-        String(todayDate.getDate()).padStart(2, '0');
-      console.log("Hoy es (local Argentina): "+today);
-      const salesData = await salesService.getFeesDueOn('VENTAS', today);
+      // const todayDate = new Date();
+      // const today = todayDate.getFullYear() + '-' +
+      //   String(todayDate.getMonth() + 1).padStart(2, '0') + '-' +
+      //   String(todayDate.getDate()).padStart(2, '0');
+      // console.log("Hoy es (local Argentina): "+today);
+      const salesData = await salesService.getFeesDue();
       setSales(salesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar las ventas');
@@ -153,8 +153,8 @@ const VentasACobrarHoy: React.FC = () => {
 
         {/* Filters */}
         <SalesFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          searchTerm={searchDescription}
+          onSearchChange={setSearchDescription}
           selectedStatus={selectedStatus}
           onStatusChange={setSelectedStatus}
           selectedProductType={selectedProductType}
@@ -164,7 +164,7 @@ const VentasACobrarHoy: React.FC = () => {
         />
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
@@ -204,7 +204,7 @@ const VentasACobrarHoy: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Sales List */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
@@ -214,7 +214,7 @@ const VentasACobrarHoy: React.FC = () => {
               <div className="text-center py-8">
                 <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500">
-                  {searchTerm || selectedStatus !== 'Todos' || selectedProductType
+                  {searchDescription || selectedStatus !== 'Todos' || selectedProductType
                     ? 'No se encontraron ventas que coincidan con los filtros'
                     : 'No hay ventas para cobrar hoy'}
                 </p>

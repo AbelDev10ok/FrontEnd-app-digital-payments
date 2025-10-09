@@ -10,6 +10,7 @@ interface SalesFiltersProps {
   onProductTypeChange: (value: string) => void;
   productTypes: ProductTypeDto[];
   statusOptions?: string[];
+  productTypeOptions?: string[];
 }
 
 const SalesFilters = ({
@@ -20,7 +21,7 @@ const SalesFilters = ({
   selectedProductType,
   onProductTypeChange,
   productTypes,
-  statusOptions = ['Todos', 'Completada', 'Pendiente', 'Atrasada']
+  statusOptions = ['Todos', 'Completada', 'Pendiente', 'Atrasada'],
 }: SalesFiltersProps) => {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -30,7 +31,7 @@ const SalesFilters = ({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
-            placeholder="Buscar por cliente o producto..."
+            placeholder="Buscar por descripcion producto..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"

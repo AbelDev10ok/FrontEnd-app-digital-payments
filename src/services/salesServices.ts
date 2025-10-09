@@ -67,6 +67,15 @@ export interface CreateSaleRequest {
 
 export const salesService = {
 
+  async getProductDescriptions(productType: string): Promise<SaleResponseDto[]> {
+    const response = await authenticatedFetch(`${API_BASE_URL}/search-by-description?description=${productType}`);
+    if (!response.ok) {
+      throw new Error('Error al obtener los tipos de productos');
+    }
+    return response.json();
+
+  },
+
   async getProductTypes(): Promise<ProductTypeDto[]> {
     const response = await authenticatedFetch('http://localhost:8080/api/product-types/all');
     if (!response.ok) {
@@ -74,7 +83,6 @@ export const salesService = {
     }
     return response.json();
   },
-
 
   // Obtener todas las ventas (excluyendo préstamos por defecto)
   async getAllSales(productType: string = 'PRESTAMO'): Promise<SaleResponseDto[] | []> {
@@ -85,6 +93,15 @@ export const salesService = {
 
     if (!response.ok) {
       throw new Error('Error al obtener las ventas');
+    }
+    return response.json();
+  },
+
+  // obtener cuotas a cobrar es decir cuotas atrasadas y cuotas de hoy
+  async getFeesDue(): Promise<SaleResponseDto[]> {
+    const response = await authenticatedFetch(`${API_BASE_URL}/delayed-fees`);
+    if (!response.ok) {
+      throw new Error('Error al obtener las cuotas');
     }
     return response.json();
   },

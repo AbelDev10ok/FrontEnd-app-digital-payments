@@ -1,5 +1,7 @@
 import { CheckCircle, Loader2 } from "lucide-react";
-import { SaleResponseDto } from "../services/salesServices";
+import { SaleResponseDto, salesService } from "../services/salesServices";
+import { ModalPay } from "../components/pay/ModalPay";
+import { useState } from "react";
 
 interface CronogramaFeesProps{
     transaction: SaleResponseDto
@@ -7,12 +9,70 @@ interface CronogramaFeesProps{
     getStatusIcon: (status: string) => React.ReactNode;
     formatCurrency:(amount: number) => string;
     getStatusBadge: (status: string) => React.ReactNode;
-    handleMarkAsPaid:(feeId: number) => void;
-    processingFee: number | null;
+    refreshTransaction: () => Promise<void>;
 }
 
-export default function CronogramaFees({transaction, formatDate, getStatusIcon, formatCurrency, getStatusBadge, handleMarkAsPaid, processingFee}: CronogramaFeesProps ) {
-    return (
+
+export default function CronogramaFees({transaction, formatDate, getStatusIcon, formatCurrency, getStatusBadge, refreshTransaction}: CronogramaFeesProps ) {
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [selectedFee, setSelectedFee] = useState<{ id: number; amount: number; numberFee: number } | null>(null);
+    const [paymentAmount, setPaymentAmount] = useState('');
+    const [remainingDebt, setRemainingDebt] = useState(0);
+    const [processingFee, setProcessingFee] = useState<number | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const handlePaymentAmountChange = (value: string) => {
+    const numericValue = parseFloat(value) || 0;
+    setPaymentAmount(value);
+    if (selectedFee) {
+      setRemainingDebt(Math.max(0, selectedFee.amount - numericValue));
+    }
+  };
+
+    const openPaymentModal = (fee: { id: number; amount: number; numberFee: number }, remainingDebt: number) => {
+    const str = fee.amount != null ? fee.amount.toString() : '';
+    console.log(fee.amount)
+    setSelectedFee(fee);
+    setPaymentAmount(str);
+    setRemainingDebt(remainingDebt);
+    setShowPaymentModal(true);
+  };
+
+    
+
+    const handleConfirmPayment = async () => {
+      if (!selectedFee || !paymentAmount) return;
+      
+      try {
+        setProcessingFee(selectedFee.id);
+        await salesService.markFeeAsPaid(selectedFee.id, parseFloat(paymentAmount));
+        // Recargar datos
+        refreshTransaction();
+        closePaymentModal();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Error al marcar como pagada');
+      } finally {
+        setProcessingFee(null);
+      }
+    };
+    
+  
+  const closePaymentModal = () => {
+    setShowPaymentModal(false);
+    setSelectedFee(null);
+    setPaymentAmount('');
+    setRemainingDebt(0);
+  };
+
+
+
+  if(error){
+    return <div className="text-red-600">Error: {error}</div>;
+  }
+
+
+  return (
+    
         <section>
         {transaction.fees.length > 0 && (
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -80,18 +140,19 @@ export default function CronogramaFees({transaction, formatDate, getStatusIcon, 
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                         {!fee.paid && (
-                          <button
-                            onClick={() => handleMarkAsPaid(fee.id)}
-                            disabled={processingFee === fee.id}
-                            className="text-indigo-600 hover:text-indigo-900 disabled:opacity-50"
-                          >
-                            {processingFee === fee.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              'Marcar como pagada'
-                            )}
-                          </button>
+                              <button
+                                onClick={() => openPaymentModal({ id: fee.id, amount: transaction.amountFe , numberFee: fee.numberFee },transaction.remainingAmount)}
+                                disabled={processingFee === fee.id}
+                                className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                              >
+                                {processingFee === fee.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <CheckCircle className="w-4 h-4" />
+                                )}
+                              </button>
                         )}
+
                         {fee.paid && (
                           <span className="text-green-600 text-sm font-medium">
                             ✓ Completada
@@ -101,7 +162,21 @@ export default function CronogramaFees({transaction, formatDate, getStatusIcon, 
                     </tr>
                   ))}
                 </tbody>
+
               </table>
+                  {showPaymentModal && selectedFee && (
+                          <ModalPay 
+                            open={showPaymentModal}
+                            onClose={closePaymentModal}
+                            selectedFee={selectedFee}
+                            paymentAmount={paymentAmount}
+                            onPaymentAmountChange={handlePaymentAmountChange}
+                            remainingDebt={remainingDebt}
+                            onConfirm={handleConfirmPayment}
+                            processingFeeId={processingFee}
+                            formatCurrency={formatCurrency}
+                          />
+                  )}
             </div>
           </div>
         )}

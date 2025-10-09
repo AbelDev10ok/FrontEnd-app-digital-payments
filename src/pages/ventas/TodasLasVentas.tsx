@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/dashboard/DashBoardLayout';
-import { salesService, SaleResponseDto, ProductTypeDto } from '../../services/salesServices';
+import { salesService, SaleResponseDto } from '../../services/salesServices';
 import Load from '../../shared/Load';
 import ErrorMessage from '../../shared/ErrorMessage';
 import HeaderTransaction from '../../shared/HeaderTransaction';
@@ -16,17 +16,19 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
   const [sales, setSales] = useState<SaleResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
 
   const {
-    searchTerm,
-    setSearchTerm,
+    searchDescription,
+    setSearchDescription,
     selectedStatus,
     setSelectedStatus,
     selectedProductType,
     setSelectedProductType,
-    filteredSales
-  } = useSalesFilters(sales);
+    filteredSales,
+    fetchSalesByDescription,
+    productTypes,
+    setProductTypes
+    } = useSalesFilters({sales, setSales});
 
   const statusOptions = ['Todos', 'Completada', 'Pendiente', 'Atrasada'];
 
@@ -67,6 +69,14 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (searchDescription) {
+      fetchSalesByDescription(searchDescription);
+    } else {
+      fetchAllSales();
+    }
+  }, [searchDescription]);
 
   useEffect(() => {
     const fetchProductTypes = async () => {
@@ -159,8 +169,8 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
 
         {/* Search and Filters */}
         <SalesFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          searchTerm={searchDescription}
+          onSearchChange={setSearchDescription}
           selectedStatus={selectedStatus}
           onStatusChange={setSelectedStatus}
           selectedProductType={selectedProductType}
@@ -199,7 +209,7 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
                 {filteredSales.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                      {searchTerm || selectedStatus !== 'Todos' 
+                      {searchDescription || selectedStatus !== 'Todos' 
                         ? 'No se encontraron ventas que coincidan con los filtros' 
                         : 'No hay ventas registradas'}
                     </td>

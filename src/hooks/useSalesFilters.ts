@@ -1,17 +1,38 @@
 import { useState, useMemo } from 'react';
-import { SaleResponseDto } from '../services/salesServices';
+import { ProductTypeDto, SaleResponseDto, salesService } from '../services/salesServices';
 
-export const useSalesFilters = (sales: SaleResponseDto[]) => {
-  const [searchTerm, setSearchTerm] = useState('');
+
+interface UseSalesFiltersReturn {
+  sales: SaleResponseDto[];
+  setSales: React.Dispatch<React.SetStateAction<SaleResponseDto[]>>;
+}
+export const useSalesFilters= ({sales, setSales}: UseSalesFiltersReturn ) => {
+  const [searchDescription, setSearchDescription] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
   const [selectedProductType, setSelectedProductType] = useState('');
+  const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
+  
+
+
+  // fetch para obtener ventas por descripción
+  const fetchSalesByDescription = async (description: string) => {
+    try {
+      const [salesData] = await Promise.all([
+        salesService.getProductDescriptions(description),
+      ]);      
+
+      setSales(salesData);
+    } catch (error) {
+      console.error('Error fetching sales by description:', error);
+    }
+  };
+
 
   const filteredSales = useMemo(() => {
     return sales.filter(sale => {
       const searchMatch =
-        sale.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sale.descriptionProduct.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sale.id.toString().includes(searchTerm);
+        sale.descriptionProduct.toLowerCase().includes(searchDescription.toLowerCase()) ||
+        sale.id.toString().includes(searchDescription);
 
       const statusMatch = (() => {
         if (selectedStatus === 'Todos') return true;
@@ -27,15 +48,18 @@ export const useSalesFilters = (sales: SaleResponseDto[]) => {
 
       return searchMatch && statusMatch && productTypeMatch;
     });
-  }, [sales, searchTerm, selectedStatus, selectedProductType]);
+  }, [sales, searchDescription, selectedStatus, selectedProductType]);
 
   return {
-    searchTerm,
-    setSearchTerm,
+    searchDescription,
+    setSearchDescription,
     selectedStatus,
     setSelectedStatus,
     selectedProductType,
     setSelectedProductType,
-    filteredSales
+    filteredSales,
+    fetchSalesByDescription,
+    productTypes,
+    setProductTypes
   };
 };

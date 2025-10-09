@@ -17,10 +17,9 @@ import ErrorMessage from '../shared/ErrorMessage';
 
 const VentaDetalle: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [transaction, setTransaction] = useState<SaleResponseDto | null>(null);
+  const [transaction, setTransaction] = useState<SaleResponseDto>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [processingFee, setProcessingFee] = useState<number | null>(null);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -68,22 +67,12 @@ const VentaDetalle: React.FC = () => {
     );
   };
 
-  const handleMarkAsPaid = async (feeId: number) => {
+  const refreshTransaction = async () => {
     if (!transaction) return;
-    
-    try {
-      setProcessingFee(feeId);
-      await salesService.markFeeAsPaid(transaction.id, feeId);
-      
-      // Recargar los datos de la transacción
-      const updatedTransaction = await salesService.getSaleById(transaction.id);
-      setTransaction(updatedTransaction);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al marcar la cuota como pagada');
-    } finally {
-      setProcessingFee(null);
-    }
+    const updated = await salesService.getSaleById(transaction.id);
+    setTransaction(updated);
   };
+
 
   useEffect(() => {
     const fetchTransaction = async () => {
@@ -115,24 +104,6 @@ const VentaDetalle: React.FC = () => {
   if (error || !transaction) {
     return (
       <DashboardLayout title="Detalle de Transacción">
-        {/* <div className="space-y-6">
-          <div className="flex items-center space-x-3">
-            <Link
-              to="/dashboard/ventas"
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </Link>
-            <h2 className="text-xl font-semibold text-gray-900">Error</h2>
-          </div>
-          
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-            <div className="flex items-center text-red-800">
-              <AlertCircle className="w-5 h-5 mr-3" />
-              <span className="text-sm">{error || 'Transacción no encontrada'}</span>
-            </div>
-          </div>
-        </div> */}
         <ErrorMessage message={error ||'Error en la transaccion'} />
       </DashboardLayout>
     );
@@ -170,8 +141,7 @@ const VentaDetalle: React.FC = () => {
             getStatusIcon={getStatusIcon}
             formatCurrency={formatCurrency}
             getStatusBadge={getStatusBadge}
-            handleMarkAsPaid={handleMarkAsPaid}
-            processingFee={processingFee}
+            refreshTransaction={refreshTransaction}
         />
         </div>
       </DashboardLayout>
