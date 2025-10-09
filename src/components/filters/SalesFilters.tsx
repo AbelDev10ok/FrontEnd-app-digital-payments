@@ -4,6 +4,8 @@ import { ProductTypeDto } from '../../services/salesServices';
 interface SalesFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  searchClientName?: string;
+  onClientNameChange?: (value: string) => void;
   selectedStatus: string;
   onStatusChange: (value: string) => void;
   selectedProductType: string;
@@ -16,6 +18,8 @@ interface SalesFiltersProps {
 const SalesFilters = ({
   searchTerm,
   onSearchChange,
+  searchClientName = '',
+  onClientNameChange,
   selectedStatus,
   onStatusChange,
   selectedProductType,
@@ -25,8 +29,22 @@ const SalesFilters = ({
 }: SalesFiltersProps) => {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Búsqueda por nombre de cliente o descripción */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Búsqueda por nombre de cliente */}
+        {onClientNameChange && (
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Buscar por nombre cliente..."
+              value={searchClientName}
+              onChange={(e) => onClientNameChange(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            />
+          </div>
+        )}
+
+        {/* Búsqueda por descripción de producto */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input

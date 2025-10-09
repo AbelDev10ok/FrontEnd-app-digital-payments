@@ -98,8 +98,32 @@ export const salesService = {
   },
 
   // obtener cuotas a cobrar es decir cuotas atrasadas y cuotas de hoy
-  async getFeesDue(): Promise<SaleResponseDto[]> {
-    const response = await authenticatedFetch(`${API_BASE_URL}/delayed-fees`);
+  async getFeesDue(params?: {
+    date?: string;
+    clientName?: string;
+    descriptionProduct?: string;
+    status?: string;
+    productType?: string;
+  }): Promise<SaleResponseDto[]> {
+    const url = new URL(`${API_BASE_URL}/delayed-fees`);
+
+    if (params?.date) {
+      url.searchParams.append('date', params.date);
+    }
+    if (params?.clientName) {
+      url.searchParams.append('clientName', params.clientName);
+    }
+    if (params?.descriptionProduct) {
+      url.searchParams.append('descriptionProduct', params.descriptionProduct);
+    }
+    if (params?.status) {
+      url.searchParams.append('status', params.status);
+    }
+    if (params?.productType) {
+      url.searchParams.append('productType', params.productType);
+    }
+
+    const response = await authenticatedFetch(url.toString());
     if (!response.ok) {
       throw new Error('Error al obtener las cuotas');
     }

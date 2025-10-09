@@ -8,6 +8,7 @@ interface UseSalesFiltersReturn {
 }
 export const useSalesFilters= ({sales, setSales}: UseSalesFiltersReturn ) => {
   const [searchDescription, setSearchDescription] = useState('');
+  const [searchClientName, setSearchClientName] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
   const [selectedProductType, setSelectedProductType] = useState('');
   const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
@@ -34,6 +35,9 @@ export const useSalesFilters= ({sales, setSales}: UseSalesFiltersReturn ) => {
         sale.descriptionProduct.toLowerCase().includes(searchDescription.toLowerCase()) ||
         sale.id.toString().includes(searchDescription);
 
+      const clientNameMatch =
+        sale.client.name.toLowerCase().includes(searchClientName.toLowerCase());
+
       const statusMatch = (() => {
         if (selectedStatus === 'Todos') return true;
         if (selectedStatus === 'Completada') return sale.completed;
@@ -46,13 +50,15 @@ export const useSalesFilters= ({sales, setSales}: UseSalesFiltersReturn ) => {
         !selectedProductType ||
         sale.productType.id.toString() === selectedProductType;
 
-      return searchMatch && statusMatch && productTypeMatch;
+      return searchMatch && clientNameMatch && statusMatch && productTypeMatch;
     });
-  }, [sales, searchDescription, selectedStatus, selectedProductType]);
+  }, [sales, searchDescription, searchClientName, selectedStatus, selectedProductType]);
 
   return {
     searchDescription,
     setSearchDescription,
+    searchClientName,
+    setSearchClientName,
     selectedStatus,
     setSelectedStatus,
     selectedProductType,

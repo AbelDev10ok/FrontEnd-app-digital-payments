@@ -20,6 +20,8 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
   const {
     searchDescription,
     setSearchDescription,
+    searchClientName,
+    setSearchClientName,
     selectedStatus,
     setSelectedStatus,
     selectedProductType,
@@ -57,10 +59,38 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
     try {
       setLoading(true);
       setError(null);
-      // Aquí necesitarías un endpoint específico para todas las ventas
-      // Por ahora usamos el endpoint general
-      // const today = new Date().toISOString().split('T')[0];
-      const salesData = await salesService.getAllSales(transaction?'PRESTAMO':'VENTA');
+
+      const params: {
+        clientName?: string;
+        descriptionProduct?: string;
+        status?: string;
+        productType?: string;
+      } = {};
+
+      if (searchClientName) {
+        params.clientName = searchClientName;
+      }
+      if (searchDescription) {
+        params.descriptionProduct = searchDescription;
+      }
+      if (selectedStatus !== 'Todos') {
+        const statusMap: { [key: string]: string } = {
+          'Completada': 'COMPLETED',
+          'Pendiente': 'PENDING',
+          'Atrasada': 'DELAYED'
+        };
+        params.status = statusMap[selectedStatus];
+      }
+      if (selectedProductType) {
+        const productType = productTypes.find(pt => pt.id.toString() === selectedProductType);
+        if (productType) {
+          params.productType = productType.name;
+        }
+      }
+
+      params.productType = params.productType || (transaction ? 'PRESTAMO' : 'VENTA');
+
+      const salesData = await salesService.getFeesDue(params);
       setSales(salesData);
       console.log(salesData);
     } catch (err) {
@@ -71,12 +101,8 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
   };
 
   useEffect(() => {
-    if (searchDescription) {
-      fetchSalesByDescription(searchDescription);
-    } else {
-      fetchAllSales();
-    }
-  }, [searchDescription]);
+    fetchAllSales();
+  }, [searchDescription, searchClientName, selectedStatus, selectedProductType]);
 
   useEffect(() => {
     const fetchProductTypes = async () => {
@@ -171,6 +197,8 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
         <SalesFilters
           searchTerm={searchDescription}
           onSearchChange={setSearchDescription}
+          searchClientName={searchClientName}
+          onClientNameChange={setSearchClientName}
           selectedStatus={selectedStatus}
           onStatusChange={setSelectedStatus}
           selectedProductType={selectedProductType}
