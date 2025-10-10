@@ -17,18 +17,9 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const {
-    searchDescription,
-    setSearchDescription,
-    selectedStatus,
-    setSelectedStatus,
-    selectedProductType,
-    setSelectedProductType,
-    filteredSales,
-    fetchSalesByDescription,
-    productTypes,
-    setProductTypes
-    } = useSalesFilters({sales, setSales});
+  const [searchDescription, setSearchDescription] = useState('');
+  const [searchClientName, setSearchClientName] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('Todos');
 
   const statusOptions = ['Todos', 'Completada', 'Pendiente', 'Atrasada'];
 
@@ -53,14 +44,28 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
     return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>;
   };
 
-  const fetchAllSales = async () => {
+  const fetchSales = async () => {
     try {
       setLoading(true);
       setError(null);
-      // Aquí necesitarías un endpoint específico para todas las ventas
-      // Por ahora usamos el endpoint general
-      // const today = new Date().toISOString().split('T')[0];
-      const salesData = await salesService.getAllSales(transaction?'PRESTAMO':'VENTA');
+
+      const params: any = {};
+
+      if (searchDescription.trim()) {
+        params.descriptionProduct = searchDescription.trim();
+      }
+
+      if (searchClientName.trim()) {
+        params.clientName = searchClientName.trim();
+      }
+
+      if (selectedStatus !== 'Todos') {
+        params.status = selectedStatus.toUpperCase();
+      }
+
+      params.productType = transaction ? 'PRESTAMO' : 'VENTA';
+
+      const salesData = await salesService.getFeesDue(params);
       setSales(salesData);
       console.log(salesData);
     } catch (err) {
@@ -71,30 +76,16 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
   };
 
   useEffect(() => {
-    const fetchProductTypes = async () => {
-      try {
-        const types = await salesService.getProductTypes();
-        setProductTypes(types);
-      } catch (err) {
-        console.error('Error al cargar tipos de productos:', err);
-      }
-    };
-
-    fetchAllSales();
-    fetchProductTypes();
+    fetchSales();
   }, [transaction]);
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
-      if (searchDescription.trim()) {
-        fetchSalesByDescription(searchDescription);
-      } else {
-        fetchAllSales();
-      }
+      fetchSales();
     }, 500);
 
     return () => clearTimeout(debounceTimer);
-  }, [searchDescription]);
+  }, [searchDescription, searchClientName, selectedStatus]);
 
   if (loading) {
     return (
@@ -175,11 +166,13 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
         <SalesFilters
           searchTerm={searchDescription}
           onSearchChange={setSearchDescription}
+          searchClientName={searchClientName}
+          onClientNameChange={setSearchClientName}
           selectedStatus={selectedStatus}
           onStatusChange={setSelectedStatus}
-          selectedProductType={selectedProductType}
-          onProductTypeChange={setSelectedProductType}
-          productTypes={productTypes}
+          selectedProductType=""
+          onProductTypeChange={() => {}}
+          productTypes={[]}
           statusOptions={statusOptions}
         />
 
@@ -210,16 +203,16 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredSales.length === 0 ? (
+                {sales.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                      {searchDescription || selectedStatus !== 'Todos' 
-                        ? 'No se encontraron ventas que coincidan con los filtros' 
+                      {searchDescription || searchClientName || selectedStatus !== 'Todos'
+                        ? 'No se encontraron ventas que coincidan con los filtros'
                         : 'No hay ventas registradas'}
                     </td>
                   </tr>
                 ) : (
-                  filteredSales.map((sale) => (
+                  sales.map((sale) => (
                     <tr key={sale.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
