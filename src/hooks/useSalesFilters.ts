@@ -31,10 +31,6 @@ export const useSalesFilters= ({sales, setSales}: UseSalesFiltersReturn ) => {
 
   const filteredSales = useMemo(() => {
     return sales.filter(sale => {
-      const searchMatch =
-        sale.descriptionProduct.toLowerCase().includes(searchDescription.toLowerCase()) ||
-        sale.id.toString().includes(searchDescription);
-
       const clientNameMatch =
         sale.client.name.toLowerCase().includes(searchClientName.toLowerCase());
 
@@ -50,9 +46,9 @@ export const useSalesFilters= ({sales, setSales}: UseSalesFiltersReturn ) => {
         !selectedProductType ||
         sale.productType.id.toString() === selectedProductType;
 
-      return searchMatch && clientNameMatch && statusMatch && productTypeMatch;
+      return clientNameMatch && statusMatch && productTypeMatch;
     });
-  }, [sales, searchDescription, searchClientName, selectedStatus, selectedProductType]);
+  }, [sales, searchClientName, selectedStatus, selectedProductType]);
 
   return {
     searchDescription,

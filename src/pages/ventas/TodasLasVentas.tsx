@@ -84,6 +84,18 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
     fetchProductTypes();
   }, [transaction]);
 
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (searchDescription.trim()) {
+        fetchSalesByDescription(searchDescription);
+      } else {
+        fetchAllSales();
+      }
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchDescription]);
+
   if (loading) {
     return (
       <DashboardLayout title="Todas las Ventas">
