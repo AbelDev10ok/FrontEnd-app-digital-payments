@@ -71,14 +71,6 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
   };
 
   useEffect(() => {
-    if (searchDescription) {
-      fetchSalesByDescription(searchDescription);
-    } else {
-      fetchAllSales();
-    }
-  }, [searchDescription]);
-
-  useEffect(() => {
     const fetchProductTypes = async () => {
       try {
         const types = await salesService.getProductTypes();
