@@ -8,11 +8,11 @@ import HeaderTransaction from '../../shared/HeaderTransaction';
 import SalesFilters from '../../components/filters/SalesFilters';
 import { useSalesFilters } from '../../hooks/useSalesFilters';
 
-interface TodasLasVentasProps {
-  transaction?: string;
-}
+// interface TodasLasVentasProps {
+//   transaction?: string;
+// }
 
-const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
+const TodasLasVentas = () => {
   const [sales, setSales] = useState<SaleResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +21,7 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
   const [searchClientName, setSearchClientName] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
 
-  const statusOptions = ['Todos', 'Completada', 'Pendiente', 'Atrasada'];
+  const statusOptions = ['Todos', 'COMPLETED', 'ACTIVE', 'CANCELED'];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -49,6 +49,7 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
       setLoading(true);
       setError(null);
 
+
       const params: any = {};
 
       if (searchDescription.trim()) {
@@ -63,7 +64,7 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
         params.status = selectedStatus.toUpperCase();
       }
 
-      params.productType = transaction ? 'PRESTAMO' : 'VENTA';
+      params.productType = 'Todos';
 
       const salesData = await salesService.getFeesDue(params);
       setSales(salesData);
@@ -77,7 +78,7 @@ const TodasLasVentas = ({transaction}: TodasLasVentasProps = {}) => {
 
   useEffect(() => {
     fetchSales();
-  }, [transaction]);
+  }, []);
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {

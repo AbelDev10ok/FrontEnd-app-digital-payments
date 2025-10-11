@@ -107,9 +107,18 @@ export const salesService = {
   }): Promise<SaleResponseDto[]> {
     const url = new URL(`${API_BASE_URL}/delayed-fees`);
 
-    if (params?.date) {
-      url.searchParams.append('date', params.date);
+    // si no tengo fecha uso la actual
+    if (!params?.date) {
+      const today = new Date();
+
+      console.log("No date param, using today's date: " + today.toISOString().split('T')[0]);
+  
+      url.searchParams.append('date', today.toISOString().split('T')[0]);
+    }else{
+            url.searchParams.append('date', params.date);
+      console.log("date param: " + params.date);
     }
+
     if (params?.clientName) {
       url.searchParams.append('clientName', params.clientName);
     }

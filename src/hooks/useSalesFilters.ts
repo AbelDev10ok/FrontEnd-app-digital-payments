@@ -36,9 +36,9 @@ export const useSalesFilters= ({sales, setSales}: UseSalesFiltersReturn ) => {
 
       const statusMatch = (() => {
         if (selectedStatus === 'Todos') return true;
-        if (selectedStatus === 'Completada') return sale.completed;
-        if (selectedStatus === 'Pendiente') return !sale.completed && sale.daysLate === 0;
-        if (selectedStatus === 'Atrasada') return !sale.completed && sale.daysLate > 0;
+        if (selectedStatus === 'COMPLETED') return sale.completed;
+        if (selectedStatus === 'ACTIVE') return !sale.completed && sale.daysLate === 0;
+        if (selectedStatus === 'CANCELED') return !sale.completed && sale.daysLate > 0;
         return true;
       })();
 

@@ -25,7 +25,7 @@ const SalesFilters = ({
   selectedProductType,
   onProductTypeChange,
   productTypes,
-  statusOptions = ['Todos', 'Completada', 'Pendiente', 'Atrasada'],
+  statusOptions = ['Todos', 'COMPLETED', 'ACTIVE', 'CANCELED'],
 }: SalesFiltersProps) => {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
