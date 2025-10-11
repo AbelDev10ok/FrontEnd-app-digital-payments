@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/dashboard/DashBoardLayout';
 import { salesService, SaleResponseDto } from '../../services/salesServices';
@@ -44,11 +44,14 @@ const TodasLasVentas = () => {
     return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>;
   };
 
+  const isInitialLoad = useRef(true);
+
   const fetchSales = async () => {
     try {
-      setLoading(true);
+      if (isInitialLoad.current) {
+        setLoading(true);
+      }
       setError(null);
-
 
       const params: any = {};
 
@@ -72,7 +75,10 @@ const TodasLasVentas = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar las ventas');
     } finally {
-      setLoading(false);
+      if (isInitialLoad.current) {
+        setLoading(false);
+        isInitialLoad.current = false;
+      }
     }
   };
 
