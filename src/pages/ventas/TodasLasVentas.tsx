@@ -78,14 +78,6 @@ const TodasLasVentas = () => {
 
   useEffect(() => {
     fetchSales();
-  }, []);
-
-  useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      fetchSales();
-    }, 500);
-
-    return () => clearTimeout(debounceTimer);
   }, [searchDescription, searchClientName, selectedStatus]);
 
   if (loading) {

@@ -1,5 +1,6 @@
 import { Search } from 'lucide-react';
 import { ProductTypeDto } from '../../services/salesServices';
+import { DebouncedInput } from './DebouncedInput';
 
 interface SalesFiltersProps {
   searchTerm: string;
@@ -33,12 +34,11 @@ const SalesFilters = ({
         {/* Búsqueda por nombre de cliente */}
         {onClientNameChange && (
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Buscar por nombre cliente..."
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
+            <DebouncedInput
               value={searchClientName}
-              onChange={(e) => onClientNameChange(e.target.value)}
+              onChange={onClientNameChange}
+              placeholder="Buscar por nombre cliente..."
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             />
           </div>
@@ -46,12 +46,11 @@ const SalesFilters = ({
 
         {/* Búsqueda por descripción de producto */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Buscar por descripcion producto..."
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
+          <DebouncedInput
             value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={onSearchChange}
+            placeholder="Buscar por descripcion producto..."
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
           />
         </div>
