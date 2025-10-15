@@ -1,36 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Loader2, AlertCircle, CheckCircle} from 'lucide-react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/dashboard/DashBoardLayout';
-import { salesService, SaleResponseDto, ProductTypeDto } from '../../services/salesServices';
-import { ModalPay } from '../../components/pay/ModalPay';
+import { salesService, SaleResponseDto } from '../../services/salesServices';
+import Load from '../../shared/Load';
+import ErrorMessage from '../../shared/ErrorMessage';
+import HeaderTransaction from '../../shared/HeaderTransaction';
 import SalesFilters from '../../components/filters/SalesFilters';
 import { useSalesFilters } from '../../hooks/useSalesFilters';
 
-const VentasACobrarHoy: React.FC = () => {
+const VentasACobrarHoy = () => {
   const [sales, setSales] = useState<SaleResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [processingFee, setProcessingFee] = useState<number | null>(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedFee, setSelectedFee] = useState<{ id: number; amount: number; numberFee: number } | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [remainingDebt, setRemainingDebt] = useState(0);
-  const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
+
+  // const [searchDescription, setSearchDescription] = useState('');
+  // const [searchClientName, setSearchClientName] = useState('');
+  // const [selectedStatus, setSelectedStatus] = useState('Todos');
 
   const {
+    searchClientName,
+    setSearchClientName,
     searchDescription,
     setSearchDescription,
     selectedStatus,
     setSelectedStatus,
+    productTypes,
+    setProductTypes,
     selectedProductType,
-    setSelectedProductType,
-    filteredSales
-  } = useSalesFilters({ sales ,setSales});
+    setSelectedProductType
+  } = useSalesFilters();
 
-  // mostras un console log del valor de fee.amount cuando se abre el modal de pago
-  // para verificar que no sea null o undefined
-  // y si lo es, manejar el error adecuadamente
-  console.log("selectedFee amount:", sales);
+  const statusOptions = ['Todos', 'COMPLETED', 'ACTIVE', 'CANCELED'];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -43,88 +44,84 @@ const VentasACobrarHoy: React.FC = () => {
     return new Date(dateString).toLocaleDateString('es-ES');
   };
 
-  const openPaymentModal = (fee: { id: number; amount: number; numberFee: number }, remainingDebt: number) => {
-      const str = fee.amount != null ? fee.amount.toString() : '';
-      console.log(fee.amount)
-    setSelectedFee(fee);
-    setPaymentAmount(str);
-    setRemainingDebt(remainingDebt);
-    setShowPaymentModal(true);
-  };
-
-  const closePaymentModal = () => {
-    setShowPaymentModal(false);
-    setSelectedFee(null);
-    setPaymentAmount('');
-    setRemainingDebt(0);
-  };
-
-  const handlePaymentAmountChange = (value: string) => {
-    const numericValue = parseFloat(value) || 0;
-    setPaymentAmount(value);
-    if (selectedFee) {
-      setRemainingDebt(Math.max(0, selectedFee.amount - numericValue));
+  const getStatusBadge = (transaction: SaleResponseDto) => {
+    if (transaction.completed) {
+      return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Completada</span>;
     }
-  };
-
-  const handleConfirmPayment = async () => {
-    if (!selectedFee || !paymentAmount) return;
-    
-    try {
-      setProcessingFee(selectedFee.id);
-      await salesService.markFeeAsPaid(selectedFee.id, parseFloat(paymentAmount));
-      // Recargar datos
-      await fetchSalesToday();
-      closePaymentModal();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al marcar como pagada');
-    } finally {
-      setProcessingFee(null);
+    if (transaction.daysLate > 0) {
+      return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Atrasada ({transaction.daysLate}d)</span>;
     }
+    return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>;
   };
 
-  const fetchSalesToday = async () => {
+  const isInitialLoad = useRef(true);
+
+  const fetchSales = async () => {
     try {
-      setLoading(true);
+      if (isInitialLoad.current) {
+        setLoading(true);
+      }
       setError(null);
-      // Obtener fecha local de Argentina en formato YYYY-MM-DD
-      // const todayDate = new Date();
-      // const today = todayDate.getFullYear() + '-' +
-      //   String(todayDate.getMonth() + 1).padStart(2, '0') + '-' +
-      //   String(todayDate.getDate()).padStart(2, '0');
-      // console.log("Hoy es (local Argentina): "+today);
-      const salesData = await salesService.getFeesDue();
+
+      const params: any = {};
+
+      if (searchDescription.trim()) {
+        params.descriptionProduct = searchDescription.trim();
+      }
+
+      if (searchClientName.trim()) {
+        params.clientName = searchClientName.trim();
+      }
+
+      if (selectedStatus !== 'Todos') {
+        params.status = selectedStatus.toUpperCase();
+      }
+
+      if (selectedProductType) {
+        params.productType = selectedProductType;
+      } else {
+        // No lo envíes, o ponlo como null/"" según lo que espera tu backend
+        params.productType = null; // Si tu backend interpreta null como "todos"
+        // O simplemente no lo agregues al objeto params
+      }
+      const salesData = await salesService.getFeesDue(params);
       setSales(salesData);
+      console.log(salesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar las ventas');
     } finally {
-      setLoading(false);
+      if (isInitialLoad.current) {
+        setLoading(false);
+        isInitialLoad.current = false;
+      }
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
     const fetchProductTypes = async () => {
       try {
         const types = await salesService.getProductTypes();
         setProductTypes(types);
-      } catch (err) {
-        console.error('Error al cargar tipos de productos:', err);
+        console.log("types", types); // <-- esto sí muestra el array de objetos en la consola
+        console.log("productTypes", productTypes);
+      } catch (error) {
+        console.error('Error fetching product types:', error);
       }
     };
 
-    fetchSalesToday();
     fetchProductTypes();
-  }, []);
+}, []);
+
+
+  useEffect(() => {
+    console.log("Fetching sales with filters:", { searchDescription, searchClientName, selectedStatus, productTypes });
+    fetchSales();
+  }, [searchDescription, searchClientName, selectedStatus, selectedProductType, productTypes]);
 
   if (loading) {
     return (
       <DashboardLayout title="Ventas a Cobrar Hoy">
-        <div className="flex items-center justify-center h-64">
-          <div className="flex items-center space-x-3">
-            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-            <span className="text-gray-600">Cargando ventas...</span>
-          </div>
-        </div>
+        <Load />
       </DashboardLayout>
     );
   }
@@ -132,157 +129,118 @@ const VentasACobrarHoy: React.FC = () => {
   return (
     <DashboardLayout title="Ventas a Cobrar Hoy">
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center space-x-3">
-          <Calendar className="w-8 h-8 text-green-600" />
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Ventas a Cobrar Hoy</h2>
-            <p className="text-sm text-gray-500">{new Date().toLocaleDateString('es-ES')}</p>
-          </div>
-        </div>
-
-        {/* Error Message */}
+        <HeaderTransaction title="Cobranza" />
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-            <div className="flex items-center text-red-800">
-              <AlertCircle className="w-5 h-5 mr-3" />
-              <span className="text-sm">{error}</span>
-            </div>
-          </div>
+          <ErrorMessage message={error} />
         )}
 
-        {/* Filters */}
         <SalesFilters
           searchTerm={searchDescription}
           onSearchChange={setSearchDescription}
+          searchClientName={searchClientName}
+          onClientNameChange={setSearchClientName}
           selectedStatus={selectedStatus}
           onStatusChange={setSelectedStatus}
-          selectedProductType={selectedProductType}
-          onProductTypeChange={setSelectedProductType}
-          productTypes={productTypes}
-          statusOptions={['Todos', 'Completada', 'Pendiente', 'Atrasada']}
+          selectedProductType={selectedProductType} // <-- usa el estado del hook
+          onProductTypeChange={setSelectedProductType} // <-- usa el setter del hook
+          productTypes={productTypes} // <-- pasa el array del hook
+          statusOptions={statusOptions}
         />
 
-        {/* Stats */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Ventas Hoy</p>
-                <p className="text-2xl font-bold text-gray-900">{filteredSales.length}</p>
-              </div>
-              <div className="bg-green-50 p-3 rounded-xl">
-                <Calendar className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Monto Total</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(filteredSales.reduce((sum, sale) => sum + sale.priceTotal, 0))}
-                </p>
-              </div>
-              <div className="bg-blue-50 p-3 rounded-xl">
-                <DollarSign className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pendiente Cobro</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(filteredSales.reduce((sum, sale) => sum + sale.remainingAmount, 0))}
-                </p>
-              </div>
-              <div className="bg-orange-50 p-3 rounded-xl">
-                <Clock className="w-6 h-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-        </div> */}
-
-        {/* Sales List */}
+        {/* Sales Table */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Ventas del Día</h3>
-            {filteredSales.length === 0 ? (
-              <div className="text-center py-8">
-                <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">
-                  {searchDescription || selectedStatus !== 'Todos' || selectedProductType
-                    ? 'No se encontraron ventas que coincidan con los filtros'
-                    : 'No hay ventas para cobrar hoy'}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredSales.map((sale) => (
-                  <div key={sale.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Venta #{sale.id}</h4>
-                        <p className="text-sm text-gray-600">{sale.client.name}</p>
-                        <p className="text-sm text-gray-500">{sale.descriptionProduct}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-gray-900">{formatCurrency(sale.priceTotal)}</p>
-                        <p className="text-sm text-orange-600">Pendiente: {formatCurrency(sale.remainingAmount)}</p>
-                      </div>
-                    </div>
-                    
-                    {/* Cuotas pendientes */}
-                    {sale.fees && sale.fees.length > 0 && (
-                      <div className="space-y-2">
-                        {sale.fees.filter(fee => !fee.paid).map((fee) => (
-                          <div key={fee.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                            <div>
-                              <span className="text-sm font-medium">Cuota {fee.numberFee}</span>
-                              <span className="text-sm text-gray-500 ml-2">{formatDate(fee.expirationDate)}</span>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Venta
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Cliente
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Monto
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Progreso
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Estado
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {sales.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                      {searchDescription || searchClientName || selectedStatus !== 'Todos'
+                        ? 'No se encontraron ventas que coincidan con los filtros'
+                        : 'No hay ventas registradas'}
+                    </td>
+                  </tr>
+                ) : (
+                  sales.map((sale) => (
+                    <tr key={sale.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
+                            <span className="text-white font-medium text-sm">#{sale.id}</span>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{sale.descriptionProduct}</div>
+                            <div className="text-sm text-gray-500">{formatDate(sale.dateSale)}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{sale.client.name}</div>
+                        <div className="text-sm text-gray-500">{sale.client.telefono}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{formatCurrency(sale.priceTotal)}</div>
+                        {!sale.completed && (
+                          <div className="text-sm text-gray-500">Pendiente: {formatCurrency(sale.remainingAmount)}</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {sale.typePayments !== 'UNICO' ? (
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {sale.paidFeesCount}/{sale.totalFees} cuotas
                             </div>
-                            <div className="flex items-center space-x-3">
-                              <span className="font-medium">{formatCurrency(fee.amount)}</span>
-                              <button
-                                onClick={() => openPaymentModal({ id: fee.id, amount: sale.amountFe , numberFee: fee.numberFee },sale.remainingAmount)}
-                                disabled={processingFee === fee.id}
-                                className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                              >
-                                {processingFee === fee.id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <CheckCircle className="w-4 h-4" />
-                                )}
-                              </button>
+                            <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                              <div 
+                                className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${(sale.paidFeesCount / sale.totalFees) * 100}%` }}
+                              ></div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+                        ) : (
+                          <span className="text-sm text-gray-500">Pago único</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(sale)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <Link 
+                          to={`/dashboard/ventas/${sale.id}`}
+                          className="text-green-600 hover:text-green-900 mr-4"
+                        >
+                          Ver
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-
-        {/* Payment Modal */}
-        {showPaymentModal && selectedFee && (
-          <ModalPay 
-            open={showPaymentModal}
-            onClose={closePaymentModal}
-            selectedFee={selectedFee}
-            paymentAmount={paymentAmount}
-            onPaymentAmountChange={handlePaymentAmountChange}
-            remainingDebt={remainingDebt}
-            onConfirm={handleConfirmPayment}
-            processingFeeId={processingFee}
-            formatCurrency={formatCurrency}
-          />
-        )}
       </div>
     </DashboardLayout>
   );

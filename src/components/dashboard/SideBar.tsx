@@ -11,9 +11,10 @@ import {
   Eye,
   Plus,
   // CreditCard,
-  Clock,
-  AlertTriangle,
-  Calendar} from 'lucide-react';
+  // Clock,
+  // AlertTriangle,
+  // Calendar
+} from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -51,37 +52,38 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       ]
     },
     {
-      title: 'Ventas',
+      title: 'Cobrar',
       icon: ShoppingCart,
       hasSubmenu: true,
       expanded: ventasExpanded,
       onToggle: () => setVentasExpanded(!ventasExpanded),
       submenu: [
         {
-          title: 'Todas las Ventas',
+          title: 'Ventas a cobrar',
           icon: Eye,
-          path: '/dashboard/ventas/todas'
-        },
-        {
-          title: 'Ventas a Cobrar Hoy',
-          icon: Calendar,
           path: '/dashboard/ventas/cobrar-hoy'
-        },
-        {
-          title: 'Ventas Atrasadas',
-          icon: AlertTriangle,
-          path: '/dashboard/ventas/atrasadas'
-        },
-        {
-          title: 'Cuotas Atrasadas',
-          icon: Clock,
-          path: '/dashboard/ventas/cuotas-atrasadas'
-        },
-        {
-          title: 'Nueva Venta',
-          icon: Plus,
-          path: '/dashboard/ventas/crear'
         }
+        // ,
+        // {
+        //   title: 'Ventas a Cobrar Hoy',
+        //   icon: Calendar,
+        //   path: '/dashboard/ventas/cobrar-hoy'
+        // },
+        // {
+        //   title: 'Ventas Atrasadas',
+        //   icon: AlertTriangle,
+        //   path: '/dashboard/ventas/atrasadas'
+        // },
+        // {
+        //   title: 'Cuotas Atrasadas',
+        //   icon: Clock,
+        //   path: '/dashboard/ventas/cuotas-atrasadas'
+        // }
+        // {
+        //   title: 'Nueva Venta',
+        //   icon: Plus,
+        //   path: '/dashboard/ventas/crear'
+        // }
         // ,
         // {
         //   title: 'Nuevo Préstamo',
@@ -90,6 +92,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         // }
       ]
     },
+    {
+      title: 'Nueva Venta',
+      icon: Plus,
+      path: '/dashboard/ventas/crear'
+    }
 
   ];
 

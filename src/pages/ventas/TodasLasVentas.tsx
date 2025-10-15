@@ -1,27 +1,36 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Loader2, AlertCircle, CheckCircle} from 'lucide-react';
 import DashboardLayout from '../../components/dashboard/DashBoardLayout';
-import { salesService, SaleResponseDto } from '../../services/salesServices';
-import Load from '../../shared/Load';
-import ErrorMessage from '../../shared/ErrorMessage';
-import HeaderTransaction from '../../shared/HeaderTransaction';
+import { salesService, SaleResponseDto, ProductTypeDto } from '../../services/salesServices';
+import { ModalPay } from '../../components/pay/ModalPay';
 import SalesFilters from '../../components/filters/SalesFilters';
 import { useSalesFilters } from '../../hooks/useSalesFilters';
 
-// interface TodasLasVentasProps {
-//   transaction?: string;
-// }
-
-const TodasLasVentas = () => {
+const TodasLasVentas: React.FC = () => {
   const [sales, setSales] = useState<SaleResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [processingFee, setProcessingFee] = useState<number | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedFee, setSelectedFee] = useState<{ id: number; amount: number; numberFee: number } | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [remainingDebt, setRemainingDebt] = useState(0);
+  const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
 
-  const [searchDescription, setSearchDescription] = useState('');
-  const [searchClientName, setSearchClientName] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('Todos');
+  const {
+    searchDescription,
+    setSearchDescription,
+    selectedStatus,
+    setSelectedStatus,
+    selectedProductType,
+    setSelectedProductType,
+  
+  } = useSalesFilters();
 
-  const statusOptions = ['Todos', 'COMPLETED', 'ACTIVE', 'CANCELED'];
+  // mostras un console log del valor de fee.amount cuando se abre el modal de pago
+  // para verificar que no sea null o undefined
+  // y si lo es, manejar el error adecuadamente
+  console.log("selectedFee amount:", sales);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -34,86 +43,136 @@ const TodasLasVentas = () => {
     return new Date(dateString).toLocaleDateString('es-ES');
   };
 
-  const getStatusBadge = (transaction: SaleResponseDto) => {
-    if (transaction.completed) {
-      return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Completada</span>;
-    }
-    if (transaction.daysLate > 0) {
-      return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Atrasada ({transaction.daysLate}d)</span>;
-    }
-    return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>;
+  const openPaymentModal = (fee: { id: number; amount: number; numberFee: number }, remainingDebt: number) => {
+      const str = fee.amount != null ? fee.amount.toString() : '';
+      console.log(fee.amount)
+    setSelectedFee(fee);
+    setPaymentAmount(str);
+    setRemainingDebt(remainingDebt);
+    setShowPaymentModal(true);
   };
 
-  const isInitialLoad = useRef(true);
+  const closePaymentModal = () => {
+    setShowPaymentModal(false);
+    setSelectedFee(null);
+    setPaymentAmount('');
+    setRemainingDebt(0);
+  };
 
-  const fetchSales = async () => {
+  const handlePaymentAmountChange = (value: string) => {
+    const numericValue = parseFloat(value) || 0;
+    setPaymentAmount(value);
+    if (selectedFee) {
+      setRemainingDebt(Math.max(0, selectedFee.amount - numericValue));
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!selectedFee || !paymentAmount) return;
+    
     try {
-      if (isInitialLoad.current) {
-        setLoading(true);
-      }
+      setProcessingFee(selectedFee.id);
+      await salesService.markFeeAsPaid(selectedFee.id, parseFloat(paymentAmount));
+      // Recargar datos
+      await fetchSalesToday();
+      closePaymentModal();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al marcar como pagada');
+    } finally {
+      setProcessingFee(null);
+    }
+  };
+
+  const fetchSalesToday = async () => {
+    try {
+      setLoading(true);
       setError(null);
-
-      const params: any = {};
-
-      if (searchDescription.trim()) {
-        params.descriptionProduct = searchDescription.trim();
-      }
-
-      if (searchClientName.trim()) {
-        params.clientName = searchClientName.trim();
-      }
-
-      if (selectedStatus !== 'Todos') {
-        params.status = selectedStatus.toUpperCase();
-      }
-
-      params.productType = 'Todos';
-
-      const salesData = await salesService.getFeesDue(params);
+      // Obtener fecha local de Argentina en formato YYYY-MM-DD
+      // const todayDate = new Date();
+      // const today = todayDate.getFullYear() + '-' +
+      //   String(todayDate.getMonth() + 1).padStart(2, '0') + '-' +
+      //   String(todayDate.getDate()).padStart(2, '0');
+      // console.log("Hoy es (local Argentina): "+today);
+      const salesData = await salesService.getFeesDue();
       setSales(salesData);
-      console.log(salesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar las ventas');
     } finally {
-      if (isInitialLoad.current) {
-        setLoading(false);
-        isInitialLoad.current = false;
-      }
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSales();
-  }, [searchDescription, searchClientName, selectedStatus]);
+    const fetchProductTypes = async () => {
+      try {
+        const types = await salesService.getProductTypes();
+        setProductTypes(types);
+      } catch (err) {
+        console.error('Error al cargar tipos de productos:', err);
+      }
+    };
+
+    fetchSalesToday();
+    fetchProductTypes();
+  }, []);
 
   if (loading) {
     return (
-      <DashboardLayout title="Todas las Ventas">
-        <Load />
+      <DashboardLayout title="Ultimas Ventas">
+        <div className="flex items-center justify-center h-64">
+          <div className="flex items-center space-x-3">
+            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+            <span className="text-gray-600">Cargando ventas...</span>
+          </div>
+        </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout title="Todas las Ventas">
+    <DashboardLayout title="Ultimas Ventas">
       <div className="space-y-6">
         {/* Header */}
-        <HeaderTransaction title="Todas las Ventas" />
+        <div className="flex items-center space-x-3">
+          <Calendar className="w-8 h-8 text-green-600" />
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Ultimas ventas</h2>
+            <p className="text-sm text-gray-500">{new Date().toLocaleDateString('es-ES')}</p>
+          </div>
+        </div>
+
         {/* Error Message */}
         {error && (
-          <ErrorMessage message={error} />
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="flex items-center text-red-800">
+              <AlertCircle className="w-5 h-5 mr-3" />
+              <span className="text-sm">{error}</span>
+            </div>
+          </div>
         )}
 
+        {/* Filters */}
+        <SalesFilters
+          searchTerm={searchDescription}
+          onSearchChange={setSearchDescription}
+          selectedStatus={selectedStatus}
+          onStatusChange={setSelectedStatus}
+          selectedProductType={selectedProductType}
+          onProductTypeChange={setSelectedProductType}
+          productTypes={productTypes}
+          statusOptions={['Todos', 'Completada', 'Pendiente', 'Atrasada']}
+        />
+
         {/* Stats */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Ventas</p>
-                <p className="text-2xl font-bold text-gray-900">{sales.length}</p>
+                <p className="text-sm font-medium text-gray-600">Total Ventas Hoy</p>
+                <p className="text-2xl font-bold text-gray-900">{filteredSales.length}</p>
               </div>
               <div className="bg-green-50 p-3 rounded-xl">
-                <TrendingUp className="w-6 h-6 text-green-600" />
+                <Calendar className="w-6 h-6 text-green-600" />
               </div>
             </div>
           </div>
@@ -121,27 +180,13 @@ const TodasLasVentas = () => {
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Completadas</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {sales.filter(s => s.completed).length}
+                <p className="text-sm font-medium text-gray-600">Monto Total</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatCurrency(filteredSales.reduce((sum, sale) => sum + sale.priceTotal, 0))}
                 </p>
               </div>
-              <div className="bg-green-50 p-3 rounded-xl">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Ingresos Totales</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatCurrency(sales.filter(s => s.completed).reduce((sum, s) => sum + s.priceTotal, 0))}
-                </p>
-              </div>
-              <div className="bg-green-50 p-3 rounded-xl">
-                <DollarSign className="w-6 h-6 text-green-600" />
+              <div className="bg-blue-50 p-3 rounded-xl">
+                <DollarSign className="w-6 h-6 text-blue-600" />
               </div>
             </div>
           </div>
@@ -150,8 +195,8 @@ const TodasLasVentas = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Pendiente Cobro</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {formatCurrency(sales.reduce((sum, s) => sum + s.remainingAmount, 0))}
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatCurrency(filteredSales.reduce((sum, sale) => sum + sale.remainingAmount, 0))}
                 </p>
               </div>
               <div className="bg-orange-50 p-3 rounded-xl">
@@ -161,114 +206,83 @@ const TodasLasVentas = () => {
           </div>
         </div> */}
 
-        {/* Search and Filters */}
-        <SalesFilters
-          searchTerm={searchDescription}
-          onSearchChange={setSearchDescription}
-          searchClientName={searchClientName}
-          onClientNameChange={setSearchClientName}
-          selectedStatus={selectedStatus}
-          onStatusChange={setSelectedStatus}
-          selectedProductType=""
-          onProductTypeChange={() => {}}
-          productTypes={[]}
-          statusOptions={statusOptions}
-        />
-
-        {/* Sales Table */}
+        {/* Sales List */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Venta
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cliente
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Monto
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Progreso
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {sales.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                      {searchDescription || searchClientName || selectedStatus !== 'Todos'
-                        ? 'No se encontraron ventas que coincidan con los filtros'
-                        : 'No hay ventas registradas'}
-                    </td>
-                  </tr>
-                ) : (
-                  sales.map((sale) => (
-                    <tr key={sale.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
-                            <span className="text-white font-medium text-sm">#{sale.id}</span>
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{sale.descriptionProduct}</div>
-                            <div className="text-sm text-gray-500">{formatDate(sale.dateSale)}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{sale.client.name}</div>
-                        <div className="text-sm text-gray-500">{sale.client.telefono}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{formatCurrency(sale.priceTotal)}</div>
-                        {!sale.completed && (
-                          <div className="text-sm text-gray-500">Pendiente: {formatCurrency(sale.remainingAmount)}</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {sale.typePayments !== 'UNICO' ? (
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {sale.paidFeesCount}/{sale.totalFees} cuotas
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Ventas del Día</h3>
+            {sales.length === 0 ? (
+              <div className="text-center py-8">
+                <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">
+                  {searchDescription || selectedStatus !== 'Todos' || selectedProductType
+                    ? 'No se encontraron ventas que coincidan con los filtros'
+                    : 'No hay ventas para cobrar hoy'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {sales.map((sale) => (
+                  <div key={sale.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-medium text-gray-900">Venta #{sale.id}</h4>
+                        <p className="text-sm text-gray-600">{sale.client.name}</p>
+                        <p className="text-sm text-gray-500">{sale.descriptionProduct}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-900">{formatCurrency(sale.priceTotal)}</p>
+                        <p className="text-sm text-orange-600">Pendiente: {formatCurrency(sale.remainingAmount)}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Cuotas pendientes */}
+                    {sale.fees && sale.fees.length > 0 && (
+                      <div className="space-y-2">
+                        {sale.fees.filter(fee => !fee.paid).map((fee) => (
+                          <div key={fee.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                            <div>
+                              <span className="text-sm font-medium">Cuota {fee.numberFee}</span>
+                              <span className="text-sm text-gray-500 ml-2">{formatDate(fee.expirationDate)}</span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                              <div 
-                                className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                                style={{ width: `${(sale.paidFeesCount / sale.totalFees) * 100}%` }}
-                              ></div>
+                            <div className="flex items-center space-x-3">
+                              <span className="font-medium">{formatCurrency(fee.amount)}</span>
+                              <button
+                                onClick={() => openPaymentModal({ id: fee.id, amount: sale.amountFe , numberFee: fee.numberFee },sale.remainingAmount)}
+                                disabled={processingFee === fee.id}
+                                className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                              >
+                                {processingFee === fee.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <CheckCircle className="w-4 h-4" />
+                                )}
+                              </button>
                             </div>
                           </div>
-                        ) : (
-                          <span className="text-sm text-gray-500">Pago único</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(sale)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <Link 
-                          to={`/dashboard/ventas/${sale.id}`}
-                          className="text-green-600 hover:text-green-900 mr-4"
-                        >
-                          Ver
-                        </Link>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Payment Modal */}
+        {showPaymentModal && selectedFee && (
+          <ModalPay 
+            open={showPaymentModal}
+            onClose={closePaymentModal}
+            selectedFee={selectedFee}
+            paymentAmount={paymentAmount}
+            onPaymentAmountChange={handlePaymentAmountChange}
+            remainingDebt={remainingDebt}
+            onConfirm={handleConfirmPayment}
+            processingFeeId={processingFee}
+            formatCurrency={formatCurrency}
+          />
+        )}
       </div>
     </DashboardLayout>
   );

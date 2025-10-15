@@ -107,6 +107,8 @@ export const salesService = {
   }): Promise<SaleResponseDto[]> {
     const url = new URL(`${API_BASE_URL}/delayed-fees`);
 
+    console.log("Params received in getFeesDue:", params);
+
     // si no tengo fecha uso la actual
     if (!params?.date) {
       const today = new Date();
@@ -115,7 +117,7 @@ export const salesService = {
   
       url.searchParams.append('date', today.toISOString().split('T')[0]);
     }else{
-            url.searchParams.append('date', params.date);
+      url.searchParams.append('date', params.date);
       console.log("date param: " + params.date);
     }
 
@@ -129,7 +131,7 @@ export const salesService = {
       url.searchParams.append('status', params.status);
     }
     if (params?.productType) {
-      url.searchParams.append('productType', params.productType);
+      url.searchParams.append('productType', Number(params.productType).toString());
     }
 
     const response = await authenticatedFetch(url.toString());

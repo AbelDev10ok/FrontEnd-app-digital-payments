@@ -13,13 +13,10 @@ import ProtectedRoute from './shared/ProtectedRoute';
 import TokenRefreshHandler from './shared/TokenRefreshHandler';
 import EditarCliente from './pages/EditarCliente';
 
-import TodasLasVentas from './pages/ventas/TodasLasVentas';
-import VentasACobrarHoy from './pages/ventas/VentasACobrarHoy';
-import VentasAtrasadas from './pages/ventas/VentasAtrasadas';
-import CuotasAtrasadasVentas from './pages/ventas/CuotasAtrasadasVentas';
+import TodasLasVentas from './pages/ventas/VentasACobrarHoy';
+import VentasACobrarHoy from './pages/ventas/TodasLasVentas';
 
 
-import CrearPrestamo from './pages/prestamos/CrearPrestamo';
 
 function App() {
   const { isAuthenticated, user } = useAuthStore();
@@ -108,7 +105,7 @@ function App() {
             path="/dashboard/ventas/todas"
             element={
               <ProtectedRoute requiredRole="ROLE_USER">
-                <TodasLasVentas/>
+                <VentasACobrarHoy/>
               </ProtectedRoute>
             }
           />
@@ -116,26 +113,11 @@ function App() {
             path="/dashboard/ventas/cobrar-hoy"
             element={
               <ProtectedRoute requiredRole="ROLE_USER">
-                <VentasACobrarHoy />
+                <TodasLasVentas />
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/dashboard/ventas/atrasadas"
-            element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <VentasAtrasadas />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/ventas/cuotas-atrasadas"
-            element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <CuotasAtrasadasVentas />
-              </ProtectedRoute>
-            }
-          />
+          
           <Route
             path="/dashboard/ventas/crear"
             element={
@@ -149,16 +131,6 @@ function App() {
             element={
               <ProtectedRoute requiredRole="ROLE_USER">
                 <VentaDetalle />
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Nuevas rutas para préstamos */}
-          <Route
-            path="/dashboard/prestamos/crear"
-            element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <CrearPrestamo />
               </ProtectedRoute>
             }
           />

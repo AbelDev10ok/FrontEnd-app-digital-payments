@@ -1,54 +1,12 @@
-import { useState, useMemo } from 'react';
-import { ProductTypeDto, SaleResponseDto, salesService } from '../services/salesServices';
+import { useState } from 'react';
+import { ProductTypeDto } from '../services/salesServices';
 
-
-interface UseSalesFiltersReturn {
-  sales: SaleResponseDto[];
-  setSales: React.Dispatch<React.SetStateAction<SaleResponseDto[]>>;
-}
-export const useSalesFilters= ({sales, setSales}: UseSalesFiltersReturn ) => {
+export const useSalesFilters= () => {
   const [searchDescription, setSearchDescription] = useState('');
   const [searchClientName, setSearchClientName] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
   const [selectedProductType, setSelectedProductType] = useState('');
   const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
-  
-
-
-  // fetch para obtener ventas por descripción
-  const fetchSalesByDescription = async (description: string) => {
-    try {
-      const [salesData] = await Promise.all([
-        salesService.getProductDescriptions(description),
-      ]);      
-
-      setSales(salesData);
-    } catch (error) {
-      console.error('Error fetching sales by description:', error);
-    }
-  };
-
-
-  const filteredSales = useMemo(() => {
-    return sales.filter(sale => {
-      const clientNameMatch =
-        sale.client.name.toLowerCase().includes(searchClientName.toLowerCase());
-
-      const statusMatch = (() => {
-        if (selectedStatus === 'Todos') return true;
-        if (selectedStatus === 'COMPLETED') return sale.completed;
-        if (selectedStatus === 'ACTIVE') return !sale.completed && sale.daysLate === 0;
-        if (selectedStatus === 'CANCELED') return !sale.completed && sale.daysLate > 0;
-        return true;
-      })();
-
-      const productTypeMatch =
-        !selectedProductType ||
-        sale.productType.id.toString() === selectedProductType;
-
-      return clientNameMatch && statusMatch && productTypeMatch;
-    });
-  }, [sales, searchClientName, selectedStatus, selectedProductType]);
 
   return {
     searchDescription,
@@ -59,8 +17,8 @@ export const useSalesFilters= ({sales, setSales}: UseSalesFiltersReturn ) => {
     setSelectedStatus,
     selectedProductType,
     setSelectedProductType,
-    filteredSales,
-    fetchSalesByDescription,
+    // filteredSales,
+    // fetchSalesByDescription,
     productTypes,
     setProductTypes
   };
