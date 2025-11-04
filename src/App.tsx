@@ -13,8 +13,10 @@ import ProtectedRoute from './shared/ProtectedRoute';
 import TokenRefreshHandler from './shared/TokenRefreshHandler';
 import EditarCliente from './pages/EditarCliente';
 
-import TodasLasVentas from './pages/ventas/VentasACobrarHoy';
-import VentasACobrarHoy from './pages/ventas/TodasLasVentas';
+// import TodasLasVentas from './pages/ventas/Cobrar';
+// import VentasACobrarHoy from './pages/ventas/Todas';
+import Cobrar from './pages/ventas/Cobrar';
+import Todas from './pages/ventas/Todas';
 
 
 
@@ -102,18 +104,18 @@ function App() {
           
           {/* Nuevas rutas específicas para ventas */}
           <Route
-            path="/dashboard/ventas/todas"
+            path="/dashboard/ventas/cobrar-hoy"
             element={
               <ProtectedRoute requiredRole="ROLE_USER">
-                <VentasACobrarHoy/>
+                <Cobrar/>
               </ProtectedRoute>
             }
           />
           <Route
-            path="/dashboard/ventas/cobrar-hoy"
+            path="/dashboard/ventas/todas"
             element={
               <ProtectedRoute requiredRole="ROLE_USER">
-                <TodasLasVentas />
+                <Todas />
               </ProtectedRoute>
             }
           />

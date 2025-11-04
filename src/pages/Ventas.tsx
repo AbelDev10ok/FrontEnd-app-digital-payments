@@ -48,7 +48,9 @@ const Ventas: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES');
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      timeZone: 'UTC'
+    });
   };
 
   const getStatusBadge = (transaction: any) => {

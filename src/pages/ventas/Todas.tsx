@@ -1,22 +1,22 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Loader2, Link as LinkIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/dashboard/DashBoardLayout';
-import { salesService, SaleResponseDto } from '../../services/salesServices';
-import Load from '../../shared/Load';
-import ErrorMessage from '../../shared/ErrorMessage';
-import HeaderTransaction from '../../shared/HeaderTransaction';
+import { SaleResponseDto, salesService } from '../../services/salesServices';
 import SalesFilters from '../../components/filters/SalesFilters';
 import { useSalesFilters } from '../../hooks/useSalesFilters';
+import HeaderTransaction from '../../shared/HeaderTransaction';
+import ErrorMessage from '../../shared/ErrorMessage';
 
-const VentasACobrarHoy = () => {
+const Todas: React.FC = () => {
   const [sales, setSales] = useState<SaleResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
-  // const [searchDescription, setSearchDescription] = useState('');
-  // const [searchClientName, setSearchClientName] = useState('');
-  // const [selectedStatus, setSelectedStatus] = useState('Todos');
+  const isInitialLoad = useRef(true);
+
 
   const {
     searchClientName,
@@ -31,7 +31,7 @@ const VentasACobrarHoy = () => {
     setSelectedProductType
   } = useSalesFilters();
 
-  const statusOptions = ['Todos', 'COMPLETED', 'ACTIVE', 'CANCELED'];
+
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -40,22 +40,24 @@ const VentasACobrarHoy = () => {
     }).format(amount);
   };
 
+  const statusOptions = ['Todos', 'COMPLETED', 'ACTIVE', 'CANCELED'];
+
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES');
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      timeZone: 'UTC'
+    });
   };
-
+  
   const getStatusBadge = (transaction: SaleResponseDto) => {
-    if (transaction.completed) {
-      return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Completada</span>;
-    }
-    if (transaction.daysLate > 0) {
-      return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Atrasada ({transaction.daysLate}d)</span>;
-    }
-    return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>;
-  };
-
-  const isInitialLoad = useRef(true);
-
+      if (transaction.completed) {
+        return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Completada</span>;
+      }
+      if (transaction.daysLate > 0) {
+        return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Atrasada ({transaction.daysLate}d)</span>;
+      }
+      return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>;
+    };
+  
   const fetchSales = async () => {
     try {
       if (isInitialLoad.current) {
@@ -63,30 +65,25 @@ const VentasACobrarHoy = () => {
       }
       setError(null);
 
-      const params: any = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const params: any = {
+        page,
+        size: 10, // O el tamaño de página que prefieras
+      };
 
-      if (searchDescription.trim()) {
-        params.descriptionProduct = searchDescription.trim();
-      }
+      if (searchDescription.trim()) params.descriptionProduct = searchDescription.trim();
+      if (searchClientName.trim()) params.clientName = searchClientName.trim();
+      console.log("selectedStatus", selectedStatus);
+      if (selectedStatus !== 'Todos') params.status = selectedStatus.toUpperCase();
+      if (selectedProductType) params.productType = selectedProductType;
 
-      if (searchClientName.trim()) {
-        params.clientName = searchClientName.trim();
-      }
+      // Aquí podrías agregar los filtros de año y mes si los implementas en la UI
+      // params.year = selectedYear;
+      // params.month = selectedMonth;
 
-      if (selectedStatus !== 'Todos') {
-        params.status = selectedStatus.toUpperCase();
-      }
-
-      if (selectedProductType) {
-        params.productType = selectedProductType;
-      } else {
-        // No lo envíes, o ponlo como null/"" según lo que espera tu backend
-        params.productType = null; // Si tu backend interpreta null como "todos"
-        // O simplemente no lo agregues al objeto params
-      }
-      const salesData = await salesService.getFeesDue(params);
-      setSales(salesData);
-      console.log(salesData);
+      const salesData = await salesService.getAllSalesPaginated(params);
+      setSales(salesData.content);
+      setTotalPages(salesData.totalPages);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar las ventas');
     } finally {
@@ -97,39 +94,42 @@ const VentasACobrarHoy = () => {
     }
   };
 
-useEffect(() => {
-    const fetchProductTypes = async () => {
-      try {
-        const types = await salesService.getProductTypes();
-        setProductTypes(types);
-        console.log("types", types); // <-- esto sí muestra el array de objetos en la consola
-        console.log("productTypes", productTypes);
-      } catch (error) {
-        console.error('Error fetching product types:', error);
-      }
-    };
-
-    fetchProductTypes();
-}, []);
-
-
   useEffect(() => {
-    console.log("Fetching sales with filters:", { searchDescription, searchClientName, selectedStatus, productTypes });
-    fetchSales();
-  }, [searchDescription, searchClientName, selectedStatus, selectedProductType, productTypes]);
+      const fetchProductTypes = async () => {
+        try {
+          const types = await salesService.getProductTypes();
+          setProductTypes(types);
+          console.log("types", types); // <-- esto sí muestra el array de objetos en la consola
+          console.log("productTypes", productTypes);
+        } catch (error) {
+          console.error('Error fetching product types:', error);
+        }
+      };
+  
+      fetchProductTypes();
+  }, []);
+
+    useEffect(() => {
+      fetchSales();
+  }, [page, searchDescription, searchClientName, selectedStatus, selectedProductType, productTypes]);
 
   if (loading) {
     return (
-      <DashboardLayout title="Ventas a Cobrar Hoy">
-        <Load />
+      <DashboardLayout title="Todas las Ventas">
+        <div className="flex items-center justify-center h-64">
+          <div className="flex items-center space-x-3">
+            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+            <span className="text-gray-600">Cargando ventas...</span>
+          </div>
+        </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout title="Ventas a Cobrar Hoy">
+   <DashboardLayout title="Todas las Ventas">
       <div className="space-y-6">
-        <HeaderTransaction title="Cobranza" />
+        <HeaderTransaction title="Todas las Ventas" />
         {error && (
           <ErrorMessage message={error} />
         )}
@@ -143,7 +143,7 @@ useEffect(() => {
           onStatusChange={setSelectedStatus}
           selectedProductType={selectedProductType} // <-- usa el estado del hook
           onProductTypeChange={setSelectedProductType} // <-- usa el setter del hook
-          productTypes={productTypes} // <-- pasa el array del hook
+          productTypes={productTypes}
           statusOptions={statusOptions}
         />
 
@@ -192,7 +192,7 @@ useEffect(() => {
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">{sale.descriptionProduct}</div>
-                            <div className="text-sm text-gray-500">{formatDate(sale.dateSale)}</div>
+                            <div className="text-sm text-gray-500">{formatDate(sale.dateSale )}</div>
                           </div>
                         </div>
                       </td>
@@ -227,10 +227,11 @@ useEffect(() => {
                         {getStatusBadge(sale)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <Link 
+                        <Link
                           to={`/dashboard/ventas/${sale.id}`}
                           className="text-green-600 hover:text-green-900 mr-4"
                         >
+                          <LinkIcon className="w-4 h-4 inline mr-1" />
                           Ver
                         </Link>
                       </td>
@@ -241,9 +242,29 @@ useEffect(() => {
             </table>
           </div>
         </div>
+        {/* Paginación */}
+        <div className="flex justify-between items-center mt-4">
+          <button
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Anterior
+          </button>
+          <span className="text-sm text-gray-700">
+            Página {page + 1} de {totalPages}
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+            disabled={page >= totalPages - 1}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Siguiente
+          </button>
+        </div>
       </div>
     </DashboardLayout>
   );
 };
 
-export default VentasACobrarHoy;
+export default Todas;

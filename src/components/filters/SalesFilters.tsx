@@ -7,8 +7,8 @@ interface SalesFiltersProps {
   onSearchChange: (value: string) => void;
   searchClientName?: string;
   onClientNameChange?: (value: string) => void;
-  selectedStatus: string;
-  onStatusChange: (value: string) => void;
+  selectedStatus?: string;
+  onStatusChange?: (value: string) => void;
   selectedProductType: string;
   onProductTypeChange: (value: string) => void;
   productTypes: ProductTypeDto[];
@@ -56,7 +56,8 @@ const SalesFilters = ({
         </div>
 
         {/* Filtro por estado */}
-        <select
+        {onStatusChange && (
+          <select
           value={selectedStatus}
           onChange={(e) => onStatusChange(e.target.value)}
           className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
@@ -65,6 +66,8 @@ const SalesFilters = ({
             <option key={status} value={status}>{status}</option>
           ))}
         </select>
+        )}
+
 
         {/* Filtro por tipo de producto */}
         <select

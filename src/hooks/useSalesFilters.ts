@@ -17,8 +17,6 @@ export const useSalesFilters= () => {
     setSelectedStatus,
     selectedProductType,
     setSelectedProductType,
-    // filteredSales,
-    // fetchSalesByDescription,
     productTypes,
     setProductTypes
   };

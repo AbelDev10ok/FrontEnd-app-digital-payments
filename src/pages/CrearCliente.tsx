@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { UserPlus, ArrowLeft, Save, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { UserPlus, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/dashboard/DashBoardLayout';
 import { useClients } from '../hooks/useClients';
 import { clientService } from '../services/clientServices';
+import InputWithIcon from '../components/form/InputWithIcon';
+import AutocompleteSeller from '../components/autocomplete/AutocompleteSeller';
+import SubmitBar from '../components/form/SubmitBar';
 
 // Asumimos que esta es la interfaz que representa tanto a un cliente como a un vendedor
 export interface Client {
@@ -23,6 +26,10 @@ const CrearCliente: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const [sellers, setSellers] = useState<Client[]>([]);
+  const [sellersLoading, setSellersLoading] = useState(true);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -32,17 +39,13 @@ const CrearCliente: React.FC = () => {
     dni: ''
   });
 
-  // Estado para la lista de vendedores y su carga
-  const [sellers, setSellers] = useState<Client[]>([]);
-  const [sellersLoading, setSellersLoading] = useState(true);
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+
 
   // useEffect para cargar los vendedores cuando el componente se monta
   useEffect(() => {
     const fetchSellers = async () => {
       try {
-        // AQUÍ DEBES HACER EL FETCH REAL A TU API PARA OBTENER LOS VENDEDORES
         const response = await clientService.getVendedores()
         setSellers(response);
         console.log("Cargando vendedores..."); // Simulación
@@ -54,16 +57,16 @@ const CrearCliente: React.FC = () => {
     };
 
     fetchSellers();
-  }, []); // El array vacío asegura que se ejecute solo una vez
+  }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
     
-    // Limpiar error del campo cuando el usuario empiece a escribir
+    // limpiamos error del campo cuando el usuario empiece a escribir
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -193,172 +196,42 @@ const CrearCliente: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Nombre */}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre Completo *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
-                    errors.name 
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
-                      : 'border-gray-200 focus:ring-indigo-500 focus:border-indigo-500'
-                  }`}
-                  placeholder="Ingresa el nombre completo"
-                />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-                )}
+                <InputWithIcon id="name" name="name" label="Nombre Completo *" value={formData.name} onChange={handleInputChange} placeholder="Ingresa el nombre completo" error={errors.name} />
               </div>
 
               <div>
-                <label htmlFor="dni" className="block text-sm font-medium text-gray-700 mb-2">
-                  DNI *
-                </label>
-                <input
-                  type="text"
-                  id="dni"
-                  name="dni"
-                  value={formData.dni}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
-                    errors.dni
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-200 focus:ring-indigo-500 focus:border-indigo-500'
-                  }`}
-                  placeholder="Ingresa el DNI"
-                />
-                {errors.dni && (
-                  <p className="mt-1 text-sm text-red-600">{errors.dni}</p>
-                )}
+                <InputWithIcon id="dni" name="dni" label="DNI *" value={formData.dni} onChange={handleInputChange} placeholder="Ingresa el DNI" error={errors.dni} />
               </div>
-
-
 
               {/* Email */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
-                    errors.email 
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
-                      : 'border-gray-200 focus:ring-indigo-500 focus:border-indigo-500'
-                  }`}
-                  placeholder="cliente@email.com"
-                />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                )}
+                <InputWithIcon id="email" name="email" label="Email *" type="email" value={formData.email} onChange={handleInputChange} placeholder="cliente@email.com" error={errors.email} />
               </div>
 
               {/* Teléfono */}
               <div>
-                <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-2">
-                  Teléfono *
-                </label>
-                <input
-                  type="tel"
-                  id="telefono"
-                  name="telefono"
-                  value={formData.telefono}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
-                    errors.telefono 
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
-                      : 'border-gray-200 focus:ring-indigo-500 focus:border-indigo-500'
-                  }`}
-                  placeholder="1234567890"
-                />
-                {errors.telefono && (
-                  <p className="mt-1 text-sm text-red-600">{errors.telefono}</p>
-                )}
+                <InputWithIcon id="telefono" name="telefono" label="Teléfono *" value={formData.telefono} onChange={handleInputChange} placeholder="1234567890" error={errors.telefono} />
               </div>
             </div>
 
             {/* Dirección */}
             <div>
-              <label htmlFor="direccion" className="block text-sm font-medium text-gray-700 mb-2">
-                Dirección
-              </label>
-              <input
-                type="text"
-                id="direccion"
-                name="direccion"
-                value={formData.direccion}
-                onChange={handleInputChange}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
-                  errors.direccion 
-                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
-                    : 'border-gray-200 focus:ring-indigo-500 focus:border-indigo-500'
-                }`}
-                placeholder="Dirección completa"
-              />
-              {errors.direccion && (
-                <p className="mt-1 text-sm text-red-600">{errors.direccion}</p>
-              )}
+              <InputWithIcon id="direccion" name="direccion" label="Dirección" value={formData.direccion} onChange={handleInputChange} placeholder="Dirección completa" error={errors.direccion} />
             </div>
 
             {/* Vendedor (Opcional) */}
             <div>
-              <label htmlFor="sellerId" className="block text-sm font-medium text-gray-700 mb-2">
-                Vendedor (Opcional)
-              </label>
-              <select
-                id="sellerId"
-                name="sellerId"
+              <AutocompleteSeller
                 value={formData.sellerId}
-                onChange={handleInputChange}
-                disabled={sellersLoading}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors bg-white ${
-                  sellersLoading ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-200 focus:ring-indigo-500 focus:border-indigo-500'
-                }`}
-              >
-                <option value="">-- Sin Vendedor --</option>
-                {sellers.map((seller) => (
-                  <option key={seller.id} value={seller.id}>
-                    {seller.name}
-                  </option>
-                ))}
-              </select>
+                sellers={sellers}
+                onChange={(id) => setFormData(prev => ({ ...prev, sellerId: id }))}
+                error={errors.sellerId}
+              />
               {sellersLoading && <p className="text-sm text-gray-500 mt-1">Cargando vendedores...</p>}
             </div>
 
             {/* Buttons */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-              <Link
-                to="/dashboard/clientes"
-                className="px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors duration-200"
-              >
-                Cancelar
-              </Link>
-              <button
-                type="submit"
-                disabled={loading}
-                className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Crear Cliente
-                  </>
-                )}
-              </button>
-            </div>
+            <SubmitBar cancelTo="/dashboard/clientes" isDisabled={loading} submitLabel={loading ? 'Creando...' : 'Crear Cliente'} />
           </form>
         </div>
       </div>

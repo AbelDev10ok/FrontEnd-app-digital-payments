@@ -47,12 +47,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         {
           title: 'Crear Cliente',
           icon: UserPlus,
-          path: '/dashboard/clientes/crear'
+          path: '/dashboard/clientes/crear', 
         }
       ]
     },
     {
-      title: 'Cobrar',
+      title: 'Ventas',
       icon: ShoppingCart,
       hasSubmenu: true,
       expanded: ventasExpanded,
@@ -61,8 +61,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         {
           title: 'Ventas a cobrar',
           icon: Eye,
-          path: '/dashboard/ventas/cobrar-hoy'
-        }
+          hasSubmenu: true,
+          expanded: ventasExpanded,
+          onToggle: () => setVentasExpanded(!ventasExpanded),
+          path: '/dashboard/ventas/cobrar-hoy',
+        }   ,
+        {
+          title: 'Todas las Ventas',
+          icon: Eye,
+          path: '/dashboard/ventas/todas'
+        },
         // ,
         // {
         //   title: 'Ventas a Cobrar Hoy',
@@ -92,6 +100,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         // }
       ]
     },
+
     {
       title: 'Nueva Venta',
       icon: Plus,

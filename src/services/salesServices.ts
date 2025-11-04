@@ -1,6 +1,36 @@
 import { authenticatedFetch } from './authServices';
+import { Client } from './clientServices';
 
 const API_BASE_URL = 'http://localhost:8080/api/loans';
+
+export interface Page<T> {
+  content: T[];
+  pageable: {
+    sort: {
+      sorted: boolean;
+      unsorted: boolean;
+      empty: boolean;
+    };
+    offset: number;
+    pageNumber: number;
+    pageSize: number;
+    paged: boolean;
+    unpaged: boolean;
+  };
+  totalPages: number;
+  totalElements: number;
+  last: boolean;
+  size: number;
+  number: number;
+  sort: {
+    sorted: boolean;
+    unsorted: boolean;
+    empty: boolean;
+  };
+  numberOfElements: number;
+  first: boolean;
+  empty: boolean;
+}
 
 export interface ClientDto {
   id: number;
@@ -62,10 +92,32 @@ export interface CreateSaleRequest {
   amountFee?: number;
   cost: number;
   productType: number;
+  // Campos opcionales para pago de primera cuota al crear
+  firstFeeDate?: string;
+  payFirstFee?: boolean;
+  firstFeeAmount?: number;
 }
 
 
 export const salesService = {
+
+  // Obtener vendedores (clientes marcados como vendedores)
+  async getSellers(): Promise<Client[]> {
+    const response = await authenticatedFetch('http://localhost:8080/api/clients/vendedores');
+    if (!response.ok) {
+      throw new Error('Error al obtener los vendedores');
+    }
+    return response.json();
+  },
+
+  // Obtener clientes asignados a un vendedor específico
+  async getClientsBySeller(sellerId: number): Promise<Client[]> {
+    const response = await authenticatedFetch(`http://localhost:8080/api/clients/vendedor/${sellerId}/clientes`);
+    if (!response.ok) {
+      throw new Error('Error al obtener los clientes del vendedor');
+    }
+    return response.json();
+  },
 
   async getProductDescriptions(productType: string): Promise<SaleResponseDto[]> {
     const response = await authenticatedFetch(`${API_BASE_URL}/search-by-description?description=${productType}`);
@@ -97,6 +149,32 @@ export const salesService = {
     return response.json();
   },
 
+  async getAllSalesPaginated(params: {
+    page: number;
+    size: number;
+    year?: number;
+    month?: number;
+    clientName?: string;
+    descriptionProduct?: string;
+    status?: string;
+    productType?: string;
+  }): Promise<Page<SaleResponseDto>> {
+    const url = new URL(API_BASE_URL);
+    url.searchParams.append('page', params.page.toString());
+    url.searchParams.append('size', params.size.toString());
+    if (params.year) url.searchParams.append('year', params.year.toString());
+    if (params.month) url.searchParams.append('month', params.month.toString());
+    if (params.clientName) url.searchParams.append('clientName', params.clientName);
+    if (params.descriptionProduct) url.searchParams.append('descriptionProduct', params.descriptionProduct);
+    if (params.status) url.searchParams.append('status', params.status);
+    if (params.productType) url.searchParams.append('productType', params.productType);
+
+    const response = await authenticatedFetch(url.toString());
+    if (!response.ok) {
+      throw new Error('Error al obtener las ventas paginadas');
+    }
+    return response.json();
+  },
   // obtener cuotas a cobrar es decir cuotas atrasadas y cuotas de hoy
   async getFeesDue(params?: {
     date?: string;

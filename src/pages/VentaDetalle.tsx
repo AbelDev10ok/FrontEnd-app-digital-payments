@@ -29,7 +29,8 @@ const VentaDetalle: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-AR', {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      timeZone: 'UTC',
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
