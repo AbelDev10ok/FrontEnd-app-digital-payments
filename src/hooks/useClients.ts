@@ -1,26 +1,27 @@
 import { useState, useEffect } from 'react';
-import { clientService, Client, ClientRequest } from '../services/clientServices';
+import { clientService} from '../services/clientServices';
+import { Client, ClientRequest } from '../types/client';
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [financialStats, setFinancialStats] = useState({
-    totalDeudaVentas: 0,
-    totalVentasPagadas: 0,
-    totalDeudaPrestamos: 0,
-    totalPrestamosPagados: 0
-  });
+  // const [financialStats, setFinancialStats] = useState({
+  //   totalDeudaVentas: 0,
+  //   totalVentasPagadas: 0,
+  //   totalDeudaPrestamos: 0,
+  //   totalPrestamosPagados: 0
+  // });
 
   const fetchClients = async () => {
     try {
       setLoading(true);
       setError(null);
-      const clientsData = await clientService.getAllClients();
+      const clientsData = await clientService.getClients();
       setClients(clientsData);
       
       // Calcular estadísticas financieras totales
-      await calculateFinancialStats(clientsData);
+      // await calculateFinancialStats(clientsData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar los clientes');
     } finally {
@@ -28,49 +29,49 @@ export const useClients = () => {
     }
   };
 
-  const calculateFinancialStats = async (clientsData: Client[]) => {
-    try {
-      let totalDeudaVentas = 0;
-      let totalVentasPagadas = 0;
-      let totalDeudaPrestamos = 0;
-      let totalPrestamosPagados = 0;
+  // const calculateFinancialStats = async (clientsData: Client[]) => {
+  //   try {
+  //     let totalDeudaVentas = 0;
+  //     let totalVentasPagadas = 0;
+  //     let totalDeudaPrestamos = 0;
+  //     let totalPrestamosPagados = 0;
 
-      // Calcular estadísticas para todos los clientes
-      for (const client of clientsData) {
-        try {
-          const [deudaVentas, ventasPagadas, deudaPrestamos, prestamosPagados] = await Promise.all([
+  //     // Calcular estadísticas para todos los clientes
+  //     for (const client of clientsData) {
+  //       try {
+  //         const [deudaVentas, ventasPagadas, deudaPrestamos, prestamosPagados] = await Promise.all([
 
-            clientService.calcularDeudaTotalVentas(client.id),
-            clientService.calcularTotalVentasPagadas(client.id),
-            clientService.calcularDeudaTotalPrestamos(client.id),
-            clientService.calcularTotalPrestamosPagados(client.id)
-          ]);
+  //           clientService.calcularDeudaTotalVentas(client.id),
+  //           clientService.calcularTotalVentasPagadas(client.id),
+  //           clientService.calcularDeudaTotalPrestamos(client.id),
+  //           clientService.calcularTotalPrestamosPagados(client.id)
+  //         ]);
 
-          totalDeudaVentas += deudaVentas;
-          totalVentasPagadas += ventasPagadas;
-          totalDeudaPrestamos += deudaPrestamos;
-          totalPrestamosPagados += prestamosPagados;
-        } catch (err) {
-          console.warn(`Error calculando estadísticas para cliente ${client.id}:`, err);
-        }
-      }
+  //         totalDeudaVentas += deudaVentas;
+  //         totalVentasPagadas += ventasPagadas;
+  //         totalDeudaPrestamos += deudaPrestamos;
+  //         totalPrestamosPagados += prestamosPagados;
+  //       } catch (err) {
+  //         console.warn(`Error calculando estadísticas para cliente ${client.id}:`, err);
+  //       }
+  //     }
 
-      setFinancialStats({
-        totalDeudaVentas,
-        totalVentasPagadas,
-        totalDeudaPrestamos,
-        totalPrestamosPagados
-      });
-    } catch (err) {
-      console.error('Error calculando estadísticas financieras:', err);
-    }
-  };
+  //     setFinancialStats({
+  //       totalDeudaVentas,
+  //       totalVentasPagadas,
+  //       totalDeudaPrestamos,
+  //       totalPrestamosPagados
+  //     });
+  //   } catch (err) {
+  //     console.error('Error calculando estadísticas financieras:', err);
+  //   }
+  // };
   const createClient = async (clientData: ClientRequest): Promise<Client> => {
     try {
       const newClient = await clientService.createClient(clientData);
       setClients(prev => [...prev, newClient]);
       // Recalcular estadísticas después de crear un cliente
-      await calculateFinancialStats([...clients, newClient]);
+      // await calculateFinancialStats([...clients, newClient]);
       return newClient;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al crear el cliente';
@@ -86,10 +87,10 @@ export const useClients = () => {
         client.id === id ? updatedClient : client
       ));
       // Recalcular estadísticas después de actualizar un cliente
-      const updatedClients = clients.map(client => 
-        client.id === id ? updatedClient : client
-      );
-      await calculateFinancialStats(updatedClients);
+      // const updatedClients = clients.map(client => 
+      //   client.id === id ? updatedClient : client
+      // );
+      // await calculateFinancialStats(updatedClients);
       return updatedClient;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al actualizar el cliente';
@@ -98,17 +99,6 @@ export const useClients = () => {
     }
   };
 
-  const deleteClient = async (id: number): Promise<void> => {
-    try {
-      await clientService.deleteClient(id);
-      const updatedClients = clients.filter(client => client.id !== id);
-      setClients(updatedClients);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al eliminar el cliente';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    }
-  };
 
   useEffect(() => {
     fetchClients();
@@ -118,10 +108,9 @@ export const useClients = () => {
     clients,
     loading,
     error,
-    financialStats,
+    // financialStats,
     fetchClients,
     createClient,
     updateClient,
-    deleteClient,
   };
 };

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { UserPlus, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import DashboardLayout from '../components/dashboard/DashBoardLayout';
-import { useClients } from '../hooks/useClients';
-import { clientService } from '../services/clientServices';
-import InputWithIcon from '../components/form/InputWithIcon';
-import AutocompleteSeller from '../components/autocomplete/AutocompleteSeller';
-import SubmitBar from '../components/form/SubmitBar';
+import DashboardLayout from '../../components/dashboard/DashBoardLayout';
+import { useClients } from '../../hooks/useClients';
+import { clientService } from '../../services/clientServices';
+import InputWithIcon from '../../components/form/InputWithIcon';
+import AutocompleteSeller from '../../components/autocomplete/AutocompleteSeller';
+import SubmitBar from '../../components/form/SubmitBar';
 
 // Asumimos que esta es la interfaz que representa tanto a un cliente como a un vendedor
 export interface Client {
@@ -17,6 +17,7 @@ export interface Client {
   direccion: string;
   sellerId?: number;
   vendedor: boolean;
+  sellerName?: string;
 }
 
 const CrearCliente: React.FC = () => {

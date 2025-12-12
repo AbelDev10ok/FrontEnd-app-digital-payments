@@ -68,7 +68,7 @@ const Login: React.FC = () => {
     try {
       await login(email, password);
     } catch (err) {
-      setError('Credenciales inválidas. Por favor, verifica tu email y contraseña.');
+      setError('Credenciales inválidas. Por favor, verifica tu email y contraseña. ' + err );
     }
   };
 

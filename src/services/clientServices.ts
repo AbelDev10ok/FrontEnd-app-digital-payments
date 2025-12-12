@@ -1,34 +1,80 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Client, ClientRequest } from '../types/client';
 import { authenticatedFetch } from './authServices';
 
 const API_BASE_URL = 'http://localhost:8080/api/clients';
 
-export interface Client {
-  id: number;
-  name: string;
-  telefono: string;
-  email: string;
-  direccion: string;
-  sellerName?: string;
-  vendedor: boolean;
-  dni?: string;
+export interface Page<T> {
+  content: T[];
+  pageable: {
+    sort: {
+      sorted: boolean;
+      unsorted: boolean;
+      empty: boolean;
+    };
+    offset: number;
+    pageNumber: number;
+    pageSize: number;
+    paged: boolean;
+    unpaged: boolean;
+  };
+  last: boolean;
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+  sort: {
+    sorted: boolean;
+    unsorted: boolean;
+    empty: boolean;
+  };
+  first: boolean;
+  numberOfElements: number;
+  empty: boolean;
 }
 
-export interface ClientRequest {
-  name: string;
-  telefono: string;
-  email: string;
-  direccion: string;
-  sellerId?: number;
-  dni?: string
-}
 
 export const clientService = {
-  // Obtener todos los clientes
-  async getAllClients(): Promise<Client[]> {
-    const response = await authenticatedFetch(API_BASE_URL);
+  // Obtener todos los clientes con filtros opcionales
+  async getClients(search?: string, sellerId?: number | null, withoutSeller?: boolean): Promise<Client[]> {
+    const params = new URLSearchParams();
+    
+    if (search) {
+      params.append('search', search);
+    }
+    if (sellerId) {
+      params.append('sellerId', sellerId.toString());
+    }
+    if (withoutSeller) {
+      params.append('withoutSeller', 'true');
+    }
+
+    const url = params.toString() ? `${API_BASE_URL}?${params.toString()}` : API_BASE_URL;
+    const response = await authenticatedFetch(url);
     if (!response.ok) {
       throw new Error('Error al obtener los clientes');
+    }
+    return response.json();
+  },
+
+  // Obtener clientes paginados con filtros opcionales
+  async getClientsPaginated(params: {
+    page: number;
+    size: number;
+    search?: string;
+    sellerId?: number | null;
+    withoutSeller?: boolean;
+  }): Promise<Page<Client>> {
+    const url = new URL(API_BASE_URL);
+    url.searchParams.append('page', params.page.toString());
+    url.searchParams.append('size', params.size.toString());
+    if (params.search) url.searchParams.append('search', params.search);
+    if (params.sellerId) url.searchParams.append('sellerId', params.sellerId.toString());
+    if (params.withoutSeller) url.searchParams.append('withoutSeller', 'true');
+
+    const response = await authenticatedFetch(url.toString());
+    if (!response.ok) {
+      throw new Error('Error al obtener los clientes paginados');
     }
     return response.json();
   },
@@ -150,7 +196,6 @@ export const clientService = {
       throw new Error('Error al eliminar el cliente');
     }
   },
-
 
   // obtener vendedores
   async getVendedores(): Promise<Client[]> {

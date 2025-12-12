@@ -1,5 +1,5 @@
 import { DollarSign, CreditCard, CheckCircle, Clock } from "lucide-react";
-import { SaleResponseDto } from "../services/salesServices";
+import { SaleResponseDto } from "../../services/salesServices";
 
 interface InfoDetalleTransactionProps {
     transaction: SaleResponseDto

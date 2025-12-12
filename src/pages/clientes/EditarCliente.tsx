@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import DashboardLayout from '../components/dashboard/DashBoardLayout';
-import { useClients } from '../hooks/useClients';
-import { clientService} from '../services/clientServices';
+import DashboardLayout from '../../components/dashboard/DashBoardLayout';
+import { useClients } from '../../hooks/useClients';
+import { clientService} from '../../services/clientServices';
 
 const EditarCliente: React.FC = () => {
   const navigate = useNavigate();

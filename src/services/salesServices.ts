@@ -1,5 +1,5 @@
+import { Client } from '../types/client';
 import { authenticatedFetch } from './authServices';
-import { Client } from './clientServices';
 
 const API_BASE_URL = 'http://localhost:8080/api/loans';
 
@@ -80,6 +80,7 @@ export interface SaleResponseDto {
   paidFeesCount: number;
   remainingAmount: number;
   totalFees: number;
+  status: ''
 }
 
 export interface CreateSaleRequest {
@@ -176,16 +177,19 @@ export const salesService = {
     return response.json();
   },
   // obtener cuotas a cobrar es decir cuotas atrasadas y cuotas de hoy
-  async getFeesDue(params?: {
+  async getFeesDue(params: {
+    page: number;
+    size: number;
     date?: string;
     clientName?: string;
     descriptionProduct?: string;
-    status?: string;
     productType?: string;
-  }): Promise<SaleResponseDto[]> {
+  }): Promise<Page<SaleResponseDto>> {
     const url = new URL(`${API_BASE_URL}/delayed-fees`);
 
     console.log("Params received in getFeesDue:", params);
+    url.searchParams.append('page', params.page.toString());
+    url.searchParams.append('size', params.size.toString());
 
     // si no tengo fecha uso la actual
     if (!params?.date) {
@@ -205,9 +209,9 @@ export const salesService = {
     if (params?.descriptionProduct) {
       url.searchParams.append('descriptionProduct', params.descriptionProduct);
     }
-    if (params?.status) {
-      url.searchParams.append('status', params.status);
-    }
+    // if (params?.status) {
+    //   url.searchParams.append('status', params.status);
+    // }
     if (params?.productType) {
       url.searchParams.append('productType', Number(params.productType).toString());
     }

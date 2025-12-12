@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { LogOut, User, Menu } from 'lucide-react';
-import { useAuthStore } from '../../stores/authStore';
-import { useTokenRefresh } from '../../hooks/useTokenRefresh';
-import Sidebar from '../../components/dashboard/SideBar';
+import { useAuthStore } from '@features/auth';
+import Sidebar from './Sidebar';
+import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;

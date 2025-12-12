@@ -2,21 +2,21 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useAuthStore } from './stores/authStore';
 import Login from './components/login/Login';
 import Dashboard from './pages/Dashboard';
-import Clientes from './pages/Clientes';
-import CrearCliente from './pages/CrearCliente';
-import ClienteDetalle from './pages/ClienteDetalle';
-import Ventas from './pages/Ventas';
+import Clientes from './pages/clientes/Clientes';
+import CrearCliente from './pages/clientes/CrearCliente';
+import ClienteDetalle from './pages/clientes/ClienteDetalle';
+import Ventas from './pages/ventas/Ventas';
 import CrearVenta from './pages/ventas/CrearTransaccion';
-import VentaDetalle from './pages/VentaDetalle';
+import VentaDetalle from './pages/ventas/VentaDetalle';
 import AdminPanel from './pages/AdminPanel';
 import ProtectedRoute from './shared/ProtectedRoute';
 import TokenRefreshHandler from './shared/TokenRefreshHandler';
-import EditarCliente from './pages/EditarCliente';
+import EditarCliente from './pages/clientes/EditarCliente';
 
 // import TodasLasVentas from './pages/ventas/Cobrar';
 // import VentasACobrarHoy from './pages/ventas/Todas';
-import Cobrar from './pages/ventas/Cobrar';
-import Todas from './pages/ventas/Todas';
+import VentasACobrar from './pages/ventas/VentasACobrar';
+import TodasVentas from './pages/ventas/TodasVentas';
 
 
 
@@ -107,7 +107,7 @@ function App() {
             path="/dashboard/ventas/cobrar-hoy"
             element={
               <ProtectedRoute requiredRole="ROLE_USER">
-                <Cobrar/>
+                <VentasACobrar/>
               </ProtectedRoute>
             }
           />
@@ -115,7 +115,7 @@ function App() {
             path="/dashboard/ventas/todas"
             element={
               <ProtectedRoute requiredRole="ROLE_USER">
-                <Todas />
+                <TodasVentas />
               </ProtectedRoute>
             }
           />

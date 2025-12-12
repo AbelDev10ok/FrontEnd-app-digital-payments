@@ -5,15 +5,16 @@ import {
   CheckCircle, 
   AlertTriangle,
 } from 'lucide-react';
-import DashboardLayout from '../components/dashboard/DashBoardLayout';
-import { salesService, SaleResponseDto } from '../services/salesServices';
-import CronogramaFees from '../shared/CronogramaFees';
-import Load from '../shared/Load';
-import HeaderDetalleTransaction from '../shared/HeaderDetalleTransaction';
-import StateDetalleTransaction from '../shared/StateDetalleTransaction';
-import ClientInfoDetalle from '../shared/ClientInfoDetalle';
-import InfoTransactionDetalle from '../shared/InfoTransactionDetalle';
-import ErrorMessage from '../shared/ErrorMessage';
+import DashboardLayout from '../../components/dashboard/DashBoardLayout';
+import { salesService, SaleResponseDto } from '../../services/salesServices';
+import CronogramaFees from './CronogramaFees';
+import StateDetalleTransaction from './StateDetalleTransaction';
+import { formatCurrency } from '../../utils/formatCurrency';
+import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
+import { Load } from '@/shared';
+import ClientInfoDetalle from './ClientInfoDetalle';
+import HeaderDetalleTransaction from './HeaderDetalleTransaction';
+import InfoTransactionDetalle from './InfoTransactionDetalle';
 
 const VentaDetalle: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,12 +22,7 @@ const VentaDetalle: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'ARS'
-    }).format(amount);
-  };
+  // Use shared formatCurrency util (defaults to ARS)
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {

@@ -3,7 +3,7 @@
 
 # TAREAS 🔨
 
-# COMPONETIZAR: 
+Actualizar los clientes
 
 
             {/* Stats */}

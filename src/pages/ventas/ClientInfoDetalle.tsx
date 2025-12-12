@@ -1,5 +1,5 @@
+import { SaleResponseDto } from "@/services/salesServices";
 import { User, CreditCard, Calendar } from "lucide-react";
-import { SaleResponseDto } from "../services/salesServices";
 
 interface ClientInfoDetalleProps {
     transaction: SaleResponseDto;

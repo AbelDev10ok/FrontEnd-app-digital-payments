@@ -1,17 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useMemo } from 'react';
-import { ShoppingCart, Search, Filter, Plus, TrendingUp, Loader2, AlertCircle, Calendar, DollarSign, CreditCard, Clock } from 'lucide-react';
+import { ShoppingCart, Search, Plus, TrendingUp, Loader2, AlertCircle, DollarSign, CreditCard, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import DashboardLayout from '../components/dashboard/DashBoardLayout';
-import { useSales } from '../hooks/useSales';
-import { ProductTypeDto } from '../services/salesServices';
+import DashboardLayout from '../../components/dashboard/DashBoardLayout';
+import { useSales } from '../../hooks/useSales';
+import { formatCurrency } from '../../utils/formatCurrency';
+import { ProductTypeDto } from '../../services/salesServices';
 
 const Ventas: React.FC = () => {
   const { allTransactions, loading, error, stats, deleteSale } = useSales();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('Todos');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
-  const [showFilters, setShowFilters] = useState(false);
+  // const [showFilters, setShowFilters] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const typeOptions = ['Todos', 'Venta', 'Préstamo'];
@@ -40,12 +41,7 @@ const Ventas: React.FC = () => {
     });
   }, [allTransactions, searchTerm, selectedType, selectedStatus]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(amount);
-  };
+  // Use shared formatCurrency util (defaults to ARS)
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {

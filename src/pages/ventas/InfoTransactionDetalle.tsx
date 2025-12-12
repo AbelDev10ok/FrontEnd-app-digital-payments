@@ -1,5 +1,6 @@
+import { SaleResponseDto } from "@/services/salesServices";
 import { Calendar, Clock, Package } from "lucide-react";
-import { SaleResponseDto } from "../services/salesServices";
+
 
 interface InfoTransactionDetalleProps {
     transaction: SaleResponseDto;

@@ -1,6 +1,6 @@
 import { CheckCircle, Loader2 } from "lucide-react";
-import { SaleResponseDto, salesService } from "../services/salesServices";
-import { ModalPay } from "../components/pay/ModalPay";
+import { SaleResponseDto, salesService } from "../../services/salesServices";
+import { ModalPay } from "../../components/pay/ModalPay";
 import { useState } from "react";
 
 interface CronogramaFeesProps{

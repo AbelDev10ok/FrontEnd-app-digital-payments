@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Phone, Mail, MapPin, DollarSign, CreditCard, Banknote, TrendingUp, Loader2, AlertCircle, User2 } from 'lucide-react';
-import DashboardLayout from '../components/dashboard/DashBoardLayout';
-import { clientService, Client } from '../services/clientServices';
+import { ArrowLeft, DollarSign, CreditCard, Banknote, TrendingUp, Loader2, AlertCircle } from 'lucide-react';
+import DashboardLayout from '../../components/dashboard/DashBoardLayout';
+import { clientService } from '../../services/clientServices';
+import { Client } from './CrearCliente';
+import InfoCliente from '../../components/clientes/InfoCliente';
+import Load from '@/shared/components/feedback/Load';
 
 const ClienteDetalle: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -111,38 +114,21 @@ const ClienteDetalle: React.FC = () => {
     fetchClientData();
   }, [id]);
 
-  if (loading) {
+  if(loading) {
     return (
-      <DashboardLayout title="Detalle del Cliente">
-        <div className="flex items-center justify-center h-64">
-          <div className="flex items-center space-x-3">
-            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-            <span className="text-gray-600">Cargando información del cliente...</span>
-          </div>
-        </div>
+      <DashboardLayout title="Detalles de Cliente">
+        <Load />
       </DashboardLayout>
     );
   }
 
   if (error || !client) {
     return (
-      <DashboardLayout title="Detalle del Cliente">
-        <div className="space-y-6">
-          <div className="flex items-center space-x-3">
-            <Link
-              to="/dashboard/clientes"
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </Link>
-            <h2 className="text-xl font-semibold text-gray-900">Error</h2>
-          </div>
-          
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-            <div className="flex items-center text-red-800">
-              <AlertCircle className="w-5 h-5 mr-3" />
-              <span className="text-sm">{error || 'Cliente no encontrado'}</span>
-            </div>
+      <DashboardLayout title="Gestión de Clientes">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <div className="flex items-center text-red-800">
+            <AlertCircle className="w-5 h-5 mr-3" />
+            <span className="text-sm">{error}</span>
           </div>
         </div>
       </DashboardLayout>
@@ -172,71 +158,7 @@ const ClienteDetalle: React.FC = () => {
         </div>
 
         {/* INFORMACIÓN DEL CLIENTE */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Información de Contacto</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-center space-x-3">
-              <div className="bg-blue-50 p-2 rounded-lg">
-                <Mail className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Email</p>
-                <p className="font-medium text-gray-900">{client.email || 'No especificado'}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <div className="bg-green-50 p-2 rounded-lg">
-                <Phone className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Teléfono</p>
-                <p className="font-medium text-gray-900">{client.telefono}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-3 md:col-span-2">
-              <div className="bg-orange-50 p-2 rounded-lg">
-                <MapPin className="w-5 h-5 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Dirección</p>
-                <p className="font-medium text-gray-900">{client.direccion || 'No especificada'}</p>
-              </div>
-            </div>
-
-            {/* si es cliente tiene vendedor */}
-            {client.sellerName && (
-              <div className="md:col-span-2 flex items-center space-x-4 bg-blue-50 border border-blue-200 p-4 rounded-xl">
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <Mail className="w-6 h-6 text-blue-700" />
-                </div>
-                <div>
-                  <p className="font-semibold text-blue-800">Este cliente tiene un vendedor asignado</p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <User2 className="w-5 h-5 text-blue-600" />
-                    <p className="text-sm text-gray-600">{client.sellerName.toUpperCase()}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-
-            {/* si es vendedor */}
-            {client.vendedor && (
-              <div className="md:col-span-2 flex items-center space-x-4 bg-teal-50 border border-teal-200 p-4 rounded-xl">
-                <div className="bg-teal-100 p-3 rounded-full">
-                  <TrendingUp className="w-6 h-6 text-teal-700" />
-                </div>
-                <div>
-                  <p className="font-semibold text-teal-800">Este cliente también es vendedor</p>
-                  <p className="text-sm text-gray-600">Tiene acceso a funciones de venta en la plataforma.</p>
-                </div>
-              </div>
-            )}
-
-          </div>
-        </div>
+        <InfoCliente client={client} />
 
         {/* Financial Stats */}
         {loadingStats ? (
