@@ -1,22 +1,24 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuthStore } from './stores/authStore';
-import Login from './components/login/Login';
-import Dashboard from './pages/Dashboard';
-import Clientes from './pages/clientes/Clientes';
-import CrearCliente from './pages/clientes/CrearCliente';
-import ClienteDetalle from './pages/clientes/ClienteDetalle';
-import Ventas from './pages/ventas/Ventas';
-import CrearVenta from './pages/ventas/CrearTransaccion';
-import VentaDetalle from './pages/ventas/VentaDetalle';
-import AdminPanel from './pages/AdminPanel';
+
+import Login from './features/auth/components/Login';
+import Dashboard from './features/Dashboard';
+
+import ClienteDetalle from './features/clients/pages/ClienteDetalle';
+import AdminPanel from './features/adminPanel/AdminPanel';
 import ProtectedRoute from './shared/ProtectedRoute';
 import TokenRefreshHandler from './shared/TokenRefreshHandler';
-import EditarCliente from './pages/clientes/EditarCliente';
 
 // import TodasLasVentas from './pages/ventas/Cobrar';
 // import VentasACobrarHoy from './pages/ventas/Todas';
-import VentasACobrar from './pages/ventas/VentasACobrar';
-import TodasVentas from './pages/ventas/TodasVentas';
+import CrearVenta from './features/crearVentas/pages/CrearTransaccion';
+import VentasACobrar from './features/ventas/pages/VentasACobrar';
+import { useAuthStore } from './features/auth/store/authStore';
+import Clientes from './features/clients/pages/Clientes';
+import CrearCliente from './features/clients/pages/CrearCliente';
+import Ventas from './pages/ventas/Ventas';
+import TodasVentas from './features/ventas/pages/TodasVentas';
+import VentaDetalle from './features/ventaDetalle/pages/VentaDetalle';
+import EditarCliente from './features/clients/pages/EditarCliente';
 
 
 
@@ -51,9 +53,7 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <Dashboard />
-              </ProtectedRoute>
+              <ProtectedRoute requiredRole="ROLE_USER" component={Dashboard} />
             }
           />
           
@@ -61,34 +61,26 @@ function App() {
           <Route
             path="/dashboard/clientes"
             element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <Clientes />
-              </ProtectedRoute>
+              <ProtectedRoute requiredRole="ROLE_USER" component={Clientes} />
             }
           />
           <Route
             path="/dashboard/clientes/crear"
             element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <CrearCliente />
-              </ProtectedRoute>
+              <ProtectedRoute requiredRole="ROLE_USER" component={CrearCliente} />
             }
           />
           <Route
             path="/dashboard/clientes/:id"
             element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <ClienteDetalle />
-              </ProtectedRoute>
+              <ProtectedRoute requiredRole="ROLE_USER" component={ClienteDetalle} />
             }
           />
 
           <Route
             path="/dashboard/clientes/editar/:id"
             element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <EditarCliente />
-              </ProtectedRoute>
+              <ProtectedRoute requiredRole="ROLE_USER" component={EditarCliente} />
             }
           />
           
@@ -96,9 +88,7 @@ function App() {
           <Route
             path="/dashboard/ventas"
             element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <Ventas />
-              </ProtectedRoute>
+              <ProtectedRoute requiredRole="ROLE_USER" component={Ventas} />
             }
           />
           
@@ -106,34 +96,31 @@ function App() {
           <Route
             path="/dashboard/ventas/cobrar-hoy"
             element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <VentasACobrar/>
-              </ProtectedRoute>
+              <ProtectedRoute requiredRole="ROLE_USER" component={VentasACobrar} />
             }
           />
           <Route
             path="/dashboard/ventas/todas"
             element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <TodasVentas />
-              </ProtectedRoute>
+              <ProtectedRoute requiredRole="ROLE_USER" component={TodasVentas} />
             }
           />
           
           <Route
             path="/dashboard/ventas/crear"
             element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <CrearVenta type={'VENTA'} />
-              </ProtectedRoute>
+              <ProtectedRoute
+                requiredRole="ROLE_USER"
+                component={CrearVenta}
+                componentProps={{ type: 'VENTA' }}
+              />
             }
           />
+          
           <Route
             path="/dashboard/ventas/:id"
             element={
-              <ProtectedRoute requiredRole="ROLE_USER">
-                <VentaDetalle />
-              </ProtectedRoute>
+              <ProtectedRoute requiredRole="ROLE_USER" component={VentaDetalle} />
             }
           />
           
@@ -141,9 +128,7 @@ function App() {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute requiredRole="ROLE_ADMIN">
-                <AdminPanel />
-              </ProtectedRoute>
+              <ProtectedRoute requiredRole="ROLE_ADMIN" component={AdminPanel} />
             }
           />
           

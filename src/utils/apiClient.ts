@@ -1,4 +1,4 @@
-import { authenticatedFetch } from '../services/authServices';
+import { authenticatedFetch } from '../features/auth/services/authServices';
 
 // Cliente API que maneja automáticamente el refresh de tokens
 export class ApiClient {

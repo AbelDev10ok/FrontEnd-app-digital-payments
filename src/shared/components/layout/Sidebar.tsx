@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -19,7 +19,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   const [clientesExpanded, setClientesExpanded] = useState(false);
   const [ventasExpanded, setVentasExpanded] = useState(false);
 
-  const menuItems = [
+  const menuItems = useMemo(() => [
     {
       title: 'Dashboard',
       icon: LayoutDashboard,
@@ -55,9 +55,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         {
           title: 'Ventas a cobrar',
           icon: Eye,
-          hasSubmenu: true,
-          expanded: ventasExpanded,
-          onToggle: () => setVentasExpanded(!ventasExpanded),
           path: '/dashboard/ventas/cobrar-hoy',
         },
         {
@@ -72,7 +69,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       icon: Plus,
       path: '/dashboard/ventas/crear'
     }
-  ];
+  ], [clientesExpanded, ventasExpanded]);
 
   return (
     <aside className={`
@@ -99,6 +96,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                 <div>
                   <button
                     onClick={item.onToggle}
+                    aria-expanded={item.expanded}
+                    aria-controls={`submenu-${index}`}
                     className="w-full flex items-center justify-between p-3 rounded-xl text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                   >
                     <div className="flex items-center space-x-3">
@@ -113,7 +112,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                   
                   {/* Submenu */}
                   {item.expanded && item.submenu && (
-                    <div className="ml-6 mt-2 space-y-1 border-l-2 border-gray-100 pl-4">
+                    <div id={`submenu-${index}`} role="menu" aria-hidden={!item.expanded} className="ml-6 mt-2 space-y-1 border-l-2 border-gray-100 pl-4">
                       {item.submenu.map((subItem, subIndex) => (
                         <NavLink
                           key={subIndex}
@@ -135,7 +134,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                 </div>
               ) : (
                 <NavLink
-                  to={item.path}
+                  to={item.path ?? '#'}
                   end={item.exact}
                   className={({ isActive }) => `
                     flex items-center space-x-3 p-3 rounded-xl transition-colors duration-200

@@ -36,3 +36,13 @@ export interface ClientFormData {
   };
 
 
+export interface ClientDto {
+  id: number;
+  name: string;
+  telefono: string;
+  email: string;
+  direccion: string;
+  isSeller: boolean;
+  sellerName?: string;
+  dni: string;
+}

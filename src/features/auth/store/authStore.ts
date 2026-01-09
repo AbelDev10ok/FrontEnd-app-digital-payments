@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-// Usar el servicio original mientras migramos
-import { login as loginService } from '../../../services/authServices'; 
+import { login as loginService } from '../services/authServices'; 
 
 export interface User {
   email: string;

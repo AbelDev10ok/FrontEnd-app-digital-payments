@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react';
-import { ProductTypeDto } from '../../services/salesServices';
-import { DebouncedInput } from './DebouncedInput';
+import { DebouncedInput } from '@/shared/components/ui';
+import { ProductTypeDto } from '@/types/sales';
 
 interface FeesFiltersProps {
   searchTerm: string;

@@ -1,3 +1,4 @@
-// Shared barrel export
+// Barrel for shared utilities and components
 export * from './components';
-export * from './utils';
+export { default as ProtectedRoute } from './ProtectedRoute';
+export { default as TokenRefreshHandler } from './TokenRefreshHandler';

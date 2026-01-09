@@ -2,12 +2,18 @@
 import React, { useState, useMemo } from 'react';
 import { ShoppingCart, Search, Plus, TrendingUp, Loader2, AlertCircle, DollarSign, CreditCard, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import DashboardLayout from '../../components/dashboard/DashBoardLayout';
-import { useSales } from '../../hooks/useSales';
-import { formatCurrency } from '../../utils/formatCurrency';
-import { ProductTypeDto } from '../../services/salesServices';
+import { useSales } from '@/features/ventas/hooks/useSales';
+import { ProductTypeDto } from '@/types/sales';
+import { DashboardLayout } from '@/shared/components/layout';
+import { formatCurrency } from '@/shared/utils/formatCurrency';
 
-const Ventas: React.FC = () => {
+
+interface PageProps {
+  user: { email?: string; role?: string } | null;
+  onLogout: () => void;
+}
+
+const Ventas: React.FC<PageProps> = ({ user, onLogout }) => {
   const { allTransactions, loading, error, stats, deleteSale } = useSales();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('Todos');
@@ -85,7 +91,7 @@ const Ventas: React.FC = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Ventas y Préstamos">
+      <DashboardLayout title="Ventas y Préstamos" user={user} onLogout={onLogout}>
         <div className="flex items-center justify-center h-64">
           <div className="flex items-center space-x-3">
             <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
@@ -97,7 +103,7 @@ const Ventas: React.FC = () => {
   }
 
   return (
-    <DashboardLayout title="Ventas y Préstamos">
+    <DashboardLayout title="Ventas y Préstamos" user={user} onLogout={onLogout}>
       <div className="space-y-6">
         {/* Header Actions */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

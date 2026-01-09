@@ -1,20 +1,23 @@
+import { useAuthStore } from '@/features/auth/store/authStore';
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '../stores/authStore';
+import { useTokenRefresh } from '@/features/auth/hooks/useTokenRefresh';
 
 const TokenRefreshHandler: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, user } = useAuthStore();
+  // const { isAuthenticated, user } = useAuthStore();
+
+  useTokenRefresh();
 
   useEffect(() => {
     // Escuchar eventos de logout automático
-    const handleAutoLogout = () => {
-      // Solo redirigir si no estamos ya en login
-      if (location.pathname !== '/login') {
-        navigate('/login', { replace: true });
-      }
-    };
+    // const handleAutoLogout = () => {
+    //   // Solo redirigir si no estamos ya en login
+    //   if (location.pathname !== '/login') {
+    //     navigate('/login', { replace: true });
+    //   }
+    // };
 
     // Escuchar cambios en el estado de autenticación
     const unsubscribe = useAuthStore.subscribe((state) => {

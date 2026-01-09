@@ -1,14 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useAuthStore } from '@/features/auth';
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuthStore } from '../stores/authStore';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  component?: React.ComponentType<any>;
+  componentProps?: Record<string, any>;
   requiredRole?: 'ROLE_USER' | 'ROLE_ADMIN';
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
-  const { isAuthenticated, user } = useAuthStore();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, component: Component, componentProps, requiredRole }) => {
+  const { isAuthenticated, user, logout } = useAuthStore();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -25,6 +28,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
     }
     // Por defecto redirigir a login
     return <Navigate to="/login" replace />;
+  }
+
+  // If a component is provided, create it with injected auth props
+  if (Component) {
+    return <Component {...componentProps} user={user} onLogout={logout} />;
+  }
+
+  // Forward auth info to the single child element if possible
+  if (React.isValidElement(children)) {
+    return React.cloneElement(children, { user, onLogout: logout });
   }
 
   return <>{children}</>;
