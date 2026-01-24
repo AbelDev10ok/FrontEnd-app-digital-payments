@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { Search } from 'lucide-react';
 import { DebouncedInput } from '@/shared/components/ui';
 import { ProductTypeDto } from '@/types/sales';

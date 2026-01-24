@@ -1,4 +1,5 @@
 import { AlertCircle } from 'lucide-react';
+import { useMemo, useCallback } from 'react';
 
 import Load from '@/shared/components/feedback/Load.tsx';
 import { FetchParamsClients } from '@/types/client';
@@ -26,27 +27,43 @@ const Clientes: React.FC<PageProps> = ({ user, onLogout }) => {
         setShowFilters
       } = useClientsFilters();
 
+  const handleSearchTermChange = useCallback((value: string) => {
+    setSearchTerm(value);
+  }, [setSearchTerm]);
+
+  const handleVendedorChange = useCallback((id: number | null) => {
+    setSelectedVendedorId(id);
+  }, [setSelectedVendedorId]);
+
+  const handleShowFilters = useCallback((show: boolean) => {
+    setShowFilters(show);
+  }, [setShowFilters]);
 
 
-  const fetcher = async ({ page, size }: { page: number; size: number }) => {
-    const params: FetchParamsClients = { page, size };
-    if (searchTerm.trim()) params.search = searchTerm.trim();
-    
-    // Si selectedVendedorId es -1, significa "Sin vendedor"
-    if (selectedVendedorId === -1) {
-      params.withoutSeller = true;
-    } else if (selectedVendedorId && selectedVendedorId !== null) {
-      // Si es un número positivo, es el ID del vendedor
-      params.sellerId = selectedVendedorId;
-    }
-    // Si es null, no enviar filtro (significa "Todos")
-    
-    return clientService.getClientsPaginated(params);
-  };
+
+  const fetcher = useMemo(() => {
+    return async ({ page, size }: { page: number; size: number }) => {
+      const params: FetchParamsClients = { page, size };
+      if (searchTerm.trim()) params.search = searchTerm.trim();
+      
+      // Si selectedVendedorId es -1, significa "Sin vendedor"
+      if (selectedVendedorId === -1) {
+        params.withoutSeller = true;
+      } else if (selectedVendedorId && selectedVendedorId !== null) {
+        // Si es un número positivo, es el ID del vendedor
+        params.sellerId = selectedVendedorId;
+      }
+      // Si es null, no enviar filtro (significa "Todos")
+      
+      return clientService.getClientsPaginated(params);
+    };
+  }, [searchTerm, selectedVendedorId]);
+
+  const deps = useMemo(() => [searchTerm, selectedVendedorId], [searchTerm, selectedVendedorId]);
 
   const { clients, loading, error, page, setPage, totalPages } = usePaginatedClients(
     fetcher,
-    [searchTerm, selectedVendedorId],
+    deps,
     0,
     10
   );
@@ -82,14 +99,12 @@ const Clientes: React.FC<PageProps> = ({ user, onLogout }) => {
         {/* Search and Filters */}
         <FilterCliente
         searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
+        setSearchTerm={handleSearchTermChange}
         selectedVendedorId={selectedVendedorId}
-        setSelectedVendedorId={setSelectedVendedorId}
+        setSelectedVendedorId={handleVendedorChange}
         vendedoresOptions={vendedoresOptions}
         showFilters={showFilters}
-        setShowFilters={setShowFilters
-        }
-
+        setShowFilters={handleShowFilters}
         />
 
 

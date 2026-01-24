@@ -1,4 +1,3 @@
-import React, { useCallback } from 'react';
 
 import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
 import Load from '@/shared/components/feedback/Load';
@@ -45,6 +44,10 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
 
   const { sales, loading: salesLoading, error: salesError, page, setPage, totalPages } = usePaginatedSales(fetcher, [searchDescription, searchClientName, selectedStatus, selectedProductType, productTypes]);
 
+  if(salesLoading || productTypesLoading) {
+    return <Load />;
+  }
+
   return (
     <DashboardLayout title="Todas las Ventas" user={user} onLogout={onLogout}>
       <div className="space-y-6">
@@ -55,31 +58,22 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
 
         <SalesFilters
           searchTerm={searchDescription}
-          onSearchChange={useCallback((v: string) => setSearchDescription(v), [setSearchDescription])}
+          onSearchChange={setSearchDescription}
           searchClientName={searchClientName}
-          onClientNameChange={useCallback((v: string) => setSearchClientName(v), [setSearchClientName])}
+          onClientNameChange={setSearchClientName}
           selectedStatus={selectedStatus}
-          onStatusChange={useCallback((v: string) => setSelectedStatus(v), [setSelectedStatus])}
+          onStatusChange={setSelectedStatus}
           selectedProductType={selectedProductType}
-          onProductTypeChange={useCallback((v: string) => setSelectedProductType(v), [setSelectedProductType])}
+          onProductTypeChange={setSelectedProductType}
           productTypes={productTypes}
           statusOptions={statusOptions}
         />
 
-        {/* Sales Table or Loader */}
-        {(salesLoading || productTypesLoading) ? (
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <Load />
-          </div>
-        ) : (
-          (() => {
-            const emptyMessage = (searchDescription || searchClientName || selectedStatus !== 'Todos')
-              ? 'No se encontraron ventas que coincidan con los filtros'
-              : 'No hay ventas registradas';
 
-            return <SaleTable sales={sales} emptyMessage={emptyMessage} />;
-          })()
-        )}
+          <SaleTable sales={sales} emptyMessage={(searchDescription || searchClientName || selectedStatus !== 'Todos')
+              ? 'No se encontraron ventas que coincidan con los filtros'
+              : 'No hay ventas registradas'} />;
+
 
         {/* Paginación */}
         {(!salesLoading && totalPages > 1) && (

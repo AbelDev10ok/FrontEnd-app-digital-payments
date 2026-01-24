@@ -1,5 +1,5 @@
 import { Client } from "@/types/client";
-import { Link } from "lucide-react";
+import { Link } from "react-router-dom";
 
 
 type ClientTableProps = {

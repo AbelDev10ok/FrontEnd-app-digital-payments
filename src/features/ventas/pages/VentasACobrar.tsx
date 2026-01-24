@@ -1,4 +1,3 @@
-import React, { useCallback } from 'react';
 
 import HeaderTransaction from '../components/HeaderTransaction';
 import { useSalesFilters } from '../hooks/useSalesFilters';
@@ -49,6 +48,10 @@ const VentasACobrar: React.FC<PageProps> = ({ user, onLogout }) => {
 
   const { sales, loading: salesLoading, error: salesError, page, setPage, totalPages } = usePaginatedSales(fetcher, [searchDescription, searchClientName, selectedProductType, productTypes]);
 
+  if(salesLoading || productTypesLoading) {
+    return <Load />;
+  }
+
   return (
     <DashboardLayout title="Ventas a Cobrar Hoy" user={user} onLogout={onLogout}>
       <div className="space-y-6">
@@ -59,29 +62,20 @@ const VentasACobrar: React.FC<PageProps> = ({ user, onLogout }) => {
 
         <SalesFilters
           searchTerm={searchDescription}
-          onSearchChange={useCallback((v: string) => setSearchDescription(v), [setSearchDescription])}
+          onSearchChange={setSearchDescription}
           searchClientName={searchClientName}
-          onClientNameChange={useCallback((v: string) => setSearchClientName(v), [setSearchClientName])}
+          onClientNameChange={setSearchClientName}
           selectedProductType={selectedProductType}
-          onProductTypeChange={useCallback((v: string) => setSelectedProductType(v), [setSelectedProductType])}
+          onProductTypeChange={setSelectedProductType}
           productTypes={productTypes}
           statusOptions={statusOptions}
         />
 
-        {/* Table or loader (keep filters mounted while loading) */}
-        {(salesLoading || productTypesLoading) ? (
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <Load />
-          </div>
-        ) : (
-          (() => {
-            const emptyMessage = (searchDescription || searchClientName)
-              ? 'No se encontraron ventas que coincidan con los filtros'
-              : 'No hay ventas registradas';
 
-            return <SaleTable sales={sales} emptyMessage={emptyMessage} />;
-          })()
-        )}
+        <SaleTable sales={sales} emptyMessage={(searchDescription || searchClientName)
+              ? 'No se encontraron ventas que coincidan con los filtros'
+              : 'No hay ventas registradas'} />;
+
 
         {/* Paginación */}
         <div className="flex justify-between items-center mt-4">

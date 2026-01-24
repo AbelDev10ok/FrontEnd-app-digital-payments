@@ -48,7 +48,8 @@ const DebouncedInputComponent = ({
     return () => {
       if (timerRef.current) window.clearTimeout(timerRef.current);
     };
-  }, [localValue, delay, onChange, value]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localValue, delay]);
 
   return (
     <input
