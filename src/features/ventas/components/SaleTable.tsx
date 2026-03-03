@@ -9,6 +9,9 @@ type Props = {
 };
 
 const SaleTable: React.FC<Props> = ({ sales, emptyMessage }) => {
+
+  console.log("table ", sales)
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
       <div className="overflow-x-auto">

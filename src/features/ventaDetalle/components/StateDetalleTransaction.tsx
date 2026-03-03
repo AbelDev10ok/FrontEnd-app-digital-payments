@@ -1,5 +1,5 @@
-import { DollarSign, CreditCard, CheckCircle, Clock } from "lucide-react";
-import { SaleResponseDto } from "../../services/salesServices";
+import { SaleResponseDto } from "@/types/sales";
+import { DollarSign, CreditCard, CheckCircle, Clock, Hash, TrendingUp } from "lucide-react";
 
 interface InfoDetalleTransactionProps {
     transaction: SaleResponseDto
@@ -8,8 +8,10 @@ interface InfoDetalleTransactionProps {
 
 
 export default function StateDetalleTransaction({transaction, formatCurrency}: InfoDetalleTransactionProps) {
+    const profit = transaction.priceTotal - transaction.cost;
+
     return (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
@@ -21,6 +23,8 @@ export default function StateDetalleTransaction({transaction, formatCurrency}: I
               </div>
             </div>
           </div>
+
+
 
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
@@ -34,6 +38,29 @@ export default function StateDetalleTransaction({transaction, formatCurrency}: I
             </div>
           </div>
 
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Ganancia Esperada</p>
+                <p className="text-2xl font-bold text-emerald-600">{formatCurrency(profit)}</p>
+              </div>
+              <div className="bg-emerald-50 p-3 rounded-xl">
+                <TrendingUp className="w-6 h-6 text-emerald-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Cuotas Acordadas</p>
+                <p className="text-2xl font-bold text-indigo-600">{transaction.quantityFees}</p>
+              </div>
+              <div className="bg-indigo-50 p-3 rounded-xl">
+                <Hash className="w-6 h-6 text-indigo-600" />
+              </div>
+            </div>
+          </div>
 
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">

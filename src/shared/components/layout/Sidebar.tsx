@@ -73,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
   return (
     <aside className={`
-      fixed left-0 top-0 h-full bg-white border-r border-gray-200 shadow-sm transition-all duration-300 z-40
+      fixed left-0 top-0 h-full bg-white border-r border-gray-200 shadow-sm transition-all duration-300 z-50
       lg:w-64 lg:translate-x-0
       ${isOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64'}
     `}>

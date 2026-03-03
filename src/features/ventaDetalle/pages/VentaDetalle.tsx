@@ -31,6 +31,8 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
 
   // Use shared formatCurrency util (defaults to ARS)
 
+  console.log(transaction)
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       timeZone: 'UTC',
@@ -87,6 +89,7 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
         setError(null);
         const transactionData = await salesService.getSaleById(parseInt(id));
         setTransaction(transactionData);
+        console.log("Venta Detalle", transactionData)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al cargar la transacción');
       } finally {
@@ -115,6 +118,8 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
 
 
   const isLoan = transaction.productType.name === 'PRESTAMO';
+
+  
 
   return (
     <DashboardLayout title={`${isLoan ? 'Préstamo' : 'Venta'} #${transaction.id}`} user={user} onLogout={onLogout}>

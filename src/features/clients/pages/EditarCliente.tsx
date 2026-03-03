@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { clientService } from '@/features/clients/services/clientServices';
 import { useClients } from '../hooks/useClients';
 import { DashboardLayout } from '@/shared/components/layout';
+import ClientForm, { ClientFormData } from '../components/ClientForm';
+import Load from '@/shared/components/feedback/Load';
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -15,35 +17,31 @@ const EditarCliente: React.FC<PageProps> = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const { updateClient } = useClients();
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const { id } = useParams<{ id: string }>(); // Access the client ID from the URL
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    telefono: '',
-    direccion: '',
-  });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [initialValues, setInitialValues] = useState<ClientFormData | undefined>(undefined);
 
   useEffect(() => {
     const fetchClient = async () => {
       if (id) {
-        setLoading(true);
+        setInitialLoading(true);
         try {
           const client = await clientService.getClientById(Number(id));
-          setFormData({
+          setInitialValues({
             name: client.name,
             email: client.email || '',
             telefono: client.telefono,
             direccion: client.direccion || '',
+            dni: client.dni || '',
+            sellerId: client.sellerId || '',
           });
         } catch (err) {
           setError(err instanceof Error ? err.message : 'Error al cargar el cliente');
         } finally {
-          setLoading(false);
+          setInitialLoading(false);
         }
       }
     };
@@ -51,55 +49,7 @@ const EditarCliente: React.FC<PageProps> = ({ user, onLogout }) => {
     fetchClient();
   }, [id]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre es obligatorio';
-    } else if (formData.name.length < 2 || formData.name.length > 15) {
-      newErrors.name = 'El nombre debe tener entre 2 y 15 caracteres';
-    }
-
-    if (!formData.telefono.trim()) {
-      newErrors.telefono = 'El teléfono es obligatorio';
-    } else if (!/^[0-9]{10,15}$/.test(formData.telefono)) {
-      newErrors.telefono = 'El teléfono debe contener solo números y tener entre 10 y 15 dígitos';
-    }
-
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'El email debe tener un formato válido';
-    }
-
-    if (formData.direccion && formData.direccion.length > 20) {
-      newErrors.direccion = 'La dirección no puede exceder los 20 caracteres';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
+  const handleSubmit = async (formData: ClientFormData) => {
     try {
       setLoading(true);
       setError(null);
@@ -109,6 +59,8 @@ const EditarCliente: React.FC<PageProps> = ({ user, onLogout }) => {
         telefono: formData.telefono.trim(),
         email: formData.email.trim() || '',
         direccion: formData.direccion.trim() || '',
+        dni: formData.dni.trim().toLowerCase().replace(/\s+/g, ''),
+        sellerId: formData.sellerId ? Number(formData.sellerId) : undefined,
       };
 
       if (id) {
@@ -168,130 +120,17 @@ const EditarCliente: React.FC<PageProps> = ({ user, onLogout }) => {
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Nombre */}
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre Completo *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
-                    errors.name
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-200 focus:ring-indigo-500 focus:border-indigo-500'
-                  }`}
-                  placeholder="Ingresa el nombre completo"
-                />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-                )}
-              </div>
-
-              {/* Email */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
-                    errors.email
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-200 focus:ring-indigo-500 focus:border-indigo-500'
-                  }`}
-                  placeholder="cliente@email.com"
-                />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                )}
-              </div>
-
-              {/* Teléfono */}
-              <div>
-                <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-2">
-                  Teléfono *
-                </label>
-                <input
-                  type="tel"
-                  id="telefono"
-                  name="telefono"
-                  value={formData.telefono}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
-                    errors.telefono
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-200 focus:ring-indigo-500 focus:border-indigo-500'
-                  }`}
-                  placeholder="1234567890"
-                />
-                {errors.telefono && (
-                  <p className="mt-1 text-sm text-red-600">{errors.telefono}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Dirección */}
-            <div>
-              <label htmlFor="direccion" className="block text-sm font-medium text-gray-700 mb-2">
-                Dirección
-              </label>
-              <input
-                type="text"
-                id="direccion"
-                name="direccion"
-                value={formData.direccion}
-                onChange={handleInputChange}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
-                  errors.direccion
-                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                    : 'border-gray-200 focus:ring-indigo-500 focus:border-indigo-500'
-                }`}
-                placeholder="Dirección completa"
-              />
-              {errors.direccion && (
-                <p className="mt-1 text-sm text-red-600">{errors.direccion}</p>
-              )}
-            </div>
-
-            {/* Buttons */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-              <Link
-                to="/dashboard/clientes"
-                className="px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors duration-200"
-              >
-                Cancelar
-              </Link>
-              <button
-                type="submit"
-                disabled={loading}
-                className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Guardando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Guardar Cliente
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
+        {initialLoading ? (
+          <Load />
+        ) : (
+          <ClientForm
+            initialValues={initialValues}
+            onSubmit={handleSubmit}
+            loading={loading}
+            submitLabel="Guardar Cambios"
+            cancelTo="/dashboard/clientes"
+          />
+        )}
       </div>
     </DashboardLayout>
   );

@@ -1,4 +1,6 @@
 
+import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
 import Load from '@/shared/components/feedback/Load';
 import usePaginatedSales from '@/features/ventas/hooks/usePaginatedSales';
@@ -29,6 +31,15 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     setSelectedProductType
   } = useSalesFilters();
 
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const clientNameParam = searchParams.get('clientName');
+    if (clientNameParam) {
+      setSearchClientName(clientNameParam);
+    }
+  }, [searchParams, setSearchClientName]);
+
   const statusOptions = ['Todos', 'COMPLETED', 'ACTIVE', 'CANCELED'];
 
   const { productTypes, loading: productTypesLoading } = useProductTypes();
@@ -44,10 +55,7 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
 
   const { sales, loading: salesLoading, error: salesError, page, setPage, totalPages } = usePaginatedSales(fetcher, [searchDescription, searchClientName, selectedStatus, selectedProductType, productTypes]);
 
-  if(salesLoading || productTypesLoading) {
-    return <Load />;
-  }
-
+  
   return (
     <DashboardLayout title="Todas las Ventas" user={user} onLogout={onLogout}>
       <div className="space-y-6">
@@ -68,15 +76,16 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
           productTypes={productTypes}
           statusOptions={statusOptions}
         />
-
-
+        {salesLoading || productTypesLoading ? (
+          <Load />
+        ) : 
           <SaleTable sales={sales} emptyMessage={(searchDescription || searchClientName || selectedStatus !== 'Todos')
               ? 'No se encontraron ventas que coincidan con los filtros'
-              : 'No hay ventas registradas'} />;
-
+              : 'No hay ventas registradas'} />
+        }
 
         {/* Paginación */}
-        {(!salesLoading && totalPages > 1) && (
+        {(!salesLoading && !productTypesLoading && totalPages > 1) && (
           <Paginación
             page={page}
             setPage={setPage}

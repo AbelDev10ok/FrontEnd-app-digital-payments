@@ -30,6 +30,7 @@ const PrimerCuota: React.FC<PrimerCuotaProps> = ({ firstFeeDate, fecha, payFirst
           onChange={onChange}
           icon={<Calendar className="w-4 h-4 text-indigo-600" />}
           error={errors?.firstFeeDate}
+          min={fecha}
         />
       </div>
 

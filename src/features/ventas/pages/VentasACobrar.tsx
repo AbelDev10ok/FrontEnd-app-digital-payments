@@ -9,6 +9,7 @@ import { salesService } from '../services/salesServices';
 import SalesFilters from '../components/SalesFilters';
 import SaleTable from '../components/SaleTable';
 import { DashboardLayout } from '@/shared/components/layout';
+import { Paginación } from '@/shared';
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -48,10 +49,6 @@ const VentasACobrar: React.FC<PageProps> = ({ user, onLogout }) => {
 
   const { sales, loading: salesLoading, error: salesError, page, setPage, totalPages } = usePaginatedSales(fetcher, [searchDescription, searchClientName, selectedProductType, productTypes]);
 
-  if(salesLoading || productTypesLoading) {
-    return <Load />;
-  }
-
   return (
     <DashboardLayout title="Ventas a Cobrar Hoy" user={user} onLogout={onLogout}>
       <div className="space-y-6">
@@ -71,32 +68,22 @@ const VentasACobrar: React.FC<PageProps> = ({ user, onLogout }) => {
           statusOptions={statusOptions}
         />
 
-
+        {salesLoading || productTypesLoading ? (
+          <Load />
+        ) : (
         <SaleTable sales={sales} emptyMessage={(searchDescription || searchClientName)
               ? 'No se encontraron ventas que coincidan con los filtros'
-              : 'No hay ventas registradas'} />;
-
+              : 'No hay ventas registradas'} />
+        )}
 
         {/* Paginación */}
-        <div className="flex justify-between items-center mt-4">
-          <button
-            onClick={() => setPage(p => Math.max(0, p - 1))}
-            disabled={page === 0}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Anterior
-          </button>
-          <span className="text-sm text-gray-700">
-            Página {page + 1} de {totalPages}
-          </span>
-          <button
-            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-            disabled={page >= totalPages - 1}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Siguiente
-          </button>
-        </div>
+        {(!salesLoading && !productTypesLoading && totalPages > 1) && (
+          <Paginación
+            page={page}
+            setPage={setPage}
+            totalPages={totalPages}
+          />
+        )}
       </div>
     </DashboardLayout>
   );

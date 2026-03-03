@@ -2,8 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Link as LinkIcon } from 'lucide-react';
 import SaleStatusBadge from './SaleStatusBadge';
-import { SaleResponseDto } from '../services/salesServices';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
+import { SaleResponseDto } from '@/types/sales';
 
 type Props = {
   sale: SaleResponseDto;
@@ -36,7 +36,7 @@ const SaleRow: React.FC<Props> = ({ sale }) => {
         <div className="text-sm text-gray-500">{sale.client.telefono}</div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm font-medium text-gray-900">{formatCurrency(sale.amountFe)}</div>
+        <div className="text-sm font-medium text-gray-900">{formatCurrency(sale.amountFee)}</div>
         <div className="text-sm text-gray-500">Deuda : {formatCurrency(sale.remainingAmount)}</div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">

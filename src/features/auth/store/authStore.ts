@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { login as loginService } from '../services/authServices'; 
+import { login as loginService, refreshToken as refreshTokenService } from '../services/authServices'; 
 
 export interface User {
   email: string;
@@ -57,7 +57,7 @@ const isTokenExpiringSoon = (token: string): boolean => {
   const currentTime = Date.now() / 1000;
   const timeUntilExpiry = decoded.exp - currentTime;
   
-  return timeUntilExpiry < 300;
+  return timeUntilExpiry < 5 * 60;
 };
 
 // VERIFICAMOS SI EL TOKEN YA EXPIRÓ
@@ -137,8 +137,11 @@ export const useAuthStore = create<AuthState>()(
 
         if (isTokenExpired(accessToken) || isTokenExpiringSoon(accessToken)) {
           try {
-            // Refresh logic here
-            console.log('Token expiring, needs refresh');
+            // Llamamos al servicio para renovar el token usando el refresh token actual
+            const response = await refreshTokenService(currentRefreshToken);
+            
+            // Actualizamos el store con los nuevos tokens
+            get().setTokens(response.accessToken, response.refreshToken || currentRefreshToken);
           } catch (error) {
             console.error('Error refreshing token:', error);
             get().logout();

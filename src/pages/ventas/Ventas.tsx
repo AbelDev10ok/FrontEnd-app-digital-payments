@@ -37,9 +37,9 @@ const Ventas: React.FC<PageProps> = ({ user, onLogout }) => {
 
       const statusMatch = (() => {
         if (selectedStatus === 'Todos') return true;
-        if (selectedStatus === 'Completada') return transaction.completed;
-        if (selectedStatus === 'Pendiente') return !transaction.completed && transaction.daysLate === 0;
-        if (selectedStatus === 'Atrasada') return !transaction.completed && transaction.daysLate > 0;
+        if (selectedStatus === 'Completada') return transaction.status.toString() === 'COMPLETED';
+        if (selectedStatus === 'Pendiente') return transaction.status.toString() !== 'COMPLETED' && transaction.daysLate === 0;
+        if (selectedStatus === 'Atrasada') return transaction.status.toString() !== 'COMPLETED' && transaction.daysLate > 0;
         return true;
       })();
 
@@ -56,7 +56,7 @@ const Ventas: React.FC<PageProps> = ({ user, onLogout }) => {
   };
 
   const getStatusBadge = (transaction: any) => {
-    if (transaction.completed) {
+    if (transaction.st) {
       return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Completada</span>;
     }
     if (transaction.daysLate > 0) {

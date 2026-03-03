@@ -1,4 +1,4 @@
-import { ClientDto } from "./client";
+import { Client } from "./client";
 
   // Función fetcher para la paginación
   export interface FetchParamsSales {
@@ -55,16 +55,17 @@ export interface ProductTypeDto {
 
 export interface SaleResponseDto {
   id: number;
-  client: ClientDto;
+  client: Client;
   descriptionProduct: string;
   priceTotal: number;
   dateSale: string;
   finalPaymentDate: string;
-  typePayments: 'SEMANAL' | 'MENSUAL' | 'QUINCENAL' | 'UNICO';
+  realFinalPayment: string;
+  typePayments: 'SEMANAL' | 'MENSUAL' | 'QUINCENAL' | 'CONTADO';
   daysLate: number;
   quantityFees: number;
-  completed: boolean;
-  amountFe: number;
+  // completed: boolean;
+  amountFee: number;
   fees: FeeDto[];
   cost: number;
   productType: ProductTypeDto;
@@ -87,6 +88,3 @@ export interface FeeDto {
   productDescription: string;
   status: 'PENDING' | 'PAID';
 }
-
-
-

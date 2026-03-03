@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Page } from '../../../services/clientServices';
 import { Client } from '../../../types/client';
+import { Page } from '../services/clientServices';
 
 type FetchFn = (params: { page: number; size: number }) => Promise<Page<Client>>;
 
@@ -19,7 +19,7 @@ export default function usePaginatedClients(fetchFn: FetchFn, deps: unknown[] = 
         setError(null);
         const data = await fetchFn({ page, size });
         if (!mounted) return;
-        console.log('usePaginatedClients - data.content:', data.content);
+        // console.log('usePaginatedClients - data.content:', data.content);
         setClients(Array.isArray(data.content) ? data.content : []);
         setTotalPages(data.totalPages);
       } catch (err) {

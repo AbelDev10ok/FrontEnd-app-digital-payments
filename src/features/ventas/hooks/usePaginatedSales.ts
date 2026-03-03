@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Page, SaleResponseDto } from '../services/salesServices';
+import { Page } from '../services/salesServices';
+import { SaleResponseDto } from '@/types/sales';
 
 type FetchFn = (params: { page: number; size: number }) => Promise<Page<SaleResponseDto>>;
 

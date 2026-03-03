@@ -1,5 +1,4 @@
 import { AlertCircle } from 'lucide-react';
-import { useMemo, useCallback } from 'react';
 
 import Load from '@/shared/components/feedback/Load.tsx';
 import { FetchParamsClients } from '@/types/client';
@@ -27,100 +26,69 @@ const Clientes: React.FC<PageProps> = ({ user, onLogout }) => {
         setShowFilters
       } = useClientsFilters();
 
-  const handleSearchTermChange = useCallback((value: string) => {
-    setSearchTerm(value);
-  }, [setSearchTerm]);
-
-  const handleVendedorChange = useCallback((id: number | null) => {
-    setSelectedVendedorId(id);
-  }, [setSelectedVendedorId]);
-
-  const handleShowFilters = useCallback((show: boolean) => {
-    setShowFilters(show);
-  }, [setShowFilters]);
-
-
-
-  const fetcher = useMemo(() => {
-    return async ({ page, size }: { page: number; size: number }) => {
-      const params: FetchParamsClients = { page, size };
-      if (searchTerm.trim()) params.search = searchTerm.trim();
-      
-      // Si selectedVendedorId es -1, significa "Sin vendedor"
-      if (selectedVendedorId === -1) {
-        params.withoutSeller = true;
-      } else if (selectedVendedorId && selectedVendedorId !== null) {
-        // Si es un número positivo, es el ID del vendedor
-        params.sellerId = selectedVendedorId;
-      }
-      // Si es null, no enviar filtro (significa "Todos")
-      
-      return clientService.getClientsPaginated(params);
-    };
-  }, [searchTerm, selectedVendedorId]);
-
-  const deps = useMemo(() => [searchTerm, selectedVendedorId], [searchTerm, selectedVendedorId]);
+  const fetcher = async ({ page, size }: { page: number; size: number }) => {
+    const params: FetchParamsClients = { page, size };
+    if (searchTerm.trim()) params.search = searchTerm.trim();
+    
+    // Si selectedVendedorId es -1, significa "Sin vendedor"
+    if (selectedVendedorId === -1) {
+      params.withoutSeller = true;
+    } else if (selectedVendedorId && selectedVendedorId !== null) {
+      // Si es un número positivo, es el ID del vendedor
+      params.sellerId = selectedVendedorId;
+    }
+    // Si es null, no enviar filtro (significa "Todos")
+    
+    return clientService.getClientsPaginated(params);
+  };
 
   const { clients, loading, error, page, setPage, totalPages } = usePaginatedClients(
     fetcher,
-    deps,
+    [searchTerm, selectedVendedorId],
     0,
     10
   );
   
-
-  if(loading) {
-    return (
-      <DashboardLayout title="Gestión de Clientes" user={user} onLogout={onLogout}>
-        <Load />
-      </DashboardLayout>
-    );
-  }
-
-  if(error){
-    return (
-      <DashboardLayout title="Gestión de Clientes" user={user} onLogout={onLogout}>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <div className="flex items-center text-red-800">
-            <AlertCircle className="w-5 h-5 mr-3" />
-            <span className="text-sm">{error}</span>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  // Eliminamos los returns tempranos para evitar que se desmonte el buscador
 
   return (
     <DashboardLayout title="Gestión de Clientes" user={user} onLogout={onLogout}>
       <div className="space-y-6">
-
         <HeaderClientes/>
 
-        {/* Search and Filters */}
+        {/* Search and Filters - Se mantiene siempre renderizado para no perder el foco */}
         <FilterCliente
-        searchTerm={searchTerm}
-        setSearchTerm={handleSearchTermChange}
-        selectedVendedorId={selectedVendedorId}
-        setSelectedVendedorId={handleVendedorChange}
-        vendedoresOptions={vendedoresOptions}
-        showFilters={showFilters}
-        setShowFilters={handleShowFilters}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedVendedorId={selectedVendedorId}
+          setSelectedVendedorId={setSelectedVendedorId}
+          vendedoresOptions={vendedoresOptions}
+          showFilters={showFilters}
+          setShowFilters={setShowFilters}
         />
 
-
-        {/* Clients Table */}
-        {!loading && (
+        {/* Clients Table o Estado de Carga/Error */}
+        {loading ? (
+          <Load />
+        ) : error ? (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="flex items-center text-red-800">
+              <AlertCircle className="w-5 h-5 mr-3" />
+              <span className="text-sm">{error}</span>
+            </div>
+          </div>
+        ) : (
           <ClientTable clients={clients} searchTerm={searchTerm} />
         )}
 
-            {/* Paginación */}
-            {totalPages > 1 && (
-              <Paginación
-                page={page}
-                setPage={setPage}
-                totalPages={totalPages}
-              />
-            )}
+        {/* Paginación */}
+        {!loading && !error && totalPages > 1 && (
+          <Paginación
+            page={page}
+            setPage={setPage}
+            totalPages={totalPages}
+          />
+        )}
       </div>
     </DashboardLayout>
   );

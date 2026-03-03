@@ -1,6 +1,7 @@
 import { Search } from 'lucide-react';
 import { DebouncedInput } from '@/shared/components/ui';
 import { ProductTypeDto } from '@/types/sales';
+import { memo } from 'react';
 
 interface FeesFiltersProps {
   searchTerm: string;
@@ -45,4 +46,4 @@ const FeesFilters = ({
   );
 };
 
-export default FeesFilters;
+export default memo(FeesFilters);

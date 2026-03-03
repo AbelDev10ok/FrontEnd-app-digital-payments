@@ -20,13 +20,13 @@ export const useSales = () => {
       setError(null);
       // fecha en formato año-mes-día
       const today = new Date().toISOString().split('T')[0];
-      console.log('Today:', today);
+      // console.log('Today:', today);
       
       // Obtener ventas y préstamos en paralelo
       const [salesData] = await Promise.all([
         salesService.getFeesDueOn('VENTAS',today),
       ]);
-      console.log('Sales Data:', salesData);
+      // console.log('Sales Data:', salesData);
       setSales(salesData);
       // setLoans(loansData);
       
@@ -43,13 +43,13 @@ export const useSales = () => {
     const allTransactions = [...salesData];
     
     const totalSales = salesData.length;
-    const completedSales = allTransactions.filter(t => t.completed).length;
-    const pendingSales = allTransactions.filter(t => !t.completed).length;
+    const completedSales = allTransactions.filter(t => t. status.toString() === 'COMPLETED').length;
+    const pendingSales = allTransactions.filter(t => t. status.toString() !== 'COMPLETED').length;
     const totalRevenue = allTransactions
-      .filter(t => t.completed)
+      .filter(t => t. status.toString() === 'COMPLETED')
       .reduce((sum, t) => sum + t.priceTotal, 0);
     const totalOutstanding = allTransactions
-      .filter(t => !t.completed)
+      .filter(t => t. status.toString() !== 'COMPLETED')
       .reduce((sum, t) => sum + t.remainingAmount, 0);
 
     setStats({

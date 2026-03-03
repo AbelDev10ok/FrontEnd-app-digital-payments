@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useEffect, useRef, memo } from 'react';
+import { useEffect, useRef, memo } from 'react';
 
 interface DebouncedInputProps {
   value: string;
@@ -16,50 +16,37 @@ const DebouncedInputComponent = ({
   delay = 500,
   className = ''
 }: DebouncedInputProps) => {
-  const [localValue, setLocalValue] = useState(value);
   const timerRef = useRef<number | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const hadFocus = useRef(false);
-
-  // sync external value but preserve focus/cursor if user is typing
-  useEffect(() => {
-    if (value !== localValue) {
-      setLocalValue(value);
-      if (hadFocus.current && inputRef.current) {
-        const pos = String(value ?? '').length;
-        inputRef.current.focus();
-        try { inputRef.current.setSelectionRange(pos, pos); } catch (e) { /* ignore */ }
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (timerRef.current) {
-      window.clearTimeout(timerRef.current);
-    }
+    const handleChange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
 
-    timerRef.current = window.setTimeout(() => {
-      if (localValue !== value) {
-        onChange(localValue);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
       }
-    }, delay);
+
+      timerRef.current = window.setTimeout(() => {
+        onChange(target.value);
+      }, delay);
+    };
+
+    const input = inputRef.current;
+    input?.addEventListener('input', handleChange);
 
     return () => {
-      if (timerRef.current) window.clearTimeout(timerRef.current);
+      input?.removeEventListener('input', handleChange);
+      if (timerRef.current) clearTimeout(timerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [localValue, delay]);
+  }, [onChange, delay]);
 
   return (
     <input
+      ref={inputRef}
       type="text"
       placeholder={placeholder}
-      value={localValue}
-      ref={inputRef}
-      onFocus={() => { hadFocus.current = true; }}
-      onBlur={() => { hadFocus.current = false; }}
-      onChange={(e) => setLocalValue(e.target.value)}
+      defaultValue={value}
       className={className}
     />
   );

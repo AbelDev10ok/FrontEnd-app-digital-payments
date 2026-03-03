@@ -1,7 +1,9 @@
 import { Plus, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { memo } from "react";
 
 const HeaderClientes = () => {
+  // console.log("Rendering HeaderClientes");
   return (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center space-x-3">
@@ -24,4 +26,4 @@ const HeaderClientes = () => {
 );
 }
 
-export default HeaderClientes;
+export default memo(HeaderClientes);

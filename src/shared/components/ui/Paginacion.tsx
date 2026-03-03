@@ -12,6 +12,9 @@ type PaginaciónProps = {
 
 
 const Paginación: React.FC<PaginaciónProps> = ({ page, setPage, totalPages }) => {
+
+    // console.log("Rendering Paginación - Page:", page, "TotalPages:", totalPages);
+
     return (
         <div className="flex justify-between items-center mt-4">
             <button

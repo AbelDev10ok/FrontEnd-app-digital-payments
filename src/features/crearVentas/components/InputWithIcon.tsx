@@ -12,6 +12,7 @@ interface Props {
   required?: boolean;
   error?: string;
   min?: number | string;
+  max?: number | string;
   step?: number | string;
   className?: string;
 }
@@ -28,6 +29,7 @@ const InputWithIcon: React.FC<Props> = ({
   required,
   error,
   min,
+  max,
   step,
   className = ''
 }) => {
@@ -50,6 +52,7 @@ const InputWithIcon: React.FC<Props> = ({
           type={type}
           required={required}
           min={min}
+          max={max}
           step={step}
           className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${error ? 'border-red-500' : 'border-gray-200'} ${className}`}
         />

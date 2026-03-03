@@ -28,13 +28,15 @@ const CrearTransaccion = ({ type, user, onLogout }: CrearTransaccionProps) => {
   } = useSaleForm(type);
 
   const submitWrapper = async (e: React.FormEvent) => {
+    // e.preventDefault();
+
     const ok = await handleSubmit(e);
-    if (ok) navigate('/dashboard/ventas');
-    else {
-      if (!formData.cliente) {
-        alert(formData.sellerId ? 'Selecciona un cliente del vendedor seleccionado' : 'Selecciona un cliente');
-      }
+
+    if(ok) {
+      // alert('Transacción creada exitosamente');
+      navigate('/dashboard/ventas/todas');
     }
+
   };
 
   return (

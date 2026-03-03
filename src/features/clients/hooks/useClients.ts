@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState} from 'react';
 import { Client, ClientRequest } from '../../../types/client';
 import { clientService } from '../services/clientServices';
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // const [financialStats, setFinancialStats] = useState({
   //   totalDeudaVentas: 0,
@@ -12,23 +12,6 @@ export const useClients = () => {
   //   totalDeudaPrestamos: 0,
   //   totalPrestamosPagados: 0
   // });
-
-  const fetchClients = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const clientsData = await clientService.getClients();
-      console.log('fetchClients - clientsData:', clientsData);
-      setClients(Array.isArray(clientsData) ? clientsData : []);
-      
-      // Calcular estadísticas financieras totales
-      // await calculateFinancialStats(clientsData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar los clientes');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // const calculateFinancialStats = async (clientsData: Client[]) => {
   //   try {
@@ -53,7 +36,7 @@ export const useClients = () => {
   //         totalDeudaPrestamos += deudaPrestamos;
   //         totalPrestamosPagados += prestamosPagados;
   //       } catch (err) {
-  //         console.warn(`Error calculando estadísticas para cliente ${client.id}:`, err);
+          // console.warn(`Error calculando estadísticas para cliente ${client.id}:`, err);
   //       }
   //     }
 
@@ -64,15 +47,15 @@ export const useClients = () => {
   //       totalPrestamosPagados
   //     });
   //   } catch (err) {
-  //     console.error('Error calculando estadísticas financieras:', err);
+      // console.error('Error calculando estadísticas financieras:', err);
   //   }
   // };
   const createClient = async (clientData: ClientRequest): Promise<Client> => {
     try {
       const newClient = await clientService.createClient(clientData);
-      console.log('createClient - newClient:', newClient);
+      // console.log('createClient - newClient:', newClient);
       setClients(prev => {
-        console.log('createClient - prev:', prev);
+        // console.log('createClient - prev:', prev);
         return Array.isArray(prev) ? [...prev, newClient] : [newClient];
       });
       // Recalcular estadísticas después de crear un cliente
@@ -87,10 +70,11 @@ export const useClients = () => {
 
   const updateClient = async (id: number, clientData: ClientRequest): Promise<Client> => {
     try {
+      // console.log('updateClient - clientData:', clientData);
       const updatedClient = await clientService.updateClient(id, clientData);
-      console.log('updateClient - updatedClient:', updatedClient);
+      // console.log('updateClient - updatedClient:', updatedClient);
       setClients(prev => {
-        console.log('updateClient - prev:', prev);
+        // console.log('updateClient - prev:', prev);
         return Array.isArray(prev)
           ? prev.map(client => client.id === id ? updatedClient : client)
           : [updatedClient];
@@ -108,17 +92,9 @@ export const useClients = () => {
     }
   };
 
-
-  useEffect(() => {
-    fetchClients();
-  }, []);
-
   return {
     clients,
-    loading,
     error,
-    // financialStats,
-    fetchClients,
     createClient,
     updateClient,
   };

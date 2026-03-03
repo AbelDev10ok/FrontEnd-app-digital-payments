@@ -1,5 +1,6 @@
 import { DebouncedInput } from '@/shared/components/ui';
 import { Search, Filter } from "lucide-react";
+import { memo } from 'react';
 
 type FilterClienteProps = {
   searchTerm: string;
@@ -13,7 +14,10 @@ type FilterClienteProps = {
 
 
 const FilterCliente = ({searchTerm, setSearchTerm, selectedVendedorId, setSelectedVendedorId, vendedoresOptions, showFilters, setShowFilters}:FilterClienteProps) => {
-    return (
+  
+  console.log("Rendering FilterCliente");
+  
+  return (
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
@@ -22,7 +26,7 @@ const FilterCliente = ({searchTerm, setSearchTerm, selectedVendedorId, setSelect
                 value={searchTerm}
                 onChange={setSearchTerm}
                 placeholder="Buscar clientes..."
-                delay={500}
+                delay={800}
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
@@ -60,4 +64,4 @@ const FilterCliente = ({searchTerm, setSearchTerm, selectedVendedorId, setSelect
 
 }
 
-export default FilterCliente;
+export default memo(FilterCliente);

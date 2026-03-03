@@ -3,7 +3,7 @@ import { User } from 'lucide-react';
 import { Client } from '../../types/client';
 
 interface Props {
-  value?: string; // sellerId as string
+  value?: string | number; // sellerId as string
   sellers: Client[];
   onChange: (sellerId: string) => void;
   placeholder?: string;

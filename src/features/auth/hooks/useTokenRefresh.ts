@@ -6,6 +6,7 @@ export const useTokenRefresh = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    console.log('useTokenRefresh: isAuthenticated =', isAuthenticated);
     if (isAuthenticated) {
       // Verificar inmediatamente al montar
       checkTokenExpiration();
@@ -13,7 +14,7 @@ export const useTokenRefresh = () => {
       // Configurar verificación periódica cada 4 minutos
       intervalRef.current = setInterval(() => {
         checkTokenExpiration();
-      }, 4 * 60 * 1000); // 4 minutos
+      }, 4 * 60 * 1000); // cada 4 minutos
 
       return () => {
         if (intervalRef.current) {

@@ -1,4 +1,4 @@
-import { SaleResponseDto } from "@/services/salesServices";
+import { SaleResponseDto } from "@/types/sales";
 import { Calendar, Clock, Package } from "lucide-react";
 
 
@@ -10,7 +10,10 @@ interface InfoTransactionDetalleProps {
 
 
 export default function InfoTransactionDetalle({transaction, isLoan, formatDate}: InfoTransactionDetalleProps) {
-    return (
+
+  console.log("info transaction detalle", transaction.realFinalPayment)
+
+  return (
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Información de la Transacción</h3>
             <div className="space-y-4">
@@ -24,10 +27,24 @@ export default function InfoTransactionDetalle({transaction, isLoan, formatDate}
               <div className="flex items-center space-x-3">
                 <Clock className="w-5 h-5 text-gray-400" />
                 <div>
-                  <p className="text-sm text-gray-500">Fecha Final de Pago</p>
+                  <p className="text-sm text-gray-500">Fecha Final Estimada de Pago</p>
                   <p className="font-medium text-gray-900">{formatDate(transaction.finalPaymentDate)}</p>
                 </div>
               </div>
+
+                {transaction.remainingAmount === 0 ?
+                <div className="flex items-center space-x-3">
+                  <Clock className="w-5 h-5 text-gray-400" /> 
+                  <div>
+                    <p className="text-sm text-gray-500">Fecha Finalizacion de Venta</p>
+                    <p className="font-medium text-gray-900">{formatDate(transaction.realFinalPayment)}</p>
+                  </div>              
+                </div>
+
+                :
+                null
+                }
+  
               <div className="flex items-center space-x-3">
                 <Package className="w-5 h-5 text-gray-400" />
                 <div>

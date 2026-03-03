@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Client } from '@/types/client';
 import {salesService } from '@/features/ventas/services/salesServices';
-import { useClients } from '@/features/clients/hooks/useClients';
+import { clientService } from '@/features/clients/services/clientServices';
 import { CreateSaleRequest, ProductTypeDto, SaleFormData, SaleType } from '@/types/sales';
 
 
@@ -13,8 +13,6 @@ const getLocalDateString = (date: Date) => {
 };
 
 export default function useSaleForm(initialType: SaleType) {
-  const { clients } = useClients();
-
   const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
   const [sellers, setSellers] = useState<Client[]>([]);
   const [displayedClients, setDisplayedClients] = useState<Client[]>([]);
@@ -70,6 +68,10 @@ export default function useSaleForm(initialType: SaleType) {
     if (formData.sellerId && formData.cliente) {
       const belongs = displayedClients.some(c => c.id === Number(formData.cliente));
       if (!belongs) newErrors.cliente = 'El cliente no pertenece al vendedor seleccionado';
+    }
+
+    if(Number(formData.cost) >= Number(formData.amountFee) * Number(formData.quantityFees)) {
+      newErrors.cost = 'El costo no puede ser menor o igual al monto total de la venta';
     }
 
     setErrors(newErrors);
@@ -140,28 +142,62 @@ export default function useSaleForm(initialType: SaleType) {
     fetchSellers();
   }, []);
 
-  // fetch clients for seller
+  // fetch clients for seller or all clients
   useEffect(() => {
-    const fetchClientsForSeller = async () => {
+    const fetchClients = async () => {
       try {
         if (!formData.sellerId) {
-          setDisplayedClients(clients as Client[]);
+          const response = await clientService.getClientsPaginated({ page: 0, size: 1000 });
+          setDisplayedClients(response.content);
           return;
         }
         const sellerIdNum = Number(formData.sellerId);
         const clientsOfSeller = await salesService.getClientsBySeller(sellerIdNum);
         setDisplayedClients(clientsOfSeller);
       } catch (err) {
-        console.error('Error fetching clients for seller', err);
+        console.error('Error fetching clients', err);
       }
     };
-    fetchClientsForSeller();
-  }, [formData.sellerId, clients]);
+    fetchClients();
+  }, [formData.sellerId]);
 
-  // sync displayedClients with clients when no seller
+  // Auto-completar vendedor cuando se selecciona un cliente
   useEffect(() => {
-  if (!formData.sellerId) setDisplayedClients(clients as Client[]);
-  }, [clients, formData.sellerId]);
+    const clientId = Number(formData.cliente);
+
+    if (clientId && clientId !== 0) {
+      const selectedClient = displayedClients.find(c => c.id === clientId);
+      
+      if (selectedClient) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const clientData = selectedClient as any;
+        
+        // Búsqueda robusta del nombre del vendedor 
+        let extractedSellerId = null;
+
+        if (!extractedSellerId && clientData?.sellerName) {
+          const foundSeller = sellers.find(s => s.name.toLowerCase() === clientData.sellerName.toLowerCase());
+          if (foundSeller) extractedSellerId = foundSeller.id;
+        }
+
+        // Si encontramos un ID y es diferente al actual, actualizamos
+        if (extractedSellerId && Number(formData.sellerId) !== Number(extractedSellerId)) {
+          setFormData(prev => ({ ...prev, sellerId: Number(extractedSellerId) }) as unknown as SaleFormData);
+        }
+      }
+    }
+  }, [formData.cliente, displayedClients, sellers]);
+
+  // Auto-completar descripción si el tipo de producto es PRESTAMO
+  useEffect(() => {
+    if (productTypes.length > 0 && formData.productTypeId) {
+      const selectedType = productTypes.find(pt => String(pt.id) === String(formData.productTypeId));
+      
+      if (selectedType?.name === 'PRESTAMO') {
+         setFormData(prev => ({ ...prev, descripcion: 'Préstamo personal' }));
+      }
+    }
+  }, [formData.productTypeId, productTypes]);
 
   // sync first fee date with sale date rules
   useEffect(() => {

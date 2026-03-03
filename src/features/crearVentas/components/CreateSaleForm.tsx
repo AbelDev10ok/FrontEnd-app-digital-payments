@@ -22,12 +22,18 @@ interface Props {
 }
 
 const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputChange, errors, isSubmittingDisabled, productTypes, sellers, displayedClients, onSubmit }) => {
+  // Verificar si el tipo seleccionado es PRESTAMO (ya sea por el modo del formulario o por el dropdown)
+  const selectedProductType = productTypes.find(pt => String(pt.id) === String(formData.productTypeId));
+  const isPrestamo = formData.tipo === 'PRESTAMO' || selectedProductType?.name === 'PRESTAMO';
+
+  const today = new Date().toISOString().split('T')[0];
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
       <form onSubmit={onSubmit} className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <InputWithIcon id="fecha" name="fecha" label="Fecha *" type="date" value={formData.fecha} onChange={handleInputChange} icon={<Calendar className="w-4 h-4 text-indigo-600" />} error={errors.fecha} />
+            <InputWithIcon id="fecha" name="fecha" label="Fecha *" type="date" value={formData.fecha} onChange={handleInputChange} icon={<Calendar className="w-4 h-4 text-indigo-600" />} error={errors.fecha} max={today} />
           </div>
 
           <div>
@@ -48,7 +54,7 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
             <AutocompleteSeller
               value={formData.sellerId}
               sellers={sellers}
-              onChange={(id: string) => setFormData((prev: any) => ({ ...prev, sellerId: id, cliente: 0 }))}
+              onChange={(id: string | number) => setFormData((prev: any) => ({ ...prev, sellerId: Number(id), cliente: 0 }))}
               error={errors.sellerId}
             />
           </div>
@@ -88,20 +94,22 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
           </div>
         </div>
 
-        <div>
-          <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-2">
-            Descripción de producto *
-          </label>
-          <textarea
-            id="descripcion"
-            name="descripcion"
-            value={formData.descripcion}
-            onChange={handleInputChange}
-            rows={2}
-            className="w-1/3 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Tv samsung 32'..."
-          />
-        </div>
+        {!isPrestamo && (
+          <div>
+            <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-2">
+              Descripción de producto *
+            </label>
+            <textarea
+              id="descripcion"
+              name="descripcion"
+              value={formData.descripcion}
+              onChange={handleInputChange}
+              rows={2}
+              className="w-1/3 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Tv samsung 32'..."
+            />
+          </div>
+        )}
 
         <SubmitBar isDisabled={isSubmittingDisabled} />
       </form>

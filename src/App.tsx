@@ -19,6 +19,7 @@ import Ventas from './pages/ventas/Ventas';
 import TodasVentas from './features/ventas/pages/TodasVentas';
 import VentaDetalle from './features/ventaDetalle/pages/VentaDetalle';
 import EditarCliente from './features/clients/pages/EditarCliente';
+// import EditarVenta from './features/ventaDetalle/components/';
 
 
 
@@ -84,15 +85,8 @@ function App() {
             }
           />
           
-          {/* Rutas protegidas para ventas - mantenemos compatibilidad */}
-          <Route
-            path="/dashboard/ventas"
-            element={
-              <ProtectedRoute requiredRole="ROLE_USER" component={Ventas} />
-            }
-          />
-          
-          {/* Nuevas rutas específicas para ventas */}
+          {/* --- RUTAS DE VENTAS (Ordenadas para evitar conflictos) --- */}
+          {/* Rutas estáticas y específicas van primero */}
           <Route
             path="/dashboard/ventas/cobrar-hoy"
             element={
@@ -118,9 +112,25 @@ function App() {
           />
           
           <Route
+            path="/dashboard/ventas/editar/:id"
+            element={
+              <ProtectedRoute requiredRole="ROLE_USER" component={EditarVenta} />
+            }
+          />
+
+          {/* La ruta dinámica :id debe ir DESPUÉS de las estáticas para evitar que "todas" o "crear" sean tratados como un ID. */}
+          <Route
             path="/dashboard/ventas/:id"
             element={
               <ProtectedRoute requiredRole="ROLE_USER" component={VentaDetalle} />
+            }
+          />
+
+          {/* Ruta general de ventas (posiblemente antigua), se deja al final para no interferir. */}
+          <Route
+            path="/dashboard/ventas"
+            element={
+              <ProtectedRoute requiredRole="ROLE_USER" component={Ventas} />
             }
           />
           

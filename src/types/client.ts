@@ -6,7 +6,7 @@ export interface Client {
   direccion: string;
   sellerId?: number;
   sellerName?: string;
-  vendedor: boolean;
+  seller: boolean;
   dni?: string;
 }
 
@@ -36,13 +36,13 @@ export interface ClientFormData {
   };
 
 
-export interface ClientDto {
-  id: number;
-  name: string;
-  telefono: string;
-  email: string;
-  direccion: string;
-  isSeller: boolean;
-  sellerName?: string;
-  dni: string;
-}
+// export interface ClientDto {
+//   id: number;
+//   name: string;
+//   telefono: string;
+//   email: string;
+//   direccion: string;
+//   isSeller: boolean;
+//   sellerName?: string;
+//   dni: string;
+// }

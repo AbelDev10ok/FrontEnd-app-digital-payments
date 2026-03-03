@@ -37,27 +37,6 @@ export interface Page<T> {
 
 
 export const clientService = {
-  // Obtener todos los clientes con filtros opcionales
-  async getClients(search?: string, sellerId?: number | null, withoutSeller?: boolean): Promise<Client[]> {
-    const params = new URLSearchParams();
-    
-    if (search) {
-      params.append('search', search);
-    }
-    if (sellerId) {
-      params.append('sellerId', sellerId.toString());
-    }
-    if (withoutSeller) {
-      params.append('withoutSeller', 'true');
-    }
-
-    const url = params.toString() ? `${API_BASE_URL}?${params.toString()}` : API_BASE_URL;
-    const response = await authenticatedFetch(url);
-    if (!response.ok) {
-      throw new Error('Error al obtener los clientes');
-    }
-    return response.json();
-  },
 
   // Obtener clientes paginados con filtros opcionales
   async getClientsPaginated(params: {
@@ -76,8 +55,8 @@ export const clientService = {
 
     const response = await authenticatedFetch(url.toString());
     if (!response.ok) {
-      throw new Error('Error al obtener los clientes paginados');
-    }
+      const errorData = await response.json().catch(() => ({ message: 'Error al obtener los clientes paginados' }));
+      throw new Error(errorData.message || 'Error al obtener los clientes paginados');    }
     return response.json();
   },
 
@@ -85,10 +64,10 @@ export const clientService = {
   async getClientById(id: number): Promise<Client> {
     const response = await authenticatedFetch(`${API_BASE_URL}/${id}`);
     if (!response.ok) {
-      throw new Error('Error al obtener el cliente');
-    }
+      const errorData = await response.json().catch(() => ({ message: 'Error al obtener el cliente' }));
+      throw new Error(errorData.message || 'Error al obtener el cliente');    }
 
-    console.log('Client data:', await response.clone().json());
+    // console.log('Client data:', await response.clone().json());
     return response.json();
   },
 
@@ -96,8 +75,8 @@ export const clientService = {
   async calcularDeudaTotalVentas(id: number): Promise<number> {
     const response = await authenticatedFetch(`${API_BASE_URL}/${id}/deuda-ventas`);
     if (!response.ok) {
-      throw new Error('Error al calcular la deuda de ventas');
-    }
+      const errorData = await response.json().catch(() => ({ message: 'Error al calcular la deuda total de ventas' }));
+      throw new Error(errorData.message || 'Error al calcular la deuda total de ventas');    }
     return response.json();
   },
 
@@ -105,8 +84,8 @@ export const clientService = {
   async calcularTotalVentasPagadas(id: number): Promise<number> {
     const response = await authenticatedFetch(`${API_BASE_URL}/${id}/total-ventas-pagadas`);
     if (!response.ok) {
-      throw new Error('Error al calcular el total de ventas pagadas');
-    }
+      const errorData = await response.json().catch(() => ({ message: 'Error al calcular el total de ventas pagadas' }));
+      throw new Error(errorData.message || 'Error al calcular el total de ventas pagadas');    }
 
     return response.json();
   },
@@ -115,8 +94,8 @@ export const clientService = {
   async calcularDeudaTotalPrestamos(id: number): Promise<number> {
     const response = await authenticatedFetch(`${API_BASE_URL}/${id}/deuda-prestamos`);
     if (!response.ok) {
-      throw new Error('Error al calcular la deuda de préstamos');
-    }
+      const errorData = await response.json().catch(() => ({ message: 'Error al calcular la deuda total de préstamos' }));
+      throw new Error(errorData.message || 'Error al calcular la deuda total de préstamos');    }
     return response.json();
   },
 
@@ -124,8 +103,8 @@ export const clientService = {
   async calcularTotalPrestamosPagados(id: number): Promise<number> {
     const response = await authenticatedFetch(`${API_BASE_URL}/${id}/total-prestamos-pagados`);
     if (!response.ok) {
-      throw new Error('Error al calcular el total de préstamos pagados');
-    }
+      const errorData = await response.json().catch(() => ({ message: 'Error al calcular el total de préstamos pagados' }));
+      throw new Error(errorData.message || 'Error al calcular el total de préstamos pagados');    }
     return response.json();
   },
 
@@ -135,8 +114,8 @@ export const clientService = {
       method: 'PUT',
     });
     if (!response.ok) {
-      throw new Error('Error al habilitar como vendedor');
-    }
+      const errorData = await response.json().catch(() => ({ message: 'Error al habilitar como vendedor' }));
+      throw new Error(errorData.message || 'Error al habilitar como vendedor');    }
   },
 
   // Desabilitar cliente como vendedor
@@ -145,13 +124,13 @@ export const clientService = {
       method: 'PUT',
     });
     if (!response.ok) {
-      throw new Error('Error al deshabilitar como vendedor');
-    }
+      const errorData = await response.json().catch(() => ({ message: 'Error al Desabilitar como vendedor' }));
+      throw new Error(errorData.message || 'Error al deshabilitar como vendedor');    }
   },
 
   // Crear nuevo cliente
   async createClient(clientData: ClientRequest): Promise<Client> {
-    console.log('CREANDO  Client data:', clientData);
+    // console.log('CREANDO  Client data:', clientData);
     const response = await authenticatedFetch(API_BASE_URL, {
       method: 'POST',
       headers: {
@@ -177,6 +156,8 @@ export const clientService = {
       },
       body: JSON.stringify(clientData),
     });
+    // console.log('Client data:', clientData);
+
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: 'Error al actualizar el cliente' }));
@@ -195,15 +176,25 @@ export const clientService = {
     // const data = await response.json();
 
     if (!response.ok) {
-      throw new Error('Error al eliminar el cliente');
+      const errorData = await response.json().catch(() => ({ message: 'Error al eliminar el cliente' }));
+      throw new Error(errorData.message || 'Error al eliminar el cliente');
     }
   },
 
   // obtener vendedores
-  async getVendedores(): Promise<Client[]> {
+  async getVendedoresConClientesAsignados(): Promise<Client[]> {
     const response = await authenticatedFetch(`${API_BASE_URL}/vendedores`);
     if (!response.ok) {
       throw new Error('Error al obtener los vendedores');
+    }
+    return response.json();
+  },
+
+
+  async getVendedoresActivos(): Promise<Client[]> {
+    const response = await authenticatedFetch(`${API_BASE_URL}/vendedores/activos`);
+    if (!response.ok) {
+      throw new Error('Error al obtener los vendedores activos');
     }
     return response.json();
   },

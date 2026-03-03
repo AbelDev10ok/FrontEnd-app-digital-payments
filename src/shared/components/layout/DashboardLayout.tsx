@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, memo } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
@@ -10,6 +10,8 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, user, onLogout }) => {
+
+  // console.log('DashboardLayout renderizado');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
@@ -47,7 +49,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, user
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -55,4 +57,4 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, user
   );
 };
 
-export default DashboardLayout;
+export default memo(DashboardLayout);
