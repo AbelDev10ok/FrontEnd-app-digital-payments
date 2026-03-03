@@ -111,12 +111,12 @@ function App() {
             }
           />
           
-          <Route
+          {/* <Route
             path="/dashboard/ventas/editar/:id"
             element={
               <ProtectedRoute requiredRole="ROLE_USER" component={EditarVenta} />
             }
-          />
+          /> */}
 
           {/* La ruta dinámica :id debe ir DESPUÉS de las estáticas para evitar que "todas" o "crear" sean tratados como un ID. */}
           <Route
