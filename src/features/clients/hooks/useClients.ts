@@ -1,6 +1,6 @@
 import { useState} from 'react';
-import { Client, ClientRequest } from '../../../types/client';
-import { clientService } from '../services/clientServices';
+import { Client, ClientRequest } from '@/@/../types/client';
+import { clientService } from '@features/clients/services/clientServices';
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);

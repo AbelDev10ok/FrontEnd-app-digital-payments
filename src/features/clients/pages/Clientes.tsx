@@ -8,8 +8,8 @@ import ClientTable from '../components/ClientTable';
 import { Paginación } from '@/shared/components/ui';
 import { useClientsFilters } from '@/features/clients/hooks/useClientsFilters';
 import usePaginatedClients from '@/features/clients/hooks/usePaginatedClients';
-import { clientService } from '../services/clientServices';
-import FilterCliente from '../components/FilterCliente';
+import { clientService } from '@features/clients/services/clientServices';
+import FilterCliente from '@features/clients/components/FilterCliente';
 
 interface PageProps {
   user: { email?: string; role?: string } | null;

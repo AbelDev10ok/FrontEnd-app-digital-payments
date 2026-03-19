@@ -3,7 +3,7 @@ import { Client } from '@/types/client';
 import InputWithIcon from '@/features/crearVentas/components/InputWithIcon';
 import AutocompleteSeller from '@/shared/components/AutocompleteSeller';
 import SubmitBar from '@/features/crearVentas/components/SubmitBar';
-import { clientService } from '../services/clientServices';
+import { clientService } from '@features/clients/services/clientServices';
 
 // Definimos la estructura de los datos del formulario
 export interface ClientFormData {

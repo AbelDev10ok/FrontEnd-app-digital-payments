@@ -1,5 +1,5 @@
 import { SaleResponseDto } from "@/types/sales";
-import { DollarSign, CreditCard, CheckCircle, Clock, Hash, TrendingUp } from "lucide-react";
+import { DollarSign, CreditCard, CheckCircle, Hash, TrendingUp } from "lucide-react";
 
 interface InfoDetalleTransactionProps {
     transaction: SaleResponseDto
@@ -77,13 +77,13 @@ export default function StateDetalleTransaction({transaction, formatCurrency}: I
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Días de Atraso</p>
-                <p className={`text-2xl font-bold ${transaction.daysLate > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                  {transaction.daysLate}
+                <p className="text-sm font-medium text-gray-600">Costo</p>
+                <p className={`text-2xl font-bold text-green-600'}`}>
+                  {formatCurrency(transaction.cost)}
                 </p>
               </div>
-              <div className={`${transaction.daysLate > 0 ? 'bg-red-50' : 'bg-green-50'} p-3 rounded-xl`}>
-                <Clock className={`w-6 h-6 ${transaction.daysLate > 0 ? 'text-red-600' : 'text-green-600'}`} />
+              <div className='bg-green-50 p-3 rounded-xl'>
+                <DollarSign className={`w-6 h-6 'text-green-600'}`} />
               </div>
             </div>
           </div>

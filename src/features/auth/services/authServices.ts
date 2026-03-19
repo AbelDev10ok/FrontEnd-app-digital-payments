@@ -1,54 +1,45 @@
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "@features/auth/store/authStore";
 
+interface ApiResponse<T> {
+  message: string;
+  status: string;
+  data: T;
+}
 
 // authServices.ts
 export async function login(email: string, password: string) {
-  try {
-    const response = await fetch('http://localhost:8080/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
+  const response = await fetch('http://localhost:8080/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+  });
 
-    // Si la respuesta no es OK, lanzamos un error que será capturado por el catch.
-    if (!response.ok) {
-      // Puedes obtener el mensaje de error del backend si existe.
-      const errorData = await response.json().catch(() => ({ message: 'Credenciales inválidas' }));
-      throw new Error(errorData.message || 'Credenciales inválidas');
-    }
+  const apiResponse: ApiResponse<any> = await response.json();
 
-    const result = await response.json();
-    return result.data; // Devuelve solo los datos relevantes (accessToken, refreshToken, etc.)
-  } catch (error) {
-    // Si la promesa falla (por ejemplo, error de red), se propaga el error.
-    console.error('Error during login:', error);
-    throw error; // Re-lanzar el error para que el componente que llama lo maneje.
+  if (response.ok && apiResponse.status === 'OK') {
+    return apiResponse.data;
+  } else {
+    throw new Error(apiResponse.message || 'Credenciales inválidas');
   }
-
-  
 }
 // Función para refrescar el token
 export async function refreshToken(refreshToken: string) {
-  try {
-    const response = await fetch('http://localhost:8080/auth/refresh-token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refreshToken }),
-    });
+  const response = await fetch('http://localhost:8080/auth/refresh-token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ refreshToken }),
+  });
 
-    if (!response.ok) {
-      throw new Error('Refresh token expired or invalid');
-    }
+  const apiResponse: ApiResponse<any> = await response.json();
 
-    const result = await response.json();
-    return result; // { accessToken, refreshToken }
-  } catch (error) {
-    console.error('Error refreshing token:', error);
-    throw error;
+  if (response.ok && apiResponse.status === 'OK') {
+    return apiResponse.data;
+  } else {
+    throw new Error(apiResponse.message || 'Refresh token expired or invalid');
   }
 }
 
@@ -74,7 +65,7 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
       headers,
     });
 
-    // Si el token es válido, devolver la respuesta
+    // Si el token es válido, o el error no es 401, devolver la respuesta para ser manejada por el service
     if (response.ok || response.status !== 401) {
       return response;
     }

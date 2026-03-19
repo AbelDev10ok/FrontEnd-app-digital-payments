@@ -3,8 +3,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, DollarSign, CreditCard, Banknote, Loader2, AlertCircle, ShoppingBag, Trash2 } from 'lucide-react';
 import Load from '@/shared/components/feedback/Load';
 import { Client } from '@/types/client';
-import InfoCliente from '../components/InfoCliente';
-import { clientService } from '../services/clientServices';
+import InfoCliente from '@features/clients/components/InfoCliente';
+import { clientService } from '@features/clients/services/clientServices';
 import { DashboardLayout } from '@/shared/components/layout';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
 

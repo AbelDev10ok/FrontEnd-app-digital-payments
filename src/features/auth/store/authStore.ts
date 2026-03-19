@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { login as loginService, refreshToken as refreshTokenService } from '../services/authServices'; 
+import { login as loginService, refreshToken as refreshTokenService } from '@features/auth/services/authServices'; 
 
 export interface User {
   email: string;

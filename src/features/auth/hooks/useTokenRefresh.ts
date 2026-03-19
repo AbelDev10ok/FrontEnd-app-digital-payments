@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '@features/auth/store/authStore';
 
 export const useTokenRefresh = () => {
   const { isAuthenticated, checkTokenExpiration } = useAuthStore();

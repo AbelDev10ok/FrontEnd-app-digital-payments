@@ -14,11 +14,10 @@ cuando termino de pagar una venta le muestra mal la fecha de finalizacion ✅
 
 cuando elimino una cuota se crea una nueva con fecha anterior a otras deberia crearse posterior a la ultima ✅
 
-
-no cuenta bien los dias de atraso ✅
-
-
 calcula mas la fecha de finalizacion puse 3 meses y calcular a 4 meses ✅
+
+testeaando que ande bien creacion de ventas
+
             {/* Stats */}
         {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">

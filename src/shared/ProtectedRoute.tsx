@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useAuthStore } from '@/features/auth';
+import { useAuthStore } from '@/features/auth/store/authStore';
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 
@@ -14,7 +14,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, component: Co
   const { isAuthenticated, user, logout } = useAuthStore();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace />
   }
 
   if (requiredRole && user?.role !== requiredRole) {

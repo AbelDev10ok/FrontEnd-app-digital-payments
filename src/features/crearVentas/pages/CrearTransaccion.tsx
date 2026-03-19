@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/shared';
-import useSaleForm from '../hooks/useSaleForm';
-import TransactionHeader from '../components/TransactionHeader';
-import CreateSaleForm from '../components/CreateSaleForm';
+import useSaleForm from '@features/crearVentas/hooks/useSaleForm';
+import TransactionHeader from '@features/crearVentas/components/TransactionHeader';
+import CreateSaleForm from '@features/crearVentas/components/CreateSaleForm';
 
 
 

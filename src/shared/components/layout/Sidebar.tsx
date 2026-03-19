@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -9,15 +9,39 @@ import {
   UserPlus,
   Eye,
   Plus,
+  Package,
 } from 'lucide-react';
+import { salesService } from '@/features/ventas/services/salesServices';
+import { ProductTypeDto } from '@/types/sales';
 
 interface SidebarProps {
   isOpen: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
-  const [clientesExpanded, setClientesExpanded] = useState(false);
-  const [ventasExpanded, setVentasExpanded] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [clientesExpanded, setClientesExpanded] = useState(() => location.pathname.includes('/clientes'));
+  const [ventasExpanded, setVentasExpanded] = useState(() => location.pathname.includes('/ventas'));
+
+  const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
+  const [productTypesExpanded, setProductTypesExpanded] = useState(() => {
+    return location.pathname.includes('/ventas') && location.search.includes('productType=');
+  });
+
+  useEffect(() => {
+    salesService.getProductTypes()
+      .then(setProductTypes)
+      .catch(err => console.error("Error fetching product types:", err));
+  }, []);
+
+  const filterOptions = [
+    { label: 'Todos', value: 'Todos', color: 'bg-indigo-500' },
+    { label: 'A Cobrar', value: 'A_COBRAR', color: 'bg-red-500' },
+    { label: 'Completadas', value: 'COMPLETED', color: 'bg-green-500' },
+    { label: 'Activas', value: 'ACTIVE', color: 'bg-yellow-500' }
+    ];
 
   const menuItems = useMemo(() => [
     {
@@ -51,18 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       hasSubmenu: true,
       expanded: ventasExpanded,
       onToggle: () => setVentasExpanded(!ventasExpanded),
-      submenu: [
-        {
-          title: 'Ventas a cobrar',
-          icon: Eye,
-          path: '/dashboard/ventas/cobrar-hoy',
-        },
-        {
-          title: 'Todas las Ventas',
-          icon: Eye,
-          path: '/dashboard/ventas/todas'
-        },
-      ]
+      submenu: []
     },
     {
       title: 'Nueva Venta',
@@ -129,6 +142,107 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                           <span>{subItem.title}</span>
                         </NavLink>
                       ))}
+                      {/* Filtros (estate) */}
+                      {item.title === 'Ventas' && (
+                        <div className="mt-1">
+                            <div className="flex flex-col space-y-1 ml-2">
+                              {filterOptions.map(option => {
+                                const isActive = (() => {
+                                  const search = new URLSearchParams(location.search);
+                                  const current = search.get('status');
+                                  if (option.value === 'Todos') {
+                                    return (
+                                      location.pathname === '/dashboard/ventas/todas' && !current
+                                    );
+                                  }
+                                  return (
+                                    location.pathname === '/dashboard/ventas/todas' &&
+                                    current === option.value
+                                  );
+                                })();
+
+                                return (
+                                  <button
+                                    key={option.value}
+                                    onClick={() => {
+                                      if (option.value === 'Todos') {
+                                        navigate('/dashboard/ventas/todas');
+                                      } else {
+                                        navigate(`/dashboard/ventas/todas?status=${option.value}`);
+                                      }
+                                      // Mantenemos el menú abierto para mejor UX
+                                      if (!ventasExpanded) setVentasExpanded(true);
+                                    }}
+                                    className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-colors duration-150
+                                      ${isActive
+                                        ? 'bg-indigo-50 text-indigo-700 font-medium'
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                      }`}
+                                  >
+                                    <span className={`w-2 h-2 rounded-full ${option.color}`} />
+                                    <span>{option.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                          {/* Filtros de Tipos de Producto */}
+                          <div className="mt-2 pt-2 border-t border-gray-100">
+                            <button
+                              onClick={() => setProductTypesExpanded(!productTypesExpanded)}
+                              className="w-full flex items-center justify-between p-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-200 group"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <Package className="w-4 h-4 text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                                <span className="font-medium">Categoria</span>
+                              </div>
+                              {productTypesExpanded ? (
+                                <ChevronDown className="w-3 h-3" />
+                              ) : (
+                                <ChevronRight className="w-3 h-3" />
+                              )}
+                            </button>
+                            {productTypesExpanded && (
+                              <div className="flex flex-col space-y-1 mt-1 ml-2">
+                                <button
+                                  onClick={() => {
+                                    navigate('/dashboard/ventas/todas');
+                                    if (!ventasExpanded) setVentasExpanded(true);
+                                  }}
+                                  className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-colors duration-150 ${
+                                    location.pathname === '/dashboard/ventas/todas' && !new URLSearchParams(location.search).get('productType')
+                                      ? 'bg-indigo-50 text-indigo-700 font-medium'
+                                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                  }`}
+                                >
+                                  <span className="w-2 h-2 rounded-full bg-gray-400" />
+                                  <span>Todos</span>
+                                </button>
+                                {productTypes.map(pt => {
+                                  const isActive = new URLSearchParams(location.search).get('productType') === String(pt.id);
+                                  return (
+                                    <button
+                                      key={pt.id}
+                                      onClick={() => {
+                                        navigate(`/dashboard/ventas/todas?productType=${pt.id}`);
+                                        if (!ventasExpanded) setVentasExpanded(true);
+                                      }}
+                                      className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-colors duration-150 ${
+                                        isActive
+                                          ? 'bg-indigo-50 text-indigo-700 font-medium'
+                                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                      }`}
+                                    >
+                                      <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                                      <span>{pt.name}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

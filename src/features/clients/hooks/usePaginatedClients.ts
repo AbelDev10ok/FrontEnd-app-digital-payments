@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Client } from '../../../types/client';
-import { Page } from '../services/clientServices';
+import { Client } from '@/@/../types/client';
+import { Page } from '@features/clients/services/clientServices';
 
 type FetchFn = (params: { page: number; size: number }) => Promise<Page<Client>>;
 

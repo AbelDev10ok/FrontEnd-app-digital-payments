@@ -1,25 +1,25 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-import Login from './features/auth/components/Login';
-import Dashboard from './features/Dashboard';
+import Login from '@/features/auth/components/Login';
+import Dashboard from '@/features/Dashboard';
 
-import ClienteDetalle from './features/clients/pages/ClienteDetalle';
-import AdminPanel from './features/adminPanel/AdminPanel';
-import ProtectedRoute from './shared/ProtectedRoute';
-import TokenRefreshHandler from './shared/TokenRefreshHandler';
+import ClienteDetalle from '@/features/clients/pages/ClienteDetalle';
+import AdminPanel from '@/features/adminPanel/AdminPanel';
+import ProtectedRoute from '@/shared/ProtectedRoute';
+import TokenRefreshHandler from '@/shared/TokenRefreshHandler';
 
 // import TodasLasVentas from './pages/ventas/Cobrar';
 // import VentasACobrarHoy from './pages/ventas/Todas';
-import CrearVenta from './features/crearVentas/pages/CrearTransaccion';
-import VentasACobrar from './features/ventas/pages/VentasACobrar';
-import { useAuthStore } from './features/auth/store/authStore';
-import Clientes from './features/clients/pages/Clientes';
-import CrearCliente from './features/clients/pages/CrearCliente';
-import Ventas from './pages/ventas/Ventas';
-import TodasVentas from './features/ventas/pages/TodasVentas';
-import VentaDetalle from './features/ventaDetalle/pages/VentaDetalle';
-import EditarCliente from './features/clients/pages/EditarCliente';
-// import EditarVenta from './features/ventaDetalle/components/';
+import CrearVenta from '@/features/crearVentas/pages/CrearTransaccion';
+// import VentasACobrar from './features/ventas/pages/VentasACobrar';
+import { useAuthStore } from '@/features/auth/store/authStore';
+import Clientes from '@/features/clients/pages/Clientes';
+import CrearCliente from '@/features/clients/pages/CrearCliente';
+import Ventas from '@/pages/ventas/Ventas';
+import TodasVentas from '@/features/ventas/pages/TodasVentas';
+import VentaDetalle from '@/features/ventaDetalle/pages/VentaDetalle';
+import EditarVenta from '@/features/ventas/pages/EditarVenta';
+import EditarCliente from '@/features/clients/pages/EditarCliente';
 
 
 
@@ -87,12 +87,12 @@ function App() {
           
           {/* --- RUTAS DE VENTAS (Ordenadas para evitar conflictos) --- */}
           {/* Rutas estáticas y específicas van primero */}
-          <Route
+          {/* <Route
             path="/dashboard/ventas/cobrar-hoy"
             element={
               <ProtectedRoute requiredRole="ROLE_USER" component={VentasACobrar} />
             }
-          />
+          /> */}
           <Route
             path="/dashboard/ventas/todas"
             element={
@@ -111,12 +111,12 @@ function App() {
             }
           />
           
-          {/* <Route
+          <Route
             path="/dashboard/ventas/editar/:id"
             element={
               <ProtectedRoute requiredRole="ROLE_USER" component={EditarVenta} />
             }
-          /> */}
+          />
 
           {/* La ruta dinámica :id debe ir DESPUÉS de las estáticas para evitar que "todas" o "crear" sean tratados como un ID. */}
           <Route

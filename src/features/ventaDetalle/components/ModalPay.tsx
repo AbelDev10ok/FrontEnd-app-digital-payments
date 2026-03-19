@@ -1,4 +1,5 @@
-import { X, Loader2, AlertCircle } from 'lucide-react';
+import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
+import { X, Loader2} from 'lucide-react';
 
 export interface ModalPayProps {
   open: boolean;
@@ -6,6 +7,7 @@ export interface ModalPayProps {
   selectedFee: { id: number; amount: number; numberFee: number } | null;
   paymentDate: string;
   onPaymentDateChange: (value: string) => void;
+  dateSale: string;
   paymentAmount: string;
   onPaymentAmountChange: (value: string) => void;
   remainingDebt: number;
@@ -21,6 +23,7 @@ export const ModalPay: React.FC<ModalPayProps> = ({
   selectedFee,
   paymentDate,
   onPaymentDateChange,
+  dateSale,
   paymentAmount,
   onPaymentAmountChange,
   remainingDebt,
@@ -30,8 +33,6 @@ export const ModalPay: React.FC<ModalPayProps> = ({
   error
 }) => {
   if (!open || !selectedFee) return null;
-
-  const minDate = new Date().toISOString().split('T')[0];
 
 
   return (
@@ -73,9 +74,9 @@ export const ModalPay: React.FC<ModalPayProps> = ({
               value={paymentDate}
               onChange={(e) => onPaymentDateChange(e.target.value)}
               // fecha maximo de pago el dia de hoy
-              min={minDate}
+              min={dateSale}
               // no puede ser menor a la fecha de venta
-              // max={maxDate}
+              // max={paymentDate}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             />
           </div>
@@ -97,19 +98,18 @@ export const ModalPay: React.FC<ModalPayProps> = ({
                 placeholder="0.00"
               />
             </div>
-            {/* {parseFloat(paymentAmount) > remainingDebt && (
-              <p className="mt-1 text-sm text-red-600">
-                El monto no puede ser mayor al total de la deuda restante.
-              </p>
-            )} */}
           </div>
 
+          {error && (
+            ErrorMessage({ message: error })
+          )}
+{/* 
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <p>{error}</p>
           </div>
-        )}   
+        )}    */}
 
           <div className="flex space-x-3 pt-4">
             <button
@@ -124,16 +124,13 @@ export const ModalPay: React.FC<ModalPayProps> = ({
                 !paymentAmount ||
                 parseFloat(paymentAmount) <= 0 ||
                 parseFloat(paymentAmount) > remainingDebt ||
-                processingFeeId === selectedFee.id ||
-                paymentDate < minDate
+                processingFeeId === selectedFee.id 
+                // paymentDate <= minDate
               }
               className="flex-1 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {processingFeeId === selectedFee.id ? (
-                <div className="flex items-center justify-center">
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Procesando...
-                </div>
+                <Loader2 className="animate-spin w-5 h-5 mx-auto" />
               ) : (
                 'Confirmar Pago'
               )}

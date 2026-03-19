@@ -56,7 +56,9 @@ export default function useSaleForm(initialType: SaleType) {
 
     if (!formData.cliente || Number(formData.cliente) === 0) newErrors.cliente = formData.sellerId ? 'Selecciona un cliente del vendedor seleccionado' : 'Selecciona un cliente';
     if (!formData.productTypeId) newErrors.productTypeId = 'Selecciona un tipo de producto';
-    if (!formData.amountFee || Number(formData.amountFee) <= 0) newErrors.amountFee = 'Ingresa un valor de cuota válido';
+    if (!(formData.payments === 'CONTADO' && formData.payFirstFee)) {
+      if (!formData.amountFee || Number(formData.amountFee) <= 0) newErrors.amountFee = 'Ingresa un valor de cuota válido';
+    }
     if (!formData.cost || Number(formData.cost) <= 0) newErrors.cost = 'Ingresa un costo válido';
     if (!formData.quantityFees || Number(formData.quantityFees) < 1) newErrors.quantityFees = 'La cantidad de cuotas debe ser al menos 1';
 
@@ -70,7 +72,7 @@ export default function useSaleForm(initialType: SaleType) {
       if (!belongs) newErrors.cliente = 'El cliente no pertenece al vendedor seleccionado';
     }
 
-    if(Number(formData.cost) >= Number(formData.amountFee) * Number(formData.quantityFees)) {
+    if(Number(formData.cost) >= Number(formData.amountFee) * Number(formData.quantityFees) && formData.payments !== 'CONTADO') {
       newErrors.cost = 'El costo no puede ser menor o igual al monto total de la venta';
     }
 

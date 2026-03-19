@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 export default function HeaderTransaction({title}: {title: string}) {
     return (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center space-x-3">
+          <div className="hidden sm:flex items-center space-x-3">
             <ShoppingCart className="w-8 h-8 text-green-600" />
             <div>
               <h2 className="text-xl font-semibold text-gray-900">{title}</h2>

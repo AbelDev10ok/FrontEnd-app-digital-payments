@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Clock, 
   CheckCircle, 
@@ -17,6 +17,7 @@ import HeaderDetalleTransaction from '../components/HeaderDetalleTransaction';
 import ClientInfoDetalle from '../components/ClientInfoDetalle';
 import InfoTransactionDetalle from '../components/InfoTransactionDetalle';
 import { SaleResponseDto } from '@/types/sales';
+import Modal from '@/shared/components/ui/Modal'; 
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -25,13 +26,13 @@ interface PageProps {
 
 const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [transaction, setTransaction] = useState<SaleResponseDto>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
-  // Use shared formatCurrency util (defaults to ARS)
-
-  console.log(transaction)
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
@@ -40,6 +41,25 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
       month: '2-digit',
       year: 'numeric'
     });
+  };
+
+  const handleEdit = () => {
+    navigate(`/dashboard/ventas/editar/${id}`);
+  };
+
+  const handleDelete = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!id) return;
+    try {
+      await salesService.deleteSale(parseInt(id));
+      navigate('/dashboard/ventas/todas');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al eliminar la venta');
+      setIsDeleteModalOpen(false);
+    }
   };
 
 
@@ -59,8 +79,8 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       'PAID': { bg: 'bg-green-100', text: 'text-green-800', label: 'Pagada' },
-      'LATE': { bg: 'bg-red-100', text: 'text-red-800', label: 'Atrasada' },
-      'POSTPONED': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pospuesta' },
+      // 'LATE': { bg: 'bg-red-100', text: 'text-red-800', label: 'Atrasada' },
+      // 'POSTPONED': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pospuesta' },
       'PENDING': { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Pendiente' },
     };
 
@@ -125,24 +145,41 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
     <DashboardLayout title={`${isLoan ? 'Préstamo' : 'Venta'} #${transaction.id}`} user={user} onLogout={onLogout}>
       <div className="space-y-6">
 
-        <HeaderDetalleTransaction transaction={transaction} isLoan={isLoan} />
+        <HeaderDetalleTransaction 
+          transaction={transaction} 
+          isLoan={isLoan}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
         
         {/* Transaction state */}
         <StateDetalleTransaction
           transaction={transaction}
           formatCurrency={formatCurrency}
         />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-          {/* Client Info */}
-          <ClientInfoDetalle transaction={transaction} />
-        
-          {/* Transaction Info */}
-          <InfoTransactionDetalle
-            transaction={transaction}
-            isLoan={isLoan}
-            formatDate={formatDate}
-          />
+
+        {/* Botón para mostrar/ocultar detalles */}
+        <div className="my-4">
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            className="w-full flex items-center justify-center px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:bg-gray-50 text-sm font-medium"
+          >
+            {showDetails ? 'Ocultar Detalles' : 'Ver Detalles'}
+          </button>
+        </div>
+
+        {/* Detalles del Cliente y Transacción (colapsable) */}
+        <div className={`${showDetails ? 'block' : 'hidden'}`}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Client Info */}
+            <ClientInfoDetalle transaction={transaction} />
+            {/* Transaction Info */}
+            <InfoTransactionDetalle
+              transaction={transaction}
+              isLoan={isLoan}
+              formatDate={formatDate}
+            />
+          </div>
         </div>
 
         <CronogramaFees
@@ -154,6 +191,32 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
             refreshTransaction={refreshTransaction}
         />
         </div>
+        <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Confirmar Eliminación"
+      >
+        <div className="mt-4">
+          <p className="text-sm text-gray-600">
+            ¿Estás seguro de que quieres eliminar esta venta? Esta acción no se puede deshacer.
+          </p>
+          <div className="mt-6 flex justify-end space-x-3">
+            <button
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleConfirmDelete}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+            >
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       </DashboardLayout>
   );
 };

@@ -1,10 +1,15 @@
 import { authenticatedFetch } from "@/features/auth/services/authServices";
 import { Client } from "@/types/client";
-import { CreateSaleRequest, ProductTypeDto, SaleResponseDto } from "@/types/sales";
-import { SaleFormData } from "../components/SaleForm";
-
+import { CreateSaleRequest, ProductTypeDto, SaleResponseDto, UpdateSaleRequest } from "@/types/sales";
 
 const API_BASE_URL = 'http://localhost:8080/api/loans';
+
+// Definición de la interfaz para la nueva estructura de respuesta
+interface ApiResponse<T> {
+  message: string;
+  status: string; // O un enum si se prefieren valores fijos como 'OK', 'BAD_REQUEST'
+  data: T;
+}
 
 export interface Page<T> {
   content: T[];
@@ -35,10 +40,18 @@ export interface Page<T> {
   empty: boolean;
 }
 
+// Función de ayuda para manejar la nueva respuesta de la API
+async function handleResponse<T>(response: Response): Promise<T> {
+  const apiResponse: ApiResponse<T> = await response.json();
+  if (response.ok && apiResponse.status === 'OK') {
+    return apiResponse.data;
+  } else {
+    throw new Error(apiResponse.message || 'Ocurrió un error');
+  }
+}
 
 export const salesService = {
 
-  // Obtener vendedores (clientes marcados como vendedores)
   async getSellers(): Promise<Client[]> {
     const response = await authenticatedFetch('http://localhost:8080/api/clients/vendedores');
     if (!response.ok) {
@@ -47,7 +60,6 @@ export const salesService = {
     return response.json();
   },
 
-  // Obtener clientes asignados a un vendedor específico
   async getClientsBySeller(sellerId: number): Promise<Client[]> {
     const response = await authenticatedFetch(`http://localhost:8080/api/clients/vendedor/${sellerId}/clientes`);
     if (!response.ok) {
@@ -58,11 +70,7 @@ export const salesService = {
 
   async getProductDescriptions(productType: string): Promise<SaleResponseDto[]> {
     const response = await authenticatedFetch(`${API_BASE_URL}/search-by-description?description=${productType}`);
-    if (!response.ok) {
-      throw new Error('Error al obtener los tipos de productos');
-    }
-    return response.json();
-
+    return handleResponse<SaleResponseDto[]>(response);
   },
 
   async getProductTypes(): Promise<ProductTypeDto[]> {
@@ -73,17 +81,9 @@ export const salesService = {
     return response.json();
   },
 
-  // Obtener todas las ventas (excluyendo préstamos por defecto)
-  async getAllSales(productType: string = 'PRESTAMO'): Promise<SaleResponseDto[] | []> {
+  async getAllSales(productType: string = 'PRESTAMO'): Promise<SaleResponseDto[]> {
     const response = await authenticatedFetch(`${API_BASE_URL}?productType=${productType}`);
-
-    // imprimir response en consola
-    // console.log('Response:', response);
-
-    if (!response.ok) {
-      throw new Error('Error al obtener las ventas');
-    }
-    return response.json();
+    return handleResponse<SaleResponseDto[]>(response);
   },
 
   async getAllSalesPaginated(params: {
@@ -91,6 +91,7 @@ export const salesService = {
     size: number;
     year?: number;
     month?: number;
+    day?: number;
     clientName?: string;
     descriptionProduct?: string;
     status?: string;
@@ -101,21 +102,17 @@ export const salesService = {
     url.searchParams.append('size', params.size.toString());
     if (params.year) url.searchParams.append('year', params.year.toString());
     if (params.month) url.searchParams.append('month', params.month.toString());
+    if (params.day) url.searchParams.append('day', params.day.toString());
     if (params.clientName) url.searchParams.append('clientName', params.clientName);
     if (params.descriptionProduct) url.searchParams.append('descriptionProduct', params.descriptionProduct);
     if (params.status) url.searchParams.append('status', params.status);
     if (params.productType) url.searchParams.append('productType', params.productType);
+    console.log('URL completa:', url.toString());
 
     const response = await authenticatedFetch(url.toString());
-    if (!response.ok) {
-      throw new Error('Error al obtener las ventas paginadas');
-    }
-
-    const data = await response.json();
-    console.log('Data:', data);
-    return data;
+    return handleResponse<Page<SaleResponseDto>>(response);
   },
-  // obtener cuotas a cobrar es decir cuotas atrasadas y cuotas de hoy
+
   async getFeesDue(params: {
     page: number;
     size: number;
@@ -125,230 +122,162 @@ export const salesService = {
     productType?: string;
   }): Promise<Page<SaleResponseDto>> {
     const url = new URL(`${API_BASE_URL}/delayed-fees`);
-
-    // console.log("Params received in getFeesDue:", params);
     url.searchParams.append('page', params.page.toString());
     url.searchParams.append('size', params.size.toString());
+    const date = params.date || new Date().toISOString().split('T')[0];
+    url.searchParams.append('date', date);
 
-    // si no tengo fecha uso la actual
-    if (!params?.date) {
-      const today = new Date();
-
-      // console.log("No date param, using today's date: " + today.toISOString().split('T')[0]);
-  
-      url.searchParams.append('date', today.toISOString().split('T')[0]);
-    }else{
-      url.searchParams.append('date', params.date);
-      // console.log("date param: " + params.date);
-    }
-
-    if (params?.clientName) {
-      url.searchParams.append('clientName', params.clientName);
-    }
-    if (params?.descriptionProduct) {
-      url.searchParams.append('descriptionProduct', params.descriptionProduct);
-    }
-    // if (params?.status) {
-    //   url.searchParams.append('status', params.status);
-    // }
-    if (params?.productType) {
-      url.searchParams.append('productType', Number(params.productType).toString());
-    }
+    if (params.clientName) url.searchParams.append('clientName', params.clientName);
+    if (params.descriptionProduct) url.searchParams.append('descriptionProduct', params.descriptionProduct);
+    if (params.productType) url.searchParams.append('productType', Number(params.productType).toString());
 
     const response = await authenticatedFetch(url.toString());
-    if (!response.ok) {
-      throw new Error('Error al obtener las cuotas');
-    }
-    return response.json();
+    return handleResponse<Page<SaleResponseDto>>(response);
   },
 
-  // Obtener cuotas a cobrar hoy o fecha especificada con request param date
-  async getFeesDueOn(productType:string ,date: string): Promise<SaleResponseDto[]> {
-    // console.log("data"+ date)
-    const url = new URL(API_BASE_URL+'/fees-to-charge-today');
-    if (date) {
-      url.searchParams.append('date', date);    
-    }
-    if (productType) {
-      url.searchParams.append('productType', productType);
-    }
+  async getFeesDueOn(productType: string, date: string): Promise<SaleResponseDto[]> {
+    const url = new URL(`${API_BASE_URL}/fees-to-charge-today`);
+    url.searchParams.append('date', date);
+    url.searchParams.append('productType', productType);
     const response = await authenticatedFetch(url.toString());
-
-      // imprimir response en consola
-    // const data = await response.clone().json().catch(() => null);
-    // console.log('Response:', response);
-    // console.log('Data:', data);
-
-    if (!response.ok) {
-      throw new Error('Error al obtener las cuotas');
-    }
-    return response.json();
+    return handleResponse<SaleResponseDto[]>(response);
   },
 
-  // Obtener todos los préstamos
   async getAllLoans(): Promise<SaleResponseDto[]> {
     const response = await authenticatedFetch(`${API_BASE_URL}?productType=VENTA`);
-    if (!response.ok) {
-      throw new Error('Error al obtener los préstamos');
-    }
-    return response.json();
+    return handleResponse<SaleResponseDto[]>(response);
   },
 
-  // Obtener venta por ID
   async getSaleById(id: number): Promise<SaleResponseDto> {
     const response = await authenticatedFetch(`${API_BASE_URL}/${id}`);
-    if (!response.ok) {
-      throw new Error('Error al obtener la venta');
-    }
-    // console.log('Response:', response);
-    return response.json();
+    return handleResponse<SaleResponseDto>(response);
   },
 
-  // Crear nueva venta
   async createSale(saleData: CreateSaleRequest): Promise<SaleResponseDto> {
-    console.log('Creating sale with data:', saleData);
+    console.log('Enviando solicitud de creación de venta con los siguientes datos:', saleData);
+    console.log('Endpoint al que se está enviando la solicitud:', API_BASE_URL);
+    console.log('data en formato JSON:', JSON.stringify(saleData));
     const response = await authenticatedFetch(API_BASE_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(saleData),
+    });
+    return handleResponse<SaleResponseDto>(response);
+  },
+
+  async updateSale(id: number, saleData: UpdateSaleRequest): Promise<void> {
+    const response = await authenticatedFetch(`${API_BASE_URL}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(saleData),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Error al crear la venta' }));
-      throw new Error(errorData.message || 'Error al crear la venta');
+      try {
+        const apiResponse = await response.json();
+        throw new Error(apiResponse.message);
+      } catch (e) {
+        throw new Error(e.message);
+      }
     }
-
-    return response.json();
   },
 
-  // Actualizar venta
-  async updateSale(id: number, saleData: SaleFormData): Promise<void> {
-    console.log('Updating sale with data:', saleData);
-
-    const data = {
-      amountFee: saleData.amountFee,
-      descriptionProduct: saleData.descriptionProduct,
-      payments: saleData.payments,
-      quantityFees: saleData.quantityFees,
-      cost: saleData.cost,
-      productType: saleData.productTypeId,
-      clientId: saleData.clientId
-    };
-
-    // la fecha va en la url como request param
-    const response = await authenticatedFetch(`${API_BASE_URL}/${id}?date=${saleData.dateSale}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      // Se mejora el manejo de errores para leer el cuerpo de la respuesta
-      // como texto si no es un JSON válido.
-      let errorDetail = 'Error al actualizar la venta';
-      try {
-        const errorBody = await response.json();
-        errorDetail = errorBody.message || JSON.stringify(errorBody);
-      } catch (e) {
-        errorDetail = await response.text();
-      }
-      throw new Error(errorDetail);
-    }
-    // No se procesa el cuerpo de la respuesta en caso de éxito para evitar el error de parseo,
-    // ya que el backend devuelve texto plano en lugar de JSON.
-  }
-  ,
-
-  // Eliminar venta
   async deleteSale(id: number): Promise<void> {
-    console.log('Deleting sale with id:', id);
     const response = await authenticatedFetch(`${API_BASE_URL}/deleted/${id}`, {
       method: 'DELETE',
     });
 
     if (!response.ok) {
-      throw new Error('Error al eliminar la venta');
-    }
-  },
-
-  async markFeeAsPaid(feeId: number, amount: number, date: string ): Promise<void> {
-    console.log("Marking fee as paid: feeId=" + feeId + ", amount=" + amount, typeof amount, "date=" + date, typeof date);
-    const url = `${API_BASE_URL}/collects-fee/${feeId}/pay?amount=${amount}&date=${date}`;
-    const response = await authenticatedFetch(url, {
-      method: 'POST'
-      // No agregues headers ni body aquí
-    });
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.message);
-    }
-  },
-
-  async postponeFee(saleId: number, feeId: number, newDateExpiration: string, amount: number, newDatePayment?: string): Promise<void> {
-    console.log(`Postponing fee: saleId=${saleId}, feeId=${feeId}, newDateExpiration=${newDateExpiration}, amount=${amount}, newDatePayment=${newDatePayment}`);
-    let url = `${API_BASE_URL}/fee/${feeId}/postpone?newDateExpiration=${newDateExpiration}&amount=${amount}`;
-    if (newDatePayment) {
-      url += `&newDatePayment=${newDatePayment}`;
-    }
-    const response = await authenticatedFetch(url, {
-      method: 'POST',
-      // No enviamos headers ni body porque son Query Params
-    });
-
-    if (!response.ok) {
-      let errorDetail = 'Error al posponer la cuota';
       try {
-        const errorBody = await response.json();
-        errorDetail = errorBody.message || JSON.stringify(errorBody);
+        const apiResponse = await response.json();
+        throw new Error(apiResponse.message);
       } catch (e) {
-        const text = await response.text();
-        if (text) errorDetail = text;
+        throw new Error(e.message);
       }
-      throw new Error(errorDetail);
     }
   },
+
+  async markFeeAsPaid(feeId: number, amount: number, date: string): Promise<void> {
+    const url = `${API_BASE_URL}/collects-fee/${feeId}/pay?amount=${amount}&date=${date}`;
+    const response = await authenticatedFetch(url, { method: 'POST' });
+
+    if (!response.ok) {
+      // Si la respuesta no es ok, intenta parsear el cuerpo como JSON para obtener el mensaje de error
+      try {
+        const apiResponse = await response.json();
+        throw new Error(apiResponse.message);
+      } catch (e) {
+        // Si el cuerpo no es JSON o hay otro error, lanza un error genérico
+        throw new Error(e.message);
+      }
+    }
+    // Si la respuesta es ok, no se necesita procesar el cuerpo si se espera que esté vacío
+  },
+
+async postponeFee(saleId: number, feeId: number, newDateExpiration: string, amount: number, newDatePayment?: string): Promise<void> {
+    // Usamos URLSearchParams para construir los parámetros de la URL dinámicamente
+    const params = new URLSearchParams();
+    params.append('newDateExpiration', newDateExpiration);
+
+    if (newDatePayment) {
+      params.append('newDatePayment', newDatePayment);
+    }
+    
+    // ATENCIÓN: Se asume que si el monto es 0, no se quiere modificar en este contexto.
+    // Solo agregamos 'amount' a la URL si es un número válido, no nulo y diferente de 0.
+    if (amount !== null && !isNaN(amount)) {
+      params.append('amount', amount.toString());
+    }
+
+    const url = `${API_BASE_URL}/fee/${feeId}/postpone?${params.toString()}`;
+    
+    const response = await authenticatedFetch(url, { method: 'POST' });
+
+    if (!response.ok) {
+      try {
+        const apiResponse = await response.json();
+        console.error('Error al posponer la cuota:', apiResponse);
+        throw new Error(apiResponse.message);
+      } catch (e) {
+        // Es una buena práctica asegurarse de que 'e' es un error antes de acceder a .message
+        const errorMessage = e instanceof Error ? e.message : 'Ocurrió un error desconocido';
+        throw new Error(errorMessage);
+      }
+    }
+},
 
   async deleteFee(feeId: number): Promise<void> {
-    console.log(`Deleting fee: feeId=${feeId}`);
-    const response = await authenticatedFetch(`${API_BASE_URL}/fee/${feeId}`, {
-      method: 'DELETE',
-    });
-
+    console.log(`Intentando eliminar la cuota con ID: ${feeId}`);
+    const response = await authenticatedFetch(`${API_BASE_URL}/fee/${feeId}`, { method: 'DELETE' });
+    
     if (!response.ok) {
-      let errorDetail = 'Error al eliminar la cuota';
       try {
-        const text = await response.text();
-        try {
-          const errorBody = JSON.parse(text);
-          errorDetail = errorBody.message || JSON.stringify(errorBody);
-        } catch {
-          if (text) errorDetail = text;
-        }
+        const apiResponse = await response.json();
+        throw new Error(apiResponse.message);
       } catch (e) {
-        console.error('Error parsing error response:', e);
+        throw new Error(e.message);
       }
-      throw new Error(errorDetail);
     }
   },
 
-  // Obtener estadísticas de ventas
   async getSalesStats(): Promise<{
     totalSales: number;
     totalLoans: number;
     completedSales: number;
-    
     pendingSales: number;
     totalRevenue: number;
     totalOutstanding: number;
   }> {
     const response = await authenticatedFetch(`${API_BASE_URL}/stats`);
-    if (!response.ok) {
-      throw new Error('Error al obtener las estadísticas');
-    }
-    return response.json();
+    // Se asume que este endpoint también sigue el nuevo formato
+    return handleResponse<{
+      totalSales: number;
+      totalLoans: number;
+      completedSales: number;
+      pendingSales: number;
+      totalRevenue: number;
+      totalOutstanding: number;
+    }>(response);
   },
 };
+

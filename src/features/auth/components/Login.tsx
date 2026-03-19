@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '@features/auth/store/authStore';
 
 
 const Login: React.FC = () => {

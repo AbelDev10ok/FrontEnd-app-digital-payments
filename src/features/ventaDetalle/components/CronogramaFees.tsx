@@ -18,8 +18,6 @@ interface CronogramaFeesProps{
 
 export default function CronogramaFees({transaction, formatDate, formatCurrency, getStatusBadge, refreshTransaction}: CronogramaFeesProps ) {
     
-    console.log(transaction)
-
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [selectedFee, setSelectedFee] = useState<{ id: number; amount: number; numberFee: number } | null>(null);
     const [paymentAmount, setPaymentAmount] = useState('');
@@ -43,7 +41,7 @@ export default function CronogramaFees({transaction, formatDate, formatCurrency,
     // console.log(fee.amount)
     setSelectedFee(fee);
     setPaymentAmount(str);
-    setPaymentDate(new Date().toISOString().split('T')[0]);
+    setPaymentDate(transaction.dateSale); // Inicializar con la fecha de venta
     setRemainingDebt(remainingDebt);
     setShowPaymentModal(true);
   };
@@ -71,7 +69,7 @@ export default function CronogramaFees({transaction, formatDate, formatCurrency,
     setShowPaymentModal(false);
     setSelectedFee(null);
     setPaymentAmount('');
-    setPaymentDate(new Date().toISOString().split('T')[0]);
+    setPaymentDate(transaction.dateSale); // Reiniciar a la fecha de venta
     setRemainingDebt(0);
   };
 
@@ -186,6 +184,7 @@ export default function CronogramaFees({transaction, formatDate, formatCurrency,
                             selectedFee={selectedFee}
                             paymentAmount={paymentAmount}
                             onPaymentAmountChange={handlePaymentAmountChange}
+                            dateSale={transaction.dateSale} 
                             paymentDate={paymentDate}
                             onPaymentDateChange={(value) => setPaymentDate(value)}
                             remainingDebt={remainingDebt}

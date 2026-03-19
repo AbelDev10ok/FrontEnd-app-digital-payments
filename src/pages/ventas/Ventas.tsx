@@ -289,7 +289,7 @@ const Ventas: React.FC<PageProps> = ({ user, onLogout }) => {
                       {/* Monto */}
                       <td className="px-6 py-4 block md:table-cell text-right md:text-left relative border-b border-gray-200 md:border-b-0 before:content-[attr(data-label)] before:absolute before:left-6 before:text-sm before:font-bold before:text-gray-500 md:before:content-none" data-label="Monto:">
                         <div className="text-sm font-medium text-gray-900">{formatCurrency(transaction.priceTotal)}</div>
-                        {!transaction.completed && (
+                        {transaction.status.toString() !== 'COMPLETED' && (
                           <div className="text-sm text-gray-500">Pendiente: {formatCurrency(transaction.remainingAmount)}</div>
                         )}
                       </td>
@@ -359,13 +359,13 @@ const Ventas: React.FC<PageProps> = ({ user, onLogout }) => {
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-green-600">
-                  {formatCurrency(filteredTransactions.filter(t => t.completed).reduce((sum, t) => sum + t.priceTotal, 0))}
+                  {formatCurrency(filteredTransactions.filter(t => t.status.toString() === 'COMPLETED').reduce((sum, t) => sum + t.priceTotal, 0))}
                 </p>
                 <p className="text-sm text-gray-500">Ingresos Completados</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-orange-600">
-                  {formatCurrency(filteredTransactions.filter(t => !t.completed).reduce((sum, t) => sum + t.remainingAmount, 0))}
+                  {formatCurrency(filteredTransactions.filter(t => t.status.toString() !== 'COMPLETED').reduce((sum, t) => sum + t.remainingAmount, 0))}
                 </p>
                 <p className="text-sm text-gray-500">Pendiente de Cobro</p>
               </div>

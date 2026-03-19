@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Client } from '../../types/client';
+import { Client } from '@/types/client';
 interface Props {
   value?: number;
   clients: Client[];

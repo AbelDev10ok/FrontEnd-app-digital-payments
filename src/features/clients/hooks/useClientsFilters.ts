@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Client } from "../../../types/client";
-import { clientService } from "../services/clientServices";
+import { Client } from "@/@/../types/client";
+import { clientService } from "@features/clients/services/clientServices";
 
 export interface VendedorOption {
   id: number | null;

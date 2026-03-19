@@ -6,6 +6,7 @@ import { Client } from "./client";
     size: number;
     year?: number;
     month?: number;
+    day?: number;
     clientName?: string;
     descriptionProduct?: string;
     status?: string;
@@ -53,6 +54,12 @@ export interface ProductTypeDto {
   name: string;
 }
 
+export interface UpdateSaleRequest {
+  descriptionProduct: string;
+  productType: number;
+
+}
+
 export interface SaleResponseDto {
   id: number;
   client: Client;
@@ -62,7 +69,6 @@ export interface SaleResponseDto {
   finalPaymentDate: string;
   realFinalPayment: string;
   typePayments: 'SEMANAL' | 'MENSUAL' | 'QUINCENAL' | 'CONTADO';
-  daysLate: number;
   quantityFees: number;
   // completed: boolean;
   amountFee: number;

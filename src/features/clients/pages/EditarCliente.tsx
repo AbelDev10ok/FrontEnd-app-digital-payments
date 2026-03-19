@@ -3,9 +3,9 @@ import { ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { clientService } from '@/features/clients/services/clientServices';
-import { useClients } from '../hooks/useClients';
+import { useClients } from '@features/clients/hooks/useClients';
 import { DashboardLayout } from '@/shared/components/layout';
-import ClientForm, { ClientFormData } from '../components/ClientForm';
+import ClientForm, { ClientFormData } from '@features/clients/components/ClientForm';
 import Load from '@/shared/components/feedback/Load';
 
 interface PageProps {

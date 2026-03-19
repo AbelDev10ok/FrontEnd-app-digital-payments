@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, User, Shield, Menu } from 'lucide-react';
+import { LogOut, User, Menu } from 'lucide-react';
 
 interface UserShape {
   email?: string;
@@ -47,13 +47,13 @@ const Header: React.FC<HeaderProps> = ({
             )}
 
             <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl">
+              {/* <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl">
                 {user?.role === 'ROLE_ADMIN' ? (
                   <Shield className="w-6 h-6 text-white" />
                 ) : (
                   <User className="w-6 h-6 text-white" />
                 )}
-              </div>
+              </div> */}
               <div>
                 <h1 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h1>
                 <p className="text-sm text-gray-500 hidden sm:block">{autoSubtitle}</p>

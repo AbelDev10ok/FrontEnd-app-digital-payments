@@ -3,7 +3,7 @@ import { UserPlus, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useClients } from '@/features/clients/hooks/useClients';
 import { DashboardLayout } from '@/shared/components/layout';
-import ClientForm, { ClientFormData } from '../components/ClientForm';
+import ClientForm, { ClientFormData } from '@features/clients/components/ClientForm';
 
 interface PageProps {
   user: { email?: string; role?: string } | null;

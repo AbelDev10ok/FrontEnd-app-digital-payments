@@ -59,7 +59,7 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
       onSuccess();
       onClose();
     } catch (err) {
-      setError('Error al posponer la fecha de vencimiento');
+      setError(err instanceof Error ? err.message : 'Error al posponer la cuota');
       console.error(err);
     } finally {
       setLoading(false);
@@ -86,9 +86,9 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl w-full max-w-md p-6 m-4 shadow-xl border border-gray-100">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Posponer Vencimiento</h3>
-          <button 
-            onClick={onClose} 
+          <h3 className="text-lg font-semibold text-gray-900">{isPaid ? 'Editar Cuota Pagada' : 'Posponer Vencimiento'}</h3>
+          <button
+            onClick={onClose}
             className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
           >
             <X className="w-5 h-5" />
@@ -96,32 +96,10 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fecha de Vencimiento
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Calendar className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="date"
-                value={newDate}
-                onChange={(e) => setNewDate(e.target.value)}
-                min={saleDate ? new Date(saleDate).toISOString().split('T')[0] : undefined}
-                className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                required
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              La nueva fecha no puede ser anterior a la fecha de venta.
-            </p>
-          </div>
-
-          {isPaid && (
+          {!isPaid && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Fecha de Pago
+                Fecha de Vencimiento
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -129,38 +107,59 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                 </div>
                 <input
                   type="date"
-                  value={newPaymentDate}
-                  onChange={(e) => setNewPaymentDate(e.target.value)}
+                  value={newDate}
+                  onChange={(e) => setNewDate(e.target.value)}
+                  min={saleDate ? new Date(saleDate).toISOString().split('T')[0] : undefined}
                   className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                  required
                 />
               </div>
+              <p className="text-xs text-gray-500 mt-2">
+                La nueva fecha no puede ser anterior a la fecha de venta.
+              </p>
             </div>
           )}
 
           {isPaid && (
-
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Monto de la Cuota
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <DollarSign className="h-5 w-5 text-gray-400" />
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fecha de Pago
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Calendar className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="date"
+                    value={newPaymentDate}
+                    onChange={(e) => setNewPaymentDate(e.target.value)}
+                    className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                  />
+                </div>
               </div>
-              <input
-                type="number"
-                value={newAmount}
-                onChange={(e) => setNewAmount(e.target.value)}
-                step="0.01"
-                className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              El monto no puede superar la deuda actual: ${maxAmount}
-            </p>
-          </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Monto de la Cuota
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <DollarSign className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="number"
+                    value={newAmount}
+                    onChange={(e) => setNewAmount(e.target.value)}
+                    step="0.01"
+                    className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  El monto no puede superar la deuda actual: ${maxAmount}
+                </p>
+              </div>
+            </>
           )}
 
 

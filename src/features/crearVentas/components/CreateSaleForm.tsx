@@ -6,7 +6,7 @@ import AutocompleteSeller from '@/shared/components/AutocompleteSeller';
 import SubmitBar from '@/features/crearVentas/components/SubmitBar';
 import AutocompleteClient from '@/features/crearVentas/components/AutocompleteClient';
 import PrimerCuota from '@/features/crearVentas/components/PrimerCuota';
-import ProductCategoryIcon from './ProductCategoryIcon';
+import ProductCategoryIcon from '@/features/crearVentas/components/ProductCategoryIcon';
 import { CreditCard, Tv, Calendar, Plus, DollarSign } from 'lucide-react';
 
 interface Props {
@@ -77,17 +77,50 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
             errors={{ firstFeeDate: errors.firstFeeDate, firstFeeAmount: errors.firstFeeAmount }}
           />
 
-          <div>
-            <SelectWithIcon id="payments" name="payments" label="Tipo de pago *" value={formData.payments} onChange={handleInputChange} options={[{ value: 'SEMANAL', label: 'Semanal' }, { value: 'QUINCENAL', label: 'Quincenal' }, { value: 'MENSUAL', label: 'Mensual' }, { value: 'CONTADO', label: 'Contado' }]} />
-          </div>
+          
+      {/* <div>
+        <InputWithIcon
+          id="firstFeeDate"
+          name="firstFeeDate"
+          label="Fecha primera cuota (opcional)"
+          type="date"
+          value={formData.firstFeeDate}
+          onChange={handleInputChange}
+          icon={<Calendar className="w-4 h-4 text-indigo-600" />}
+          error={errors?.firstFeeDate}
+          min={formData.fecha}
+        />
+      </div> */}
 
           <div>
-            <InputWithIcon id="quantityFees" name="quantityFees" label={<><Plus className="inline w-4 h-4 text-indigo-600 mr-2" /> Cantidad de cuotas *</>} type="number" value={formData.quantityFees} onChange={handleInputChange} error={errors.quantityFees} />
+            <SelectWithIcon
+              id="payments"
+              name="payments"
+              label="Tipo de pago *"
+              value={formData.payments}
+              onChange={e => {
+                const { name, value } = e.target;
+                setFormData((prev: any) => ({
+                  ...prev,
+                  [name]: value,
+                  quantityFees: value === 'CONTADO' ? 1 : prev.quantityFees,
+                }));
+              }}
+              options={[{ value: 'SEMANAL', label: 'Semanal' }, { value: 'QUINCENAL', label: 'Quincenal' }, { value: 'MENSUAL', label: 'Mensual' }, { value: 'CONTADO', label: 'Contado' }]}
+            />
           </div>
 
-          <div>
-            <InputWithIcon id="amountFee" name="amountFee" label="Valor de la cuota *" type="number" value={formData.amountFee} onChange={handleInputChange} icon={<DollarSign className="w-4 h-4" />} error={errors.amountFee} />
-          </div>
+          {formData.payments !== 'CONTADO' && (
+            <div>
+              <InputWithIcon id="quantityFees" name="quantityFees" label={<><Plus className="inline w-4 h-4 text-indigo-600 mr-2" /> Cantidad de cuotas *</>} type="number" value={formData.quantityFees} onChange={handleInputChange} error={errors.quantityFees} />
+            </div>
+          )}
+
+          {!(formData.payments === 'CONTADO' && formData.payFirstFee) && (
+            <div>
+              <InputWithIcon id="amountFee" name="amountFee" label="Valor de la cuota *" type="number" value={formData.amountFee} onChange={handleInputChange} icon={<DollarSign className="w-4 h-4" />} error={errors.amountFee} />
+            </div>
+          )}
 
           <div>
             <InputWithIcon id="cost" name="cost" label="Costo *" type="number" value={formData.cost} onChange={handleInputChange} icon={<DollarSign className="w-4 h-4" />} error={errors.cost} />

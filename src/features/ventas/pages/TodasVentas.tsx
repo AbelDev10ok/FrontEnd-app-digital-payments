@@ -10,9 +10,9 @@ import HeaderTransaction from '@/features/ventas/components/HeaderTransaction';
 import { DashboardLayout } from '@/shared';
 import { Paginación } from '@/shared/components/ui';
 import { FetchParamsSales } from '@/types/sales';
-import { salesService } from '../services/salesServices';
-import SalesFilters from '../components/SalesFilters';
-import SaleTable from '../components/SaleTable';
+import { salesService } from '@features/ventas/services/salesServices';
+import SalesFilters from '@features/ventas/components/SalesFilters';
+import SaleTable from '@features/ventas/components/SaleTable';
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -28,7 +28,16 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     selectedStatus,
     setSelectedStatus,
     selectedProductType,
-    setSelectedProductType
+    setSelectedProductType,
+    year,
+    setYear,
+    month,
+    setMonth,
+    specificDate,
+    setSpecificDate,
+    showCalendar,
+    setShowCalendar,
+    date,
   } = useSalesFilters();
 
   const [searchParams] = useSearchParams();
@@ -38,9 +47,23 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     if (clientNameParam) {
       setSearchClientName(clientNameParam);
     }
-  }, [searchParams, setSearchClientName]);
+    // read status from URL and update filter
+    const statusParam = searchParams.get('status');
+    if (statusParam) {
+      setSelectedStatus(statusParam);
+    } else {
+      setSelectedStatus('Todos');
+    }
+    // read productType from URL and update filter
+    const productTypeParam = searchParams.get('productType');
+    if (productTypeParam) {
+      setSelectedProductType(productTypeParam);
+    } else {
+      setSelectedProductType('');
+    }
+  }, [searchParams, setSearchClientName, setSelectedStatus, setSelectedProductType]);
 
-  const statusOptions = ['Todos', 'COMPLETED', 'ACTIVE', 'CANCELED'];
+  // const statusOptions = ['Todos', 'COMPLETED', 'ACTIVE', 'CANCELED'];
 
   const { productTypes, loading: productTypesLoading } = useProductTypes();
 
@@ -50,10 +73,19 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     if (searchClientName.trim()) params.clientName = searchClientName.trim();
     if (selectedStatus !== 'Todos') params.status = selectedStatus.toUpperCase();
     if (selectedProductType) params.productType = selectedProductType;
+    if (specificDate) {
+      const [y, m, d] = specificDate.split('-').map(Number);
+      params.year = y;
+      params.month = m;
+      params.day = d;
+    } else {
+      if (year) params.year = parseInt(year);
+      if (month) params.month = parseInt(month);
+    }
     return salesService.getAllSalesPaginated(params);
   };
 
-  const { sales, loading: salesLoading, error: salesError, page, setPage, totalPages } = usePaginatedSales(fetcher, [searchDescription, searchClientName, selectedStatus, selectedProductType, productTypes]);
+  const { sales, loading: salesLoading, error: salesError, page, setPage, totalPages } = usePaginatedSales(fetcher, [searchDescription, searchClientName, selectedStatus, selectedProductType, productTypes, year, month, specificDate]);
 
   
   return (
@@ -69,17 +101,26 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
           onSearchChange={setSearchDescription}
           searchClientName={searchClientName}
           onClientNameChange={setSearchClientName}
-          selectedStatus={selectedStatus}
-          onStatusChange={setSelectedStatus}
-          selectedProductType={selectedProductType}
-          onProductTypeChange={setSelectedProductType}
-          productTypes={productTypes}
-          statusOptions={statusOptions}
+          year={year}
+          setYear={setYear}
+          month={month}
+          setMonth={setMonth}
+          specificDate={specificDate}
+          setSpecificDate={setSpecificDate}
+          showCalendar={showCalendar}
+          setShowCalendar={setShowCalendar}
+          // selectedStatus={selectedStatus}
+          // onStatusChange={setSelectedStatus}
+          // showStatusFilter={false}
+          // selectedProductType={selectedProductType}
+          // onProductTypeChange={setSelectedProductType}
+          // productTypes={productTypes}
+          // statusOptions={statusOptions}
         />
         {salesLoading || productTypesLoading ? (
           <Load />
         ) : 
-          <SaleTable sales={sales} emptyMessage={(searchDescription || searchClientName || selectedStatus !== 'Todos')
+          <SaleTable sales={sales} emptyMessage={(searchDescription || searchClientName || selectedStatus !== 'Todos' || date)
               ? 'No se encontraron ventas que coincidan con los filtros'
               : 'No hay ventas registradas'} />
         }

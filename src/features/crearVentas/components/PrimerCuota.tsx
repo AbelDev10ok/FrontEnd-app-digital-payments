@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, DollarSign, CheckCircle } from 'lucide-react';
+import { Calendar, CheckCircle, DollarSign, } from 'lucide-react';
 import InputWithIcon from './InputWithIcon';
 
 interface PrimerCuotaProps {
