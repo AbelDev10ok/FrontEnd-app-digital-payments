@@ -1,10 +1,8 @@
 # FrontEnd-app-digital-payments
 
-
 # TAREAS 🔨
 
 deep linking
-
 
 cuando termino de pagar una venta le muestra mal la fecha de finalizacion ✅
 
@@ -16,65 +14,12 @@ cuando elimino una cuota se crea una nueva con fecha anterior a otras deberia cr
 
 calcula mas la fecha de finalizacion puse 3 meses y calcular a 4 meses ✅
 
-testeaando que ande bien creacion de ventas
+testeaando que ande bien creacion de ventas:
 
-            {/* Stats */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Ventas</p>
-                <p className="text-2xl font-bold text-gray-900">{sales.length}</p>
-              </div>
-              <div className="bg-green-50 p-3 rounded-xl">
-                <TrendingUp className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Completadas</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {sales.filter(s => s.completed).length}
-                </p>
-              </div>
-              <div className="bg-green-50 p-3 rounded-xl">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Ingresos Totales</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatCurrency(sales.filter(s => s.completed).reduce((sum, s) => sum + s.priceTotal, 0))}
-                </p>
-              </div>
-              <div className="bg-green-50 p-3 rounded-xl">
-                <DollarSign className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pendiente Cobro</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {formatCurrency(sales.reduce((sum, s) => sum + s.remainingAmount, 0))}
-                </p>
-              </div>
-              <div className="bg-orange-50 p-3 rounded-xl">
-                <Clock className="w-6 h-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-        </div> */}
-
+- Creando venta con fecha de primer cuota adelantada una semana funciona, con vendedora funciona ✅
+- Creando venta con fecha de primer cuota el mismo dia de la venta. ✅
+- Creando venta con pago al contado misma fecha de venta. ✅
+- Creando venta con pago al contado con fecha estimada. ✅
 
 Checklist de hallazgos y recomendaciones 🔍
 Prioridad: Alta ✅
@@ -110,7 +55,7 @@ Corregir imports inconsistentes/obsoletos
 
 Archivos donde revisar:
 Dashboard.tsx (usa @/shared/components/layout/DashboardLayout — ok)
-Otros archivos antes detectados que importaban ../components/dashboard/DashBoardLayout — revisar todos los imports que apunten a components/dashboard/* y actualizar para usar @/shared o la ruta correcta.
+Otros archivos antes detectados que importaban ../components/dashboard/DashBoardLayout — revisar todos los imports que apunten a components/dashboard/\* y actualizar para usar @/shared o la ruta correcta.
 Recomendación: Hacer búsqueda global por DashBoardLayout / components/dashboard y reemplazar con @/shared/components/layout/DashboardLayout o usar barrels.
 Revisar Sidebar y rutas
 

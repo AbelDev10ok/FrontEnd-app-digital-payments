@@ -1,13 +1,11 @@
-import { useNavigate } from 'react-router-dom';
-import { DashboardLayout } from '@/shared';
-import useSaleForm from '@features/crearVentas/hooks/useSaleForm';
-import TransactionHeader from '@features/crearVentas/components/TransactionHeader';
-import CreateSaleForm from '@features/crearVentas/components/CreateSaleForm';
-
-
+import { useNavigate } from "react-router-dom";
+import { DashboardLayout } from "@/shared";
+import useSaleForm from "@features/crearVentas/hooks/useSaleForm";
+import TransactionHeader from "@features/crearVentas/components/TransactionHeader";
+import CreateSaleForm from "@features/crearVentas/components/CreateSaleForm";
 
 interface CrearTransaccionProps {
-  type: 'VENTA' | 'PRESTAMO';
+  type: "VENTA" | "PRESTAMO";
   user: { email?: string; role?: string } | null;
   onLogout: () => void;
 }
@@ -32,11 +30,10 @@ const CrearTransaccion = ({ type, user, onLogout }: CrearTransaccionProps) => {
 
     const ok = await handleSubmit(e);
 
-    if(ok) {
+    if (ok) {
       // alert('Transacción creada exitosamente');
-      navigate('/dashboard/ventas/todas');
+      navigate("/dashboard/ventas/todas");
     }
-
   };
 
   return (

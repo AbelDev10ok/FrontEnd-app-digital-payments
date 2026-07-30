@@ -1,0 +1,2 @@
+- No funciona correctamente el filtro de año y mes de las ventas ✅
+- No se guarda el estado de los search de año y mes

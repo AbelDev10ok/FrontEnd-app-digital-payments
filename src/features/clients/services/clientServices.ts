@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { authenticatedFetch } from "@/features/auth/services/authServices";
+import type { ClientStatsDto } from "@/types/dashboard";
 import { Client, ClientRequest } from "@/types/client";
 
 
@@ -197,6 +198,35 @@ export const clientService = {
       throw new Error('Error al obtener los vendedores activos');
     }
     return response.json();
+  },
+
+  async getClientStats(): Promise<ClientStatsDto> {
+    const urlString = `${API_BASE_URL}/stats`;
+    console.log('📡 [clientService] GET request a:', urlString);
+
+    try {
+      const response = await authenticatedFetch(urlString);
+      console.log('📡 [clientService] Response status:', response.status, 'ok:', response.ok);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error al obtener estadísticas de clientes' }));
+        throw new Error(errorData.message || 'Error al obtener estadísticas de clientes');
+      }
+      
+      // La API ahora envuelve la respuesta. Necesitamos desenvolverla.
+      const apiResponse = await response.json();
+
+      if (apiResponse.status === 'OK' && apiResponse.data) {
+        console.log('✅ [clientService] getClientStats parseado y desenvuelto:', apiResponse.data);
+        return apiResponse.data as ClientStatsDto;
+      } else {
+        throw new Error(apiResponse.message || 'La respuesta de la API no tuvo el formato esperado.');
+      }
+
+    } catch (err) {
+      console.error('❌ [clientService] Error en getClientStats:', err);
+      throw err;
+    }
   },
 
 };

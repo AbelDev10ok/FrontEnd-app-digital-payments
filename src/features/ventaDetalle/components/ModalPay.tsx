@@ -1,5 +1,5 @@
-import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
-import { X, Loader2} from 'lucide-react';
+import ErrorMessage from "@/shared/components/feedback/ErrorMessage";
+import { X, Loader2 } from "lucide-react";
 
 export interface ModalPayProps {
   open: boolean;
@@ -30,10 +30,9 @@ export const ModalPay: React.FC<ModalPayProps> = ({
   onConfirm,
   processingFeeId,
   formatCurrency,
-  error
+  error,
 }) => {
   if (!open || !selectedFee) return null;
-
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -52,20 +51,27 @@ export const ModalPay: React.FC<ModalPayProps> = ({
         <div className="space-y-4">
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-gray-600">Monto total de la cuota:</span>
-                <span className="font-medium">
+              <span className="text-sm text-gray-600">
+                Monto total de la cuota:
+              </span>
+              <span className="font-medium">
                 {formatCurrency(Number(selectedFee.amount) || 0)}
-                </span>            
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Deuda restante:</span>
-              <span className={`font-medium ${remainingDebt > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+              <span
+                className={`font-medium ${remainingDebt > 0 ? "text-orange-600" : "text-green-600"}`}
+              >
                 {formatCurrency(remainingDebt)}
               </span>
             </div>
           </div>
           <div>
-            <label htmlFor="paymentDate" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="paymentDate"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Fecha de Pago
             </label>
             <input
@@ -81,11 +87,16 @@ export const ModalPay: React.FC<ModalPayProps> = ({
             />
           </div>
           <div>
-            <label htmlFor="paymentAmount" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="paymentAmount"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Monto a pagar *
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">€</span>
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                €
+              </span>
               <input
                 type="number"
                 id="paymentAmount"
@@ -100,10 +111,8 @@ export const ModalPay: React.FC<ModalPayProps> = ({
             </div>
           </div>
 
-          {error && (
-            ErrorMessage({ message: error })
-          )}
-{/* 
+          {error && ErrorMessage({ message: error })}
+          {/* 
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -124,15 +133,14 @@ export const ModalPay: React.FC<ModalPayProps> = ({
                 !paymentAmount ||
                 parseFloat(paymentAmount) <= 0 ||
                 parseFloat(paymentAmount) > remainingDebt ||
-                processingFeeId === selectedFee.id 
-                // paymentDate <= minDate
+                processingFeeId === selectedFee.id
               }
               className="flex-1 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {processingFeeId === selectedFee.id ? (
                 <Loader2 className="animate-spin w-5 h-5 mx-auto" />
               ) : (
-                'Confirmar Pago'
+                "Confirmar Pago"
               )}
             </button>
           </div>

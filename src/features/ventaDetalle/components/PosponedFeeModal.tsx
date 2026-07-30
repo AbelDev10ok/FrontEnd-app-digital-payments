@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { X, Calendar, DollarSign, Trash2 } from 'lucide-react';
-import { salesService } from '@/features/ventas/services/salesServices';
+import React, { useState } from "react";
+import { X, Calendar, DollarSign, Trash2 } from "lucide-react";
+import { salesService } from "@/features/ventas/services/salesServices";
 
 interface PostponeFeeModalProps {
   isOpen: boolean;
@@ -27,39 +27,51 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
   currentAmount,
   maxAmount,
   currentPaymentDate,
-  isPaid
+  isPaid,
 }) => {
   const [newDate, setNewDate] = useState(currentDate);
-  const [newPaymentDate, setNewPaymentDate] = useState(currentPaymentDate ? new Date(currentPaymentDate).toISOString().split('T')[0] : '');
-  const [newAmount, setNewAmount] = useState(currentAmount?.toString() ?? '');
+  const [newPaymentDate, setNewPaymentDate] = useState(
+    currentPaymentDate
+      ? new Date(currentPaymentDate).toISOString().split("T")[0]
+      : "",
+  );
+  const [newAmount, setNewAmount] = useState(currentAmount?.toString() ?? "");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     const amountVal = parseFloat(newAmount);
     if (amountVal < 0) {
-      setError('El monto debe ser positivo y válido');
+      setError("El monto debe ser positivo y válido");
       setLoading(false);
       return;
     }
-    // if (amountVal > maxAmount) {
+    // if (amountVal > maxAmount && isPaid) {
     //   setError(`El monto no puede ser mayor a la deuda actual (${maxAmount})`);
     //   setLoading(false);
     //   return;
     // }
 
     try {
-      await salesService.postponeFee(saleId, feeId, newDate, amountVal, newPaymentDate || undefined);
+      await salesService.postponeFee(
+        saleId,
+        feeId,
+        newDate,
+        amountVal,
+        newPaymentDate || undefined,
+      );
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al posponer la cuota');
+      setError(
+        err instanceof Error ? err.message : "Error al posponer la cuota",
+      );
       console.error(err);
     } finally {
       setLoading(false);
@@ -67,17 +79,20 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar esta cuota?')) return;
+    if (!window.confirm("¿Estás seguro de que deseas eliminar esta cuota?"))
+      return;
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       await salesService.deleteFee(feeId);
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al eliminar la cuota');
+      setError(
+        err instanceof Error ? err.message : "Error al eliminar la cuota",
+      );
       setLoading(false);
     }
   };
@@ -86,7 +101,9 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl w-full max-w-md p-6 m-4 shadow-xl border border-gray-100">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">{isPaid ? 'Editar Cuota Pagada' : 'Posponer Vencimiento'}</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {isPaid ? "Editar Cuota Pagada" : "Posponer Vencimiento"}
+          </h3>
           <button
             onClick={onClose}
             className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
@@ -109,7 +126,11 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                   type="date"
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
-                  min={saleDate ? new Date(saleDate).toISOString().split('T')[0] : undefined}
+                  min={
+                    saleDate
+                      ? new Date(saleDate).toISOString().split("T")[0]
+                      : undefined
+                  }
                   className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
                   required
                 />
@@ -162,7 +183,6 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
             </>
           )}
 
-
           {error && (
             <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">
               {error}
@@ -181,21 +201,21 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
               <span className="hidden sm:inline">Eliminar</span>
             </button>
             <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors font-medium"
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 font-medium shadow-sm shadow-indigo-200"
-              disabled={loading}
-            >
-              {loading ? 'Guardando...' : 'Confirmar Cambio'}
-            </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors font-medium"
+                disabled={loading}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 font-medium shadow-sm shadow-indigo-200"
+                disabled={loading}
+              >
+                {loading ? "Guardando..." : "Confirmar Cambio"}
+              </button>
             </div>
           </div>
         </form>

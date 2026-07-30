@@ -1,18 +1,17 @@
-
-import { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
-import Load from '@/shared/components/feedback/Load';
-import usePaginatedSales from '@/features/ventas/hooks/usePaginatedSales';
-import useProductTypes from '@/features/ventas/hooks/useProductTypes';
-import { useSalesFilters } from '@/features/ventas/hooks/useSalesFilters';
-import HeaderTransaction from '@/features/ventas/components/HeaderTransaction';
-import { DashboardLayout } from '@/shared';
-import { Paginación } from '@/shared/components/ui';
-import { FetchParamsSales } from '@/types/sales';
-import { salesService } from '@features/ventas/services/salesServices';
-import SalesFilters from '@features/ventas/components/SalesFilters';
-import SaleTable from '@features/ventas/components/SaleTable';
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import ErrorMessage from "@/shared/components/feedback/ErrorMessage";
+import Load from "@/shared/components/feedback/Load";
+import usePaginatedSales from "@/features/ventas/hooks/usePaginatedSales";
+import useProductTypes from "@/features/ventas/hooks/useProductTypes";
+import { useSalesFilters } from "@/features/ventas/hooks/useSalesFilters";
+import HeaderTransaction from "@/features/ventas/components/HeaderTransaction";
+import { DashboardLayout } from "@/shared";
+import { Paginación } from "@/shared/components/ui";
+import { FetchParamsSales } from "@/types/sales";
+import { salesService } from "@features/ventas/services/salesServices";
+import SalesFilters from "@features/ventas/components/SalesFilters";
+import SaleTable from "@features/ventas/components/SaleTable";
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -43,25 +42,30 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const clientNameParam = searchParams.get('clientName');
+    const clientNameParam = searchParams.get("clientName");
     if (clientNameParam) {
       setSearchClientName(clientNameParam);
     }
     // read status from URL and update filter
-    const statusParam = searchParams.get('status');
+    const statusParam = searchParams.get("status");
     if (statusParam) {
       setSelectedStatus(statusParam);
     } else {
-      setSelectedStatus('Todos');
+      setSelectedStatus("Todos");
     }
     // read productType from URL and update filter
-    const productTypeParam = searchParams.get('productType');
+    const productTypeParam = searchParams.get("productType");
     if (productTypeParam) {
       setSelectedProductType(productTypeParam);
     } else {
-      setSelectedProductType('');
+      setSelectedProductType("");
     }
-  }, [searchParams, setSearchClientName, setSelectedStatus, setSelectedProductType]);
+  }, [
+    searchParams,
+    setSearchClientName,
+    setSelectedStatus,
+    setSelectedProductType,
+  ]);
 
   // const statusOptions = ['Todos', 'COMPLETED', 'ACTIVE', 'CANCELED'];
 
@@ -69,12 +73,14 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
 
   const fetcher = async ({ page, size }: { page: number; size: number }) => {
     const params: FetchParamsSales = { page, size };
-    if (searchDescription.trim()) params.descriptionProduct = searchDescription.trim();
+    if (searchDescription.trim())
+      params.descriptionProduct = searchDescription.trim();
     if (searchClientName.trim()) params.clientName = searchClientName.trim();
-    if (selectedStatus !== 'Todos') params.status = selectedStatus.toUpperCase();
+    if (selectedStatus !== "Todos")
+      params.status = selectedStatus.toUpperCase();
     if (selectedProductType) params.productType = selectedProductType;
     if (specificDate) {
-      const [y, m, d] = specificDate.split('-').map(Number);
+      const [y, m, d] = specificDate.split("-").map(Number);
       params.year = y;
       params.month = m;
       params.day = d;
@@ -85,16 +91,29 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     return salesService.getAllSalesPaginated(params);
   };
 
-  const { sales, loading: salesLoading, error: salesError, page, setPage, totalPages } = usePaginatedSales(fetcher, [searchDescription, searchClientName, selectedStatus, selectedProductType, productTypes, year, month, specificDate]);
+  const {
+    sales,
+    loading: salesLoading,
+    error: salesError,
+    page,
+    setPage,
+    totalPages,
+  } = usePaginatedSales(fetcher, [
+    searchDescription,
+    searchClientName,
+    selectedStatus,
+    selectedProductType,
+    productTypes,
+    year,
+    month,
+    specificDate,
+  ]);
 
-  
   return (
     <DashboardLayout title="Todas las Ventas" user={user} onLogout={onLogout}>
       <div className="space-y-6">
         <HeaderTransaction title="Todas las Ventas" />
-        {salesError && (
-          <ErrorMessage message={salesError} />
-        )}
+        {salesError && <ErrorMessage message={salesError} />}
 
         <SalesFilters
           searchTerm={searchDescription}
@@ -119,19 +138,23 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
         />
         {salesLoading || productTypesLoading ? (
           <Load />
-        ) : 
-          <SaleTable sales={sales} emptyMessage={(searchDescription || searchClientName || selectedStatus !== 'Todos' || date)
-              ? 'No se encontraron ventas que coincidan con los filtros'
-              : 'No hay ventas registradas'} />
-        }
+        ) : (
+          <SaleTable
+            sales={sales}
+            emptyMessage={
+              searchDescription ||
+              searchClientName ||
+              selectedStatus !== "Todos" ||
+              date
+                ? "No se encontraron ventas que coincidan con los filtros"
+                : "No hay ventas registradas"
+            }
+          />
+        )}
 
         {/* Paginación */}
-        {(!salesLoading && !productTypesLoading && totalPages > 1) && (
-          <Paginación
-            page={page}
-            setPage={setPage}
-            totalPages={totalPages}
-          />
+        {!salesLoading && !productTypesLoading && totalPages > 1 && (
+          <Paginación page={page} setPage={setPage} totalPages={totalPages} />
         )}
       </div>
     </DashboardLayout>

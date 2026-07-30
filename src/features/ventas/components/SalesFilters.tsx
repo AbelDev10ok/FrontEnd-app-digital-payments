@@ -1,6 +1,6 @@
-import { memo, useState } from 'react';
-import { Search, Calendar, X, SlidersHorizontal } from 'lucide-react';
-import { DebouncedInput } from '@/shared/components/ui';
+import { memo, useState } from "react";
+import { Search, Calendar, X, SlidersHorizontal } from "lucide-react";
+import { DebouncedInput } from "@/shared/components/ui";
 // import { ProductTypeDto } from '@/types/sales';
 
 interface SalesFiltersProps {
@@ -25,7 +25,7 @@ interface SalesFiltersProps {
 const SalesFilters = ({
   searchTerm,
   onSearchChange,
-  searchClientName = '',
+  searchClientName = "",
   onClientNameChange,
   year,
   setYear,
@@ -42,20 +42,22 @@ const SalesFilters = ({
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 10 }, (_, i) => (currentYear - i).toString());
+  const years = Array.from({ length: 10 }, (_, i) =>
+    (currentYear - i).toString(),
+  );
   const months = [
-    { value: '01', label: 'Enero' },
-    { value: '02', label: 'Febrero' },
-    { value: '03', label: 'Marzo' },
-    { value: '04', label: 'Abril' },
-    { value: '05', label: 'Mayo' },
-    { value: '06', label: 'Junio' },
-    { value: '07', label: 'Julio' },
-    { value: '08', label: 'Agosto' },
-    { value: '09', label: 'Septiembre' },
-    { value: '10', label: 'Octubre' },
-    { value: '11', label: 'Noviembre' },
-    { value: '12', label: 'Diciembre' },
+    { value: "01", label: "Enero" },
+    { value: "02", label: "Febrero" },
+    { value: "03", label: "Marzo" },
+    { value: "04", label: "Abril" },
+    { value: "05", label: "Mayo" },
+    { value: "06", label: "Junio" },
+    { value: "07", label: "Julio" },
+    { value: "08", label: "Agosto" },
+    { value: "09", label: "Septiembre" },
+    { value: "10", label: "Octubre" },
+    { value: "11", label: "Noviembre" },
+    { value: "12", label: "Diciembre" },
   ];
 
   const renderFilters = () => (
@@ -89,14 +91,18 @@ const SalesFilters = ({
         value={year}
         onChange={(e) => {
           setYear(e.target.value);
-          setSpecificDate('');
+          setSpecificDate("");
           setShowCalendar(false);
         }}
         disabled={!!specificDate}
         className="w-full sm:w-auto px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
       >
         <option value="">Año</option>
-        {years.map(y => <option key={y} value={y}>{y}</option>)}
+        {years.map((y) => (
+          <option key={y} value={y}>
+            {y}
+          </option>
+        ))}
       </select>
 
       {/* Filtro por mes */}
@@ -104,14 +110,18 @@ const SalesFilters = ({
         value={month}
         onChange={(e) => {
           setMonth(e.target.value);
-          setSpecificDate('');
+          setSpecificDate("");
           setShowCalendar(false);
         }}
         disabled={!!specificDate}
         className="w-full sm:w-auto px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
       >
         <option value="">Mes</option>
-        {months.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+        {months.map((m) => (
+          <option key={m.value} value={m.value}>
+            {m.label}
+          </option>
+        ))}
       </select>
 
       {/* Botón para calendario específico */}
@@ -171,7 +181,9 @@ const SalesFilters = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg max-w-md w-full mx-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Seleccionar fecha específica</h3>
+              <h3 className="text-lg font-semibold">
+                Seleccionar fecha específica
+              </h3>
               <button
                 onClick={() => setShowCalendar(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -184,17 +196,17 @@ const SalesFilters = ({
               value={specificDate}
               onChange={(e) => {
                 setSpecificDate(e.target.value);
-                setYear('');
-                setMonth('');
+                setYear("");
+                setMonth("");
               }}
               className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 mb-4"
             />
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => {
-                  setSpecificDate('');
-                  setYear('');
-                  setMonth('');
+                  setSpecificDate("");
+                  setYear("");
+                  setMonth("");
                   setShowCalendar(false);
                 }}
                 className="px-4 py-2 text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50"
