@@ -8,7 +8,7 @@ import {
   Clock,
   RefreshCw,
 } from 'lucide-react';
-import { DashboardLayout } from '@/shared';
+import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
 import { useDashboardMetrics } from '@/features/dashboard/hooks/useDashboardMetrics';
 import DashboardMetricCard from '@/features/dashboard/components/DashboardMetricCard';

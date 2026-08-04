@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Client } from '@/shared/types/client';
 import {salesService } from '@/features/ventas/services/salesServices';
 import { clientService } from '@/features/clients/services/clientServices';
@@ -10,6 +10,34 @@ const getLocalDateString = (date: Date) => {
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const day = date.getDate().toString().padStart(2, '0');
   return `${year}-${month}-${day}`;
+};
+
+const validateForm = (formData: SaleFormData, displayedClients: Client[]): Record<string, string> => {
+  const newErrors: Record<string, string> = {};
+
+  if (!formData.cliente || Number(formData.cliente) === 0) newErrors.cliente = formData.sellerId ? 'Selecciona un cliente del vendedor seleccionado' : 'Selecciona un cliente';
+  if (!formData.productTypeId) newErrors.productTypeId = 'Selecciona un tipo de producto';
+  if (!(formData.payments === 'CONTADO' && formData.payFirstFee)) {
+    if (!formData.amountFee || Number(formData.amountFee) <= 0) newErrors.amountFee = 'Ingresa un valor de cuota válido';
+  }
+  if (!formData.cost || Number(formData.cost) <= 0) newErrors.cost = 'Ingresa un costo válido';
+  if (!formData.quantityFees || Number(formData.quantityFees) < 1) newErrors.quantityFees = 'La cantidad de cuotas debe ser al menos 1';
+
+  if (formData.payFirstFee) {
+    if (!formData.firstFeeAmount || Number(formData.firstFeeAmount) <= 0) newErrors.firstFeeAmount = 'Ingresa monto de la primera cuota';
+    if (formData.firstFeeDate !== formData.fecha) newErrors.firstFeeDate = 'Para pagar ahora, la primera cuota debe coincidir con la fecha de venta';
+  }
+
+  if (formData.sellerId && formData.cliente) {
+    const belongs = displayedClients.some(c => c.id === Number(formData.cliente));
+    if (!belongs) newErrors.cliente = 'El cliente no pertenece al vendedor seleccionado';
+  }
+
+  if (Number(formData.cost) >= Number(formData.amountFee) * Number(formData.quantityFees) && formData.payments !== 'CONTADO') {
+    newErrors.cost = 'El costo no puede ser menor o igual al monto total de la venta';
+  }
+
+  return newErrors;
 };
 
 export default function useSaleForm(initialType: SaleType) {
@@ -34,9 +62,13 @@ export default function useSaleForm(initialType: SaleType) {
     firstFeeAmount: '',
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmittingDisabled, setIsSubmittingDisabled] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const errors = useMemo(
+    () => validateForm(formData, displayedClients),
+    [formData, displayedClients],
+  );
+  const isSubmittingDisabled = Object.keys(errors).length > 0;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const target = e.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
@@ -50,41 +82,10 @@ export default function useSaleForm(initialType: SaleType) {
     setFormData(prev => ({ ...prev, [name]: value } as unknown as SaleFormData));
   };
 
-  // Validation effect
-  useEffect(() => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.cliente || Number(formData.cliente) === 0) newErrors.cliente = formData.sellerId ? 'Selecciona un cliente del vendedor seleccionado' : 'Selecciona un cliente';
-    if (!formData.productTypeId) newErrors.productTypeId = 'Selecciona un tipo de producto';
-    if (!(formData.payments === 'CONTADO' && formData.payFirstFee)) {
-      if (!formData.amountFee || Number(formData.amountFee) <= 0) newErrors.amountFee = 'Ingresa un valor de cuota válido';
-    }
-    if (!formData.cost || Number(formData.cost) <= 0) newErrors.cost = 'Ingresa un costo válido';
-    if (!formData.quantityFees || Number(formData.quantityFees) < 1) newErrors.quantityFees = 'La cantidad de cuotas debe ser al menos 1';
-
-    if (formData.payFirstFee) {
-      if (!formData.firstFeeAmount || Number(formData.firstFeeAmount) <= 0) newErrors.firstFeeAmount = 'Ingresa monto de la primera cuota';
-      if (formData.firstFeeDate !== formData.fecha) newErrors.firstFeeDate = 'Para pagar ahora, la primera cuota debe coincidir con la fecha de venta';
-    }
-
-    if (formData.sellerId && formData.cliente) {
-      const belongs = displayedClients.some(c => c.id === Number(formData.cliente));
-      if (!belongs) newErrors.cliente = 'El cliente no pertenece al vendedor seleccionado';
-    }
-
-    if(Number(formData.cost) >= Number(formData.amountFee) * Number(formData.quantityFees) && formData.payments !== 'CONTADO') {
-      newErrors.cost = 'El costo no puede ser menor o igual al monto total de la venta';
-    }
-
-    setErrors(newErrors);
-    setIsSubmittingDisabled(Object.keys(newErrors).length > 0);
-  }, [formData, displayedClients]);
-
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    // if errors exist, stop
+    // si hay errores, no se envía (validación derivada en render)
     if (Object.keys(errors).length > 0) {
-      setIsSubmittingDisabled(true);
       return false;
     }
 

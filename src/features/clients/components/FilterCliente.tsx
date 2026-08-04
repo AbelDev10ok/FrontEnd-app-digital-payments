@@ -1,4 +1,4 @@
-import { DebouncedInput } from '@/shared/components/ui';
+import { DebouncedInput } from '@/shared/components/ui/DebouncedInput';
 import { Search, Filter } from "lucide-react";
 import { memo } from 'react';
 

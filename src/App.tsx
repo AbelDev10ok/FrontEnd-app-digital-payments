@@ -1,23 +1,22 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import Login from '@/features/auth/components/Login';
-import Dashboard from '@/features/Dashboard';
-
-import ClienteDetalle from '@/features/clients/pages/ClienteDetalle';
-import AdminPanel from '@/features/adminPanel/AdminPanel';
 import ProtectedRoute from '@/shared/ProtectedRoute';
 import TokenRefreshHandler from '@/shared/TokenRefreshHandler';
-
-import CrearVenta from '@/features/crearVentas/pages/CrearTransaccion';
+import Load from '@/shared/components/feedback/Load';
 import { useAuthStore } from '@/features/auth/store/authStore';
-import Clientes from '@/features/clients/pages/Clientes';
-import CrearCliente from '@/features/clients/pages/CrearCliente';
-import TodasVentas from '@/features/ventas/pages/TodasVentas';
-import VentaDetalle from '@/features/ventaDetalle/pages/VentaDetalle';
-import EditarVenta from '@/features/ventas/pages/EditarVenta';
-import EditarCliente from '@/features/clients/pages/EditarCliente';
 
-
+const Dashboard = lazy(() => import('@/features/Dashboard'));
+const ClienteDetalle = lazy(() => import('@/features/clients/pages/ClienteDetalle'));
+const AdminPanel = lazy(() => import('@/features/adminPanel/AdminPanel'));
+const CrearVenta = lazy(() => import('@/features/crearVentas/pages/CrearTransaccion'));
+const Clientes = lazy(() => import('@/features/clients/pages/Clientes'));
+const CrearCliente = lazy(() => import('@/features/clients/pages/CrearCliente'));
+const TodasVentas = lazy(() => import('@/features/ventas/pages/TodasVentas'));
+const VentaDetalle = lazy(() => import('@/features/ventaDetalle/pages/VentaDetalle'));
+const EditarVenta = lazy(() => import('@/features/ventas/pages/EditarVenta'));
+const EditarCliente = lazy(() => import('@/features/clients/pages/EditarCliente'));
 
 function App() {
   const { isAuthenticated, user } = useAuthStore();
@@ -26,7 +25,8 @@ function App() {
     <Router>
       <TokenRefreshHandler />
       <div className="App">
-        <Routes>
+        <Suspense fallback={<Load />}>
+          <Routes>
           {/* Ruta de login */}
           <Route path="/login" element={<Login />} />
           
@@ -130,6 +130,7 @@ function App() {
             element={<Navigate to="/" replace />} 
           />
         </Routes>
+        </Suspense>
       </div>
     </Router>
   );

@@ -1,5 +1,5 @@
 import { Shield, Users, Settings, Database, AlertTriangle } from 'lucide-react';
-import { Layout } from '@/shared';
+import Layout from '@/shared/components/layout/Layout';
 
 interface AdminPanelProps {
   user: { email?: string; role?: string } | null;

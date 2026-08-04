@@ -55,7 +55,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       icon: Users,
       hasSubmenu: true,
       expanded: clientesExpanded,
-      onToggle: () => setClientesExpanded(!clientesExpanded),
+      onToggle: () => setClientesExpanded((prev) => !prev),
       submenu: [
         {
           title: 'Ver Clientes',
@@ -74,7 +74,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       icon: ShoppingCart,
       hasSubmenu: true,
       expanded: ventasExpanded,
-      onToggle: () => setVentasExpanded(!ventasExpanded),
+      onToggle: () => setVentasExpanded((prev) => !prev),
       submenu: []
     },
     {
@@ -189,7 +189,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                           {/* Filtros de Tipos de Producto */}
                           <div className="mt-2 pt-2 border-t border-gray-100">
                             <button
-                              onClick={() => setProductTypesExpanded(!productTypesExpanded)}
+                              onClick={() => setProductTypesExpanded((prev) => !prev)}
                               className="w-full flex items-center justify-between p-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-200 group"
                             >
                               <div className="flex items-center space-x-2">

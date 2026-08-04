@@ -35,7 +35,7 @@ export default function HeaderDetalleTransaction({ transaction, isLoan, onEdit, 
 
             <div className="relative">
                 <button
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    onClick={() => setIsMenuOpen((prev) => !prev)}
                     onBlur={() => setTimeout(() => setIsMenuOpen(false), 200)}
                     className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                 >

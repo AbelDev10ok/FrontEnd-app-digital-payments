@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { clientService } from '@/features/clients/services/clientServices';
 import { useClients } from '@features/clients/hooks/useClients';
-import { DashboardLayout } from '@/shared/components/layout';
+import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import ClientForm, { ClientFormData } from '@features/clients/components/ClientForm';
 import Load from '@/shared/components/feedback/Load';
 

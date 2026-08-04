@@ -3,6 +3,17 @@
 Documento de trabajo para no olvidar las mejoras pendientes. Marcá con ✅ lo terminado.
 Referencias con `archivo:línea` verificadas contra el código actual.
 
+## ✅ Fase 1 — Performance (skill `vercel-react-best-practices`)
+
+- [x] **1.1 Lazy loading de rutas**: `React.lazy` + `<Suspense>` en `src/App.tsx`. 10 páginas lazy (Login queda eager), fallback `<Load />`. Build genera chunks por ruta.
+- [x] **1.2 Validación derivada**: `src/features/crearVentas/hooks/useSaleForm.ts` — validación extraída a `validateForm(formData, displayedClients)` a nivel módulo; `errors` con `useMemo`; `isSubmittingDisabled = Object.keys(errors).length > 0` (sin `useEffect`); `handleSubmit` corta con `return false` si hay errores.
+- [x] **1.3 Extraer JSX**: `SalesFilters.tsx` (`renderFilters()` → elemento `filters`); `VentaDetalle.tsx` (`getStatusIcon`/`getStatusBadge` a nivel módulo usando `STATUS_BADGE_CONFIG`, default PENDING). Duplicados internos eliminados.
+- [x] **1.4 Imports directos**: 14 imports de barrels → rutas directas a módulos con default export (`DashboardLayout`, `Paginacion`, `Layout`, `DebouncedInput` named).
+- [x] **1.5 `setState` funcional**: 7 toggles `setX(!x)` → `setX((prev) => !prev)` (Login, DashboardLayout, Sidebar×3, VentaDetalle, HeaderDetalleTransaction). ⚠️ En `FilterCliente`/`SalesFilters` NO se pudo: `setShowFilters`/`setShowCalendar` son props `(value: boolean) => void`, no setters.
+- [x] **1.6 Hoistear constantes**: `useDashboardMetrics.ts` — `availableYears` y `months` pasan de `useMemo([])` a constantes de módulo (static). Eliminado `useMemo` del import.
+- [x] **1.7 Versionado de stores persist**: `authStore` (`auth-store`) y `salesFilterStore` (`sales-filters-storage`) con `version: 1` + `migrate` no-op. Cierra el esquema para migraciones futuras.
+- [x] **1.8 ErrorMessage como JSX**: `ModalPay.tsx` — `ErrorMessage({ message: error })` → `<ErrorMessage message={error} />`; borrado bloque muerto comentado de abajo.
+
 ## ✅ Hecho (prioridad alta)
 
 - [x] **Bug `refresh()` en hooks de paginación**: `setPage(p => p)` no disparaba recarga. Arreglado con `refreshKey` en `usePaginatedSales.ts` y `usePaginatedClients.ts`.
@@ -40,7 +51,7 @@ Referencias con `archivo:línea` verificadas contra el código actual.
 
 ## Tests ✅
 
-Vitest + React Testing Library + jest-dom + user-event, entorno jsdom. Config en `vitest.config.ts`, setup en `src/test/setupTests.ts`. **56 tests, 13 archivos, todos pasando.** ⚠️ jsdom fijado en **26.x** (`package.json`): jsdom 27 trae `cssstyle@5` → `@asamuzakjp/css-color@4` que usa `require()` de un ESM (roto en Node 20.18).
+Vitest + React Testing Library + jest-dom + user-event, entorno jsdom. Config en `vitest.config.ts`, setup en `src/test/setupTests.ts`. **58 tests, 14 archivos, todos pasando.** ⚠️ jsdom fijado en **26.x** (`package.json`): jsdom 27 trae `cssstyle@5` → `@asamuzakjp/css-color@4` que usa `require()` de un ESM (roto en Node 20.18).
 
 - [x] **Setup**: `vitest.config.ts`, `src/test/setupTests.ts` (jest-dom + cleanup), scripts `npm test` / `npm run test:watch`.
 - [x] **Lógica pura / stores**: `authStore` (login/logout/setTokens/rol desde JWT/persistencia `auth-store`), `salesFilterStore` (filtro año/mes + sessionStorage), `formatCurrency`, `authServices` (`login` envelope, `refreshToken` raw, `authenticatedFetch` Bearer + retry 401 + logout si falla refresh).

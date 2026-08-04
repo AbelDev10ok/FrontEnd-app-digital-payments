@@ -1,6 +1,6 @@
 import { memo, useState } from "react";
 import { Search, Calendar, X, SlidersHorizontal } from "lucide-react";
-import { DebouncedInput } from "@/shared/components/ui";
+import { DebouncedInput } from "@/shared/components/ui/DebouncedInput";
 // import { ProductTypeDto } from '@/shared/types/sales';
 
 interface SalesFiltersProps {
@@ -60,7 +60,7 @@ const SalesFilters = ({
     { value: "12", label: "Diciembre" },
   ];
 
-  const renderFilters = () => (
+  const filters = (
     <div className="flex flex-wrap items-center gap-4">
       {/* Búsqueda por nombre de cliente */}
       {onClientNameChange && (
@@ -148,7 +148,7 @@ const SalesFilters = ({
         </button>
       </div>
 
-      <div className="hidden md:block">{renderFilters()}</div>
+      <div className="hidden md:block">{filters}</div>
 
       {/* Modal de filtros para mobile */}
       {showMobileFilters && (
@@ -163,7 +163,7 @@ const SalesFilters = ({
                 <X className="w-6 h-6" />
               </button>
             </div>
-            {renderFilters()}
+            {filters}
             <div className="mt-4 flex justify-end gap-2">
               <button
                 onClick={() => setShowMobileFilters(false)}

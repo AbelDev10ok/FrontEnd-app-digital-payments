@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
-import { DashboardLayout } from '@/shared/components/layout';
+import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import Load from '@/shared/components/feedback/Load';
 import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
 import { salesService } from '@/features/ventas/services/salesServices';

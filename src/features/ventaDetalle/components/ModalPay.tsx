@@ -111,14 +111,7 @@ export const ModalPay: React.FC<ModalPayProps> = ({
             </div>
           </div>
 
-          {error && ErrorMessage({ message: error })}
-          {/* 
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <p>{error}</p>
-          </div>
-        )}    */}
+          {error && <ErrorMessage message={error} />}
 
           <div className="flex space-x-3 pt-4">
             <button

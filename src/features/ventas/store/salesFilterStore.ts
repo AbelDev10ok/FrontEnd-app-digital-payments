@@ -23,6 +23,8 @@ export const useSalesFilterStore = create<SalesFilterState>()(
       // para que cuando el usuario cierre la pestaña del navegador, los filtros se borren.
       name: "sales-filters-storage",
       storage: createJSONStorage(() => sessionStorage),
+      version: 1,
+      migrate: (persistedState) => persistedState as SalesFilterState,
     },
   ),
 );

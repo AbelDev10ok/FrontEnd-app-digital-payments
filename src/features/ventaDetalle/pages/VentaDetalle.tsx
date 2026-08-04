@@ -6,7 +6,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
-import { DashboardLayout } from '@/shared/components/layout';
+import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
 import Load from '@/shared/components/feedback/Load';
 
@@ -23,6 +23,34 @@ interface PageProps {
   user: { email?: string; role?: string } | null;
   onLogout: () => void;
 }
+
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case 'PAID':
+      return <CheckCircle className="w-4 h-4 text-green-600" />;
+    case 'LATE':
+      return <AlertTriangle className="w-4 h-4 text-red-600" />;
+    case 'POSTPONED':
+      return <Clock className="w-4 h-4 text-yellow-600" />;
+    default:
+      return <Clock className="w-4 h-4 text-gray-600" />;
+  }
+};
+
+const STATUS_BADGE_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
+  PAID: { bg: 'bg-green-100', text: 'text-green-800', label: 'Pagada' },
+  PENDING: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Pendiente' },
+};
+
+const getStatusBadge = (status: string) => {
+  const config = STATUS_BADGE_CONFIG[status] || STATUS_BADGE_CONFIG.PENDING;
+
+  return (
+    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${config.bg} ${config.text}`}>
+      {config.label}
+    </span>
+  );
+};
 
 const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
   const { id } = useParams<{ id: string }>();
@@ -62,36 +90,6 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
     }
   };
 
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'PAID':
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'LATE':
-        return <AlertTriangle className="w-4 h-4 text-red-600" />;
-      case 'POSTPONED':
-        return <Clock className="w-4 h-4 text-yellow-600" />;
-      default:
-        return <Clock className="w-4 h-4 text-gray-600" />;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      'PAID': { bg: 'bg-green-100', text: 'text-green-800', label: 'Pagada' },
-      // 'LATE': { bg: 'bg-red-100', text: 'text-red-800', label: 'Atrasada' },
-      // 'POSTPONED': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pospuesta' },
-      'PENDING': { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Pendiente' },
-    };
-
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING;
-    
-    return (
-      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${config.bg} ${config.text}`}>
-        {config.label}
-      </span>
-    );
-  };
 
   const refreshTransaction = async () => {
     if (!transaction) return;
@@ -160,7 +158,7 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
         {/* Botón para mostrar/ocultar detalles */}
         <div className="my-4">
           <button
-            onClick={() => setShowDetails(!showDetails)}
+            onClick={() => setShowDetails((prev) => !prev)}
             className="w-full flex items-center justify-center px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:bg-gray-50 text-sm font-medium"
           >
             {showDetails ? 'Ocultar Detalles' : 'Ver Detalles'}

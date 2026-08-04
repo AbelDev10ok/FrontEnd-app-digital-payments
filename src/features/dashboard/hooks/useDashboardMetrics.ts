@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { salesService } from '@/features/ventas/services/salesServices';
 import { clientService } from '@/features/clients/services/clientServices';
 import type { DashboardStatsDto } from '@/shared/types/dashboard';
@@ -15,6 +15,24 @@ export interface DashboardMetrics {
 
 const getCurrentYear = () => new Date().getFullYear();
 const getCurrentMonth = () => new Date().getMonth() + 1; // 0-based
+
+const currentYear = getCurrentYear();
+const availableYears = Array.from({ length: 6 }, (_, i) => currentYear - i);
+
+const months = [
+  { value: 1, label: 'Enero' },
+  { value: 2, label: 'Febrero' },
+  { value: 3, label: 'Marzo' },
+  { value: 4, label: 'Abril' },
+  { value: 5, label: 'Mayo' },
+  { value: 6, label: 'Junio' },
+  { value: 7, label: 'Julio' },
+  { value: 8, label: 'Agosto' },
+  { value: 9, label: 'Septiembre' },
+  { value: 10, label: 'Octubre' },
+  { value: 11, label: 'Noviembre' },
+  { value: 12, label: 'Diciembre' },
+];
 
 export const useDashboardMetrics = () => {
   const [year, setYear] = useState<number>(getCurrentYear());
@@ -75,34 +93,6 @@ export const useDashboardMetrics = () => {
   useEffect(() => {
     fetchMetrics();
   }, [fetchMetrics]);
-
-  const availableYears = useMemo(() => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const years: number[] = [];
-    for (let y = currentYear; y >= currentYear - 5; y -= 1) {
-      years.push(y);
-    }
-    return years;
-  }, []);
-
-  const months = useMemo(
-    () => [
-      { value: 1, label: 'Enero' },
-      { value: 2, label: 'Febrero' },
-      { value: 3, label: 'Marzo' },
-      { value: 4, label: 'Abril' },
-      { value: 5, label: 'Mayo' },
-      { value: 6, label: 'Junio' },
-      { value: 7, label: 'Julio' },
-      { value: 8, label: 'Agosto' },
-      { value: 9, label: 'Septiembre' },
-      { value: 10, label: 'Octubre' },
-      { value: 11, label: 'Noviembre' },
-      { value: 12, label: 'Diciembre' },
-    ],
-    []
-  );
 
   return {
     loading,

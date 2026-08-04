@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { DashboardLayout } from "@/shared";
+import DashboardLayout from "@/shared/components/layout/DashboardLayout";
 import useSaleForm from "@features/crearVentas/hooks/useSaleForm";
 import TransactionHeader from "@features/crearVentas/components/TransactionHeader";
 import CreateSaleForm from "@features/crearVentas/components/CreateSaleForm";

@@ -5,7 +5,7 @@ import Load from '@/shared/components/feedback/Load';
 import { Client } from '@/shared/types/client';
 import InfoCliente from '@features/clients/components/InfoCliente';
 import { clientService } from '@features/clients/services/clientServices';
-import { DashboardLayout } from '@/shared/components/layout';
+import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
 
 interface PageProps {
@@ -40,7 +40,7 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
       
       // Actualizamos el estado del cliente localmente para reflejar el cambio.
       // Esto hará que la UI se actualice instantáneamente sin recargar la página.
-      setClient({ ...client, seller: true });
+      setClient((prev) => (prev ? { ...prev, seller: true } : prev));
     } catch (err) {
       // Mejoramos el manejo de errores para obtener más detalles si es posible.
       // A menudo, los errores de API vienen con un objeto `response` que contiene más información.
@@ -59,7 +59,7 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
     try {
       // TODO: Asegúrate de que `deshabilitarVendedor` exista en tu clientService.
       await clientService.desabilitarVendedor(parseInt(id));
-      setClient({ ...client, seller: false });
+      setClient((prev) => (prev ? { ...prev, seller: false } : prev));
     } catch (err) {
       let errorMessage = 'Ocurrió un error inesperado.';
       if (err && typeof err === 'object' && 'message' in err) {
