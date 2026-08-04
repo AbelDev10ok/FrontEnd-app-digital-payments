@@ -91,8 +91,8 @@ const EditarCliente: React.FC<PageProps> = ({ user, onLogout }) => {
 
   if(success){
       return (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-            <div className="flex items-center text-green-800">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+            <div className="flex items-center text-emerald-800">
               <CheckCircle className="w-5 h-5 mr-3" />
               <span className="text-sm">Cliente actualizado exitosamente. Redirigiendo...</span>
             </div>

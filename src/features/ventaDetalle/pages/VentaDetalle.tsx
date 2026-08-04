@@ -27,7 +27,7 @@ interface PageProps {
 const getStatusIcon = (status: string) => {
   switch (status) {
     case 'PAID':
-      return <CheckCircle className="w-4 h-4 text-green-600" />;
+      return <CheckCircle className="w-4 h-4 text-emerald-600" />;
     case 'LATE':
       return <AlertTriangle className="w-4 h-4 text-red-600" />;
     case 'POSTPONED':
@@ -38,7 +38,7 @@ const getStatusIcon = (status: string) => {
 };
 
 const STATUS_BADGE_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-  PAID: { bg: 'bg-green-100', text: 'text-green-800', label: 'Pagada' },
+  PAID: { bg: 'bg-emerald-100', text: 'text-emerald-800', label: 'Pagada' },
   PENDING: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Pendiente' },
 };
 
@@ -159,7 +159,7 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
         <div className="my-4">
           <button
             onClick={() => setShowDetails((prev) => !prev)}
-            className="w-full flex items-center justify-center px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:bg-gray-50 text-sm font-medium"
+            className="w-full flex items-center justify-center px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 hover:bg-gray-50 text-sm font-medium"
           >
             {showDetails ? 'Ocultar Detalles' : 'Ver Detalles'}
           </button>

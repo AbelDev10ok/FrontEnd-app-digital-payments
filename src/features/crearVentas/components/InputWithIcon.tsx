@@ -54,7 +54,7 @@ const InputWithIcon: React.FC<Props> = ({
           min={min}
           max={max}
           step={step}
-          className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${error ? 'border-red-500' : 'border-gray-200'} ${className}`}
+          className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 ${error ? 'border-red-500' : 'border-gray-200'} ${className}`}
         />
       </div>
       {error && <div className="text-xs text-red-600 mt-1">{error}</div>}

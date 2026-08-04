@@ -47,7 +47,7 @@ const Header: React.FC<HeaderProps> = ({
             )}
 
             <div className="flex items-center space-x-3">
-              {/* <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl">
+              {/* <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl">
                 {user?.role === 'ROLE_ADMIN' ? (
                   <Shield className="w-6 h-6 text-white" />
                 ) : (
@@ -66,7 +66,7 @@ const Header: React.FC<HeaderProps> = ({
               <p className="text-sm font-medium text-gray-900">{user?.email}</p>
               <p className="text-xs text-gray-500">{roleLabel}</p>
             </div>
-            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl">
+            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl">
               <User className="w-5 h-5 text-white" />
             </div>
             <button

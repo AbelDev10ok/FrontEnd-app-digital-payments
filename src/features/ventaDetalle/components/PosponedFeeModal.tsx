@@ -131,7 +131,7 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                       ? new Date(saleDate).toISOString().split("T")[0]
                       : undefined
                   }
-                  className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                  className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all"
                   required
                 />
               </div>
@@ -155,7 +155,7 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                     type="date"
                     value={newPaymentDate}
                     onChange={(e) => setNewPaymentDate(e.target.value)}
-                    className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                    className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all"
                   />
                 </div>
               </div>
@@ -173,7 +173,7 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                     value={newAmount}
                     onChange={(e) => setNewAmount(e.target.value)}
                     step="0.01"
-                    className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                    className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all"
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
@@ -211,7 +211,7 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 font-medium shadow-sm shadow-indigo-200"
+                className="px-4 py-2 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50 font-medium shadow-sm shadow-brand-200"
                 disabled={loading}
               >
                 {loading ? "Guardando..." : "Confirmar Cambio"}

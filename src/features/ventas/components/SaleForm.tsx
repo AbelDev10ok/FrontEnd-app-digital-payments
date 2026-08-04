@@ -37,6 +37,7 @@ interface SaleFormProps {
   cancelTo: string;
   productTypes: ProductTypeDto[];
   onDelete?: () => Promise<void> | void;
+  showFinancialFields?: boolean;
 }
 
 const SaleForm: React.FC<SaleFormProps> = ({
@@ -46,7 +47,8 @@ const SaleForm: React.FC<SaleFormProps> = ({
   submitLabel,
   cancelTo,
   productTypes,
-  onDelete
+  onDelete,
+  showFinancialFields = true
 }) => {
   const [formData, setFormData] = useState<SaleFormState>({
     descriptionProduct: '',
@@ -121,33 +123,35 @@ const SaleForm: React.FC<SaleFormProps> = ({
       newErrors.descriptionProduct = 'La descripción es obligatoria';
     }
 
-    if (!amountFee || amountFee <= 0) {
-      newErrors.amountFee = 'El monto debe ser mayor a 0';
-    }
+    if (showFinancialFields) {
+      if (!amountFee || amountFee <= 0) {
+        newErrors.amountFee = 'El monto debe ser mayor a 0';
+      }
 
-    if (!quantityFees || quantityFees <= 0) {
-      newErrors.quantityFees = 'La cantidad de cuotas debe ser mayor a 0';
-    }
+      if (!quantityFees || quantityFees <= 0) {
+        newErrors.quantityFees = 'La cantidad de cuotas debe ser mayor a 0';
+      }
 
-    if (!cost || cost <= 0) {
-      newErrors.cost = 'El costo debe ser mayor a 0';
+      if (!cost || cost <= 0) {
+        newErrors.cost = 'El costo debe ser mayor a 0';
+      }
+
+      // Validación crítica: El nuevo monto no puede ser menor a lo que ya se pagó
+      if (initialValues) {
+        const totalAmount = initialValues.amountFee
+        const amountPaid = totalAmount - initialValues.remainingAmount;
+        if (amountFee < amountPaid) {
+          newErrors.amountFee = `El monto no puede ser menor a lo ya pagado ($${amountPaid})`;
+        }
+      }
+
+      if (!formData.dateSale) {
+        newErrors.dateSale = 'La fecha es obligatoria';
+      }
     }
 
     if (!formData.productTypeId) {
       newErrors.productTypeId = 'El tipo de producto es obligatorio';
-    }
-
-    // Validación crítica: El nuevo monto no puede ser menor a lo que ya se pagó
-    if (initialValues) {
-      const totalAmount = initialValues.amountFee
-      const amountPaid = totalAmount - initialValues.remainingAmount;
-      if (amountFee < amountPaid) {
-        newErrors.amountFee = `El monto no puede ser menor a lo ya pagado ($${amountPaid})`;
-      }
-    }
-
-    if (!formData.dateSale) {
-      newErrors.dateSale = 'La fecha es obligatoria';
     }
 
     setErrors(newErrors);
@@ -192,23 +196,25 @@ const SaleForm: React.FC<SaleFormProps> = ({
           ) : null}
 
           {/* Monto Total */}
-          <div>
-            <InputWithIcon
-              id="amountFee"
-              name="amountFee"
-              label="Monto de Cuota *"
-              type="text"
-              value={formData.amountFee}
-              onChange={handleInputChange}
-              placeholder="0.00"
-              error={errors.amountFee}
-            />
-            {initialValues && (
-              <p className="text-xs text-gray-500 mt-1">
-                Deuda actual: ${initialValues.remainingAmount} (Pagado: ${(initialValues.amountFee - initialValues.remainingAmount)})
-              </p>
-            )}
-          </div>
+          {showFinancialFields && (
+            <div>
+              <InputWithIcon
+                id="amountFee"
+                name="amountFee"
+                label="Monto de Cuota *"
+                type="text"
+                value={formData.amountFee}
+                onChange={handleInputChange}
+                placeholder="0.00"
+                error={errors.amountFee}
+              />
+              {initialValues && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Deuda actual: ${initialValues.remainingAmount} (Pagado: ${(initialValues.amountFee - initialValues.remainingAmount)})
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Tipo de Producto */}
           <div>
@@ -219,74 +225,82 @@ const SaleForm: React.FC<SaleFormProps> = ({
               value={formData.productTypeId}
               onChange={handleInputChange}
               options={[{ value: '', label: 'Selecciona un tipo' }, ...productTypes.map(pt => ({ value: String(pt.id), label: pt.name }))]}
-              icon={<Tv className="w-4 h-4 text-indigo-600" />}
+              icon={<Tv className="w-4 h-4 text-brand-600" />}
               error={errors.productTypeId}
             />
           </div>
 
           {/* Costo */}
-          <div>
-            <InputWithIcon
-              id="cost"
-              name="cost"
-              label="Costo *"
-              type="text"
-              value={formData.cost}
-              onChange={handleInputChange}
-              placeholder="0.00"
-              icon={<DollarSign className="w-4 h-4" />}
-              error={errors.cost}
-            />
-          </div>
+          {showFinancialFields && (
+            <div>
+              <InputWithIcon
+                id="cost"
+                name="cost"
+                label="Costo *"
+                type="text"
+                value={formData.cost}
+                onChange={handleInputChange}
+                placeholder="0.00"
+                icon={<DollarSign className="w-4 h-4" />}
+                error={errors.cost}
+              />
+            </div>
+          )}
 
           {/* Cantidad de Cuotas */}
-          <div>
-            <InputWithIcon
-              id="quantityFees"
-              name="quantityFees"
-              label="Cantidad de Cuotas *"
-              type="text"
-              value={formData.quantityFees}
-              onChange={handleInputChange}
-              placeholder="1"
-              error={errors.quantityFees}
-            />
-          </div>
+          {showFinancialFields && (
+            <div>
+              <InputWithIcon
+                id="quantityFees"
+                name="quantityFees"
+                label="Cantidad de Cuotas *"
+                type="text"
+                value={formData.quantityFees}
+                onChange={handleInputChange}
+                placeholder="1"
+                error={errors.quantityFees}
+              />
+            </div>
+          )}
 
           {/* Frecuencia de Pago */}
-          <div>
-            <label htmlFor="payments" className="block text-sm font-medium text-gray-700 mb-1">
-              Frecuencia de Pago *
-            </label>
-            <div className="relative">
-              <select
-                id="payments"
-                name="payments"
-                value={formData.payments}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 appearance-none bg-white"
-              >
-                <option value="SEMANAL">Semanal</option>
-                <option value="QUINCENAL">Quincenal</option>
-                <option value="MENSUAL">Mensual</option>
-                <option value="CONTADO">Contado</option>
-              </select>
+          {showFinancialFields && (
+            <div>
+              <label htmlFor="payments" className="block text-sm font-medium text-gray-700 mb-1">
+                Frecuencia de Pago *
+              </label>
+              <div className="relative">
+                <select
+                  id="payments"
+                  name="payments"
+                  value={formData.payments}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 appearance-none bg-white"
+                >
+                  <option value="SEMANAL">Semanal</option>
+                  <option value="QUINCENAL">Quincenal</option>
+                  <option value="MENSUAL">Mensual</option>
+                  <option value="CONTADO">Contado</option>
+                </select>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Fecha de Venta */}
-          <div>
-            <InputWithIcon
-              id="dateSale"
-              name="dateSale"
-              label="Fecha de Venta *"
-              type="date"
-              value={formData.dateSale}
-              onChange={handleInputChange}
-              error={errors.dateSale}
-              max={today} 
-            />
-          </div>
+          {showFinancialFields && (
+            <div>
+              <InputWithIcon
+                id="dateSale"
+                name="dateSale"
+                label="Fecha de Venta *"
+                type="date"
+                value={formData.dateSale}
+                onChange={handleInputChange}
+                error={errors.dateSale}
+                max={today}
+              />
+            </div>
+          )}
           
           
           {/* Cliente (Solo lectura para evitar inconsistencias complejas por ahora) */}

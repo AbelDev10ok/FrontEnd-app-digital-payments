@@ -40,7 +40,7 @@ const AutocompleteSeller: React.FC<Props> = ({ value, sellers, onChange, placeho
           {open && filtered.length > 0 && (
             <ul className="absolute z-20 bg-white border border-gray-200 rounded-xl mt-1 w-full max-h-40 overflow-y-auto">
               {filtered.map(s => (
-                <li key={s.id} className="px-4 py-2 cursor-pointer hover:bg-indigo-100" onMouseDown={() => { onChange(String(s.id)); setSearch(s.name); setOpen(false); }}>
+                <li key={s.id} className="px-4 py-2 cursor-pointer hover:bg-brand-100" onMouseDown={() => { onChange(String(s.id)); setSearch(s.name); setOpen(false); }}>
                   {s.name}
                 </li>
               ))}
@@ -50,10 +50,10 @@ const AutocompleteSeller: React.FC<Props> = ({ value, sellers, onChange, placeho
       )}
 
       {selected && (
-        <div className="inline-flex items-center gap-2 mt-2 bg-indigo-50 text-indigo-800 px-3 py-1 rounded-full text-sm">
+        <div className="inline-flex items-center gap-2 mt-2 bg-brand-50 text-brand-800 px-3 py-1 rounded-full text-sm">
           <User className="w-4 h-4" />
           <span>{selected.name}</span>
-          <button type="button" className="ml-2 text-indigo-600 hover:text-indigo-800" onClick={() => onChange('')}>
+          <button type="button" className="ml-2 text-brand-600 hover:text-brand-800" onClick={() => onChange('')}>
             ×
           </button>
         </div>

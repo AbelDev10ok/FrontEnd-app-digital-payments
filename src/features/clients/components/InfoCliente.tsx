@@ -12,8 +12,8 @@ const InfoCliente: React.FC<InfoClienteProps> = ({ client }) => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Información de Contacto</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex items-center space-x-3">
-              <div className="bg-blue-50 p-2 rounded-lg">
-                <Mail className="w-5 h-5 text-blue-600" />
+              <div className="bg-brand-50 p-2 rounded-lg">
+                <Mail className="w-5 h-5 text-brand-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Email</p>
@@ -22,8 +22,8 @@ const InfoCliente: React.FC<InfoClienteProps> = ({ client }) => {
             </div>
             
             <div className="flex items-center space-x-3">
-              <div className="bg-green-50 p-2 rounded-lg">
-                <Phone className="w-5 h-5 text-green-600" />
+              <div className="bg-brand-50 p-2 rounded-lg">
+                <Phone className="w-5 h-5 text-brand-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Teléfono</p>
@@ -43,14 +43,14 @@ const InfoCliente: React.FC<InfoClienteProps> = ({ client }) => {
 
             {/* si es cliente tiene vendedor */}
             {client.sellerId && (
-              <div className="md:col-span-2 flex items-center space-x-4 bg-blue-50 border border-blue-200 p-4 rounded-xl">
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <Mail className="w-6 h-6 text-blue-700" />
+              <div className="md:col-span-2 flex items-center space-x-4 bg-brand-50 border border-brand-200 p-4 rounded-xl">
+                <div className="bg-brand-100 p-3 rounded-full">
+                  <Mail className="w-6 h-6 text-brand-700" />
                 </div>
                 <div>
-                  <p className="font-semibold text-blue-800">Este cliente tiene un vendedor asignado</p>
+                  <p className="font-semibold text-brand-800">Este cliente tiene un vendedor asignado</p>
                   <div className="flex items-center space-x-2 mt-1">
-                    <User2 className="w-5 h-5 text-blue-600" />
+                    <User2 className="w-5 h-5 text-brand-600" />
                     <p className="text-sm text-gray-600">{client.sellerName}</p>
                   </div>
                 </div>

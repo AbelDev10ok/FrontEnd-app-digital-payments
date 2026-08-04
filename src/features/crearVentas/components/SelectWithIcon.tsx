@@ -27,7 +27,7 @@ const SelectWithIcon: React.FC<Props> = ({ id, name, label, value, onChange, opt
           value={value}
           onChange={onChange}
           required={required}
-          className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${error ? 'border-red-500' : 'border-gray-200'} ${className}`}
+          className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 ${error ? 'border-red-500' : 'border-gray-200'} ${className}`}
         >
           {options.map(o => <option key={String(o.value)} value={o.value}>{o.label}</option>)}
         </select>

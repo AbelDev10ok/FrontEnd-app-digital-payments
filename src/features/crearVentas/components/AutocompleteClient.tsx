@@ -36,7 +36,7 @@ const AutocompleteClient: React.FC<Props> = ({ value, clients, onChange, placeho
           {open && filtered.length > 0 && (
             <ul className="absolute z-10 bg-white border border-gray-200 rounded-xl mt-1 w-full max-h-40 overflow-y-auto">
               {filtered.map(c => (
-                <li key={c.id} className="px-4 py-2 cursor-pointer hover:bg-indigo-100" onMouseDown={() => { onChange(c.id); setSearch(c.name); setOpen(false); }}>
+                <li key={c.id} className="px-4 py-2 cursor-pointer hover:bg-brand-100" onMouseDown={() => { onChange(c.id); setSearch(c.name); setOpen(false); }}>
                   {c.name}
                 </li>
               ))}
@@ -46,9 +46,9 @@ const AutocompleteClient: React.FC<Props> = ({ value, clients, onChange, placeho
       )}
 
       {selected && (
-        <div className="inline-flex items-center gap-2 mt-2 bg-indigo-50 text-indigo-800 px-3 py-1 rounded-full text-sm">
+        <div className="inline-flex items-center gap-2 mt-2 bg-brand-50 text-brand-800 px-3 py-1 rounded-full text-sm">
           <span>{selected.name}</span>
-          <button type="button" className="ml-2 text-indigo-600 hover:text-indigo-800" onClick={() => onChange(0)}>
+          <button type="button" className="ml-2 text-brand-600 hover:text-brand-800" onClick={() => onChange(0)}>
             ×
           </button>
         </div>

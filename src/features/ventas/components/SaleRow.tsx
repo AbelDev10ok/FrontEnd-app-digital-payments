@@ -23,7 +23,7 @@ const SaleRow: React.FC<Props> = ({ sale, selectedStatus }) => {
     <tr key={sale.id} className="hover:bg-gray-50">
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
-          <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-r from-brand-500 to-brand-600 rounded-full flex items-center justify-center">
             <span className="text-white font-medium text-sm">#{sale.id}</span>
           </div>
           <div className="ml-4">
@@ -56,7 +56,7 @@ const SaleRow: React.FC<Props> = ({ sale, selectedStatus }) => {
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
         <Link
           to={`/dashboard/ventas/${sale.id}`}
-          className="text-green-600 hover:text-green-900 mr-4"
+          className="text-brand-600 hover:text-brand-900 mr-4"
         >
           <LinkIcon className="w-4 h-4 inline mr-1" /> Ver
         </Link>

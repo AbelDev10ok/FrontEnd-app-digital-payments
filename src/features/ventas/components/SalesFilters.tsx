@@ -70,7 +70,7 @@ const SalesFilters = ({
             value={searchClientName}
             onChange={onClientNameChange}
             placeholder="Buscar por nombre cliente..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
           />
         </div>
       )}
@@ -82,7 +82,7 @@ const SalesFilters = ({
           value={searchTerm}
           onChange={onSearchChange}
           placeholder="Buscar por descripcion producto..."
-          className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
         />
       </div>
 
@@ -95,7 +95,7 @@ const SalesFilters = ({
           setShowCalendar(false);
         }}
         disabled={!!specificDate}
-        className="w-full sm:w-auto px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className="w-full sm:w-auto px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
       >
         <option value="">Año</option>
         {years.map((y) => (
@@ -114,7 +114,7 @@ const SalesFilters = ({
           setShowCalendar(false);
         }}
         disabled={!!specificDate}
-        className="w-full sm:w-auto px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className="w-full sm:w-auto px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
       >
         <option value="">Mes</option>
         {months.map((m) => (
@@ -127,7 +127,7 @@ const SalesFilters = ({
       {/* Botón para calendario específico */}
       <button
         onClick={() => setShowCalendar(!showCalendar)}
-        className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:bg-gray-50"
+        className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 hover:bg-gray-50"
       >
         <Calendar className="w-5 h-5 mr-2" />
         Fecha específica
@@ -199,7 +199,7 @@ const SalesFilters = ({
                 setYear("");
                 setMonth("");
               }}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 mb-4"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 mb-4"
             />
             <div className="flex justify-end space-x-2">
               <button
@@ -215,7 +215,7 @@ const SalesFilters = ({
               </button>
               <button
                 onClick={() => setShowCalendar(false)}
-                className="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600"
+                className="px-4 py-2 bg-brand-600 text-white rounded-xl hover:bg-brand-700"
               >
                 Aplicar
               </button>

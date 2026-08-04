@@ -1,2 +1,17 @@
 export * from './DebouncedInput';
+export type { AlertTone } from './Alert';
+export type { BadgeTone } from './Badge';
+export type { ButtonProps, ButtonSize, ButtonVariant } from './Button';
+export type { FieldProps } from './Field';
+export type { PageHeaderProps } from './PageHeader';
+export type { StatCardProps, StatTone } from './StatCard';
+export { default as Alert } from './Alert';
+export { default as Badge } from './Badge';
+export { default as Button } from './Button';
+export { default as Card } from './Card';
+export { default as Field } from './Field';
+export { default as Input } from './Input';
+export { default as PageHeader } from './PageHeader';
+export { default as Select } from './Select';
+export { default as StatCard } from './StatCard';
 export { default as Paginación } from './Paginacion';

@@ -37,9 +37,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   }, []);
 
   const filterOptions = [
-    { label: 'Todos', value: 'Todos', color: 'bg-indigo-500' },
+    { label: 'Todos', value: 'Todos', color: 'bg-brand-500' },
     { label: 'A Cobrar', value: 'A_COBRAR', color: 'bg-red-500' },
-    { label: 'Completadas', value: 'COMPLETED', color: 'bg-green-500' },
+    { label: 'Completadas', value: 'COMPLETED', color: 'bg-emerald-500' },
     { label: 'Activas', value: 'ACTIVE', color: 'bg-yellow-500' }
     ];
 
@@ -94,7 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         {/* Logo/Brand */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-brand-500 to-brand-600 rounded-lg flex items-center justify-center">
               <LayoutDashboard className="w-5 h-5 text-white" />
             </div>
             <span className="font-semibold text-gray-900">Mi Sistema</span>
@@ -133,7 +133,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                           className={({ isActive }) => `
                             flex items-center space-x-3 p-3 rounded-lg text-sm transition-colors duration-200
                             ${isActive 
-                              ? 'bg-indigo-50 text-indigo-700 shadow-sm' 
+                              ? 'bg-brand-50 text-brand-700 shadow-sm' 
                               : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                             }
                           `}
@@ -175,7 +175,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                                     }}
                                     className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-colors duration-150
                                       ${isActive
-                                        ? 'bg-indigo-50 text-indigo-700 font-medium'
+                                        ? 'bg-brand-50 text-brand-700 font-medium'
                                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                       }`}
                                   >
@@ -193,7 +193,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                               className="w-full flex items-center justify-between p-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-200 group"
                             >
                               <div className="flex items-center space-x-2">
-                                <Package className="w-4 h-4 text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                                <Package className="w-4 h-4 text-gray-400 group-hover:text-brand-500 transition-colors" />
                                 <span className="font-medium">Categoria</span>
                               </div>
                               {productTypesExpanded ? (
@@ -211,7 +211,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                                   }}
                                   className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-colors duration-150 ${
                                     location.pathname === '/dashboard/ventas/todas' && !new URLSearchParams(location.search).get('productType')
-                                      ? 'bg-indigo-50 text-indigo-700 font-medium'
+                                      ? 'bg-brand-50 text-brand-700 font-medium'
                                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                   }`}
                                 >
@@ -229,11 +229,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                                       }}
                                       className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-colors duration-150 ${
                                         isActive
-                                          ? 'bg-indigo-50 text-indigo-700 font-medium'
+                                          ? 'bg-brand-50 text-brand-700 font-medium'
                                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                       }`}
                                     >
-                                      <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                                      <span className="w-2 h-2 rounded-full bg-brand-500" />
                                       <span>{pt.name}</span>
                                     </button>
                                   );
@@ -253,7 +253,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                   className={({ isActive }) => `
                     flex items-center space-x-3 p-3 rounded-xl transition-colors duration-200
                     ${isActive
-                      ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-500'
+                      ? 'bg-brand-50 text-brand-700 border-r-2 border-brand-500'
                       : 'text-gray-700 hover:bg-gray-100'
                     }
                   `}

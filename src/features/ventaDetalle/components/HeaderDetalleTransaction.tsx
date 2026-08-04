@@ -22,7 +22,7 @@ export default function HeaderDetalleTransaction({ transaction, isLoan, onEdit, 
                 >
                     <ArrowLeft className="w-5 h-5 text-gray-600" />
                 </Link>
-                <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-brand-500 to-brand-600 rounded-full flex items-center justify-center">
                     <Package className="w-6 h-6 text-white" />
                 </div>
                 <div>

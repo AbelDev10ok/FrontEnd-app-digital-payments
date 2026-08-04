@@ -61,7 +61,7 @@ export const ModalPay: React.FC<ModalPayProps> = ({
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Deuda restante:</span>
               <span
-                className={`font-medium ${remainingDebt > 0 ? "text-orange-600" : "text-green-600"}`}
+                className={`font-medium ${remainingDebt > 0 ? "text-orange-600" : "text-emerald-600"}`}
               >
                 {formatCurrency(remainingDebt)}
               </span>
@@ -83,7 +83,7 @@ export const ModalPay: React.FC<ModalPayProps> = ({
               min={dateSale}
               // no puede ser menor a la fecha de venta
               // max={paymentDate}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
             />
           </div>
           <div>
@@ -105,7 +105,7 @@ export const ModalPay: React.FC<ModalPayProps> = ({
                 min="0"
                 max={selectedFee.amount}
                 step="0.01"
-                className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 placeholder="0.00"
               />
             </div>
@@ -128,7 +128,7 @@ export const ModalPay: React.FC<ModalPayProps> = ({
                 parseFloat(paymentAmount) > remainingDebt ||
                 processingFeeId === selectedFee.id
               }
-              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {processingFeeId === selectedFee.id ? (
                 <Loader2 className="animate-spin w-5 h-5 mx-auto" />

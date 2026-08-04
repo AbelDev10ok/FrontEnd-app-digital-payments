@@ -33,14 +33,14 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
       <form onSubmit={onSubmit} className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <InputWithIcon id="fecha" name="fecha" label="Fecha *" type="date" value={formData.fecha} onChange={handleInputChange} icon={<Calendar className="w-4 h-4 text-indigo-600" />} error={errors.fecha} max={today} />
+            <InputWithIcon id="fecha" name="fecha" label="Fecha *" type="date" value={formData.fecha} onChange={handleInputChange} icon={<Calendar className="w-4 h-4 text-brand-600" />} error={errors.fecha} max={today} />
           </div>
 
           <div>
             <SelectWithIcon
               id="productTypeId"
               name="productTypeId"
-              label={<><CreditCard className="w-4 h-4 text-indigo-600 inline mr-2" /> Tipo de producto *</>}
+              label={<><CreditCard className="w-4 h-4 text-brand-600 inline mr-2" /> Tipo de producto *</>}
               value={formData.productTypeId}
               onChange={e => setFormData((prev: any) => ({ ...prev, productTypeId: e.target.value }))}
               options={[{ value: '', label: 'Selecciona un tipo' }, ...productTypes.map(pt => ({ value: String(pt.id), label: pt.name }))]}
@@ -86,7 +86,7 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
           type="date"
           value={formData.firstFeeDate}
           onChange={handleInputChange}
-          icon={<Calendar className="w-4 h-4 text-indigo-600" />}
+          icon={<Calendar className="w-4 h-4 text-brand-600" />}
           error={errors?.firstFeeDate}
           min={formData.fecha}
         />
@@ -112,7 +112,7 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
 
           {formData.payments !== 'CONTADO' && (
             <div>
-              <InputWithIcon id="quantityFees" name="quantityFees" label={<><Plus className="inline w-4 h-4 text-indigo-600 mr-2" /> Cantidad de cuotas *</>} type="number" value={formData.quantityFees} onChange={handleInputChange} error={errors.quantityFees} />
+              <InputWithIcon id="quantityFees" name="quantityFees" label={<><Plus className="inline w-4 h-4 text-brand-600 mr-2" /> Cantidad de cuotas *</>} type="number" value={formData.quantityFees} onChange={handleInputChange} error={errors.quantityFees} />
             </div>
           )}
 
@@ -138,7 +138,7 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
               value={formData.descripcion}
               onChange={handleInputChange}
               rows={2}
-              className="w-1/3 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-1/3 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
               placeholder="Tv samsung 32'..."
             />
           </div>

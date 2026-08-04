@@ -3,6 +3,18 @@
 Documento de trabajo para no olvidar las mejoras pendientes. Marcá con ✅ lo terminado.
 Referencias con `archivo:línea` verificadas contra el código actual.
 
+## ✅ Fase 2 — Diseño (skills `frontend-design` + decisiones de usuario)
+
+**Dirección aprobada**: color primario único **emerald/teal financiero** (`brand`), tipografía **stack del sistema** (sin Google Fonts), primitivos UI compartidos, **signature = StatCard** (card con franja de acento superior + chip de icono), resto disciplinado.
+
+- [x] **2.1 Token system** en `tailwind.config.js`: paleta `brand` (emerald-teal custom, 50..950), `rounded-card`/`rounded-input`, `shadow-card`/`shadow-card-hover`, `fontFamily.sans` (stack sistema). Antes `extend: {}` vacío.
+- [x] **2.2 Primitivos UI** en `src/shared/components/ui/` (barrel `index.ts` con re-exports explícitos): `Button` (primary/secondary/ghost/danger, sizes, `isLoading`), `Card`, `StatCard` (signature, tones brand/success/warning/danger/neutral), `Field`, `Input`, `Select`, `Badge`, `Alert`, `PageHeader`.
+- [x] **2.3 Bugs arreglados**: `index.html` `lang="en"`→`"es"` y título en español; clases rotas `text-green-600'}` en `StateDetalleTransaction.tsx:81,86` (reescrito con StatCard); focus ring verde en `ModalPay`/`SalesFilters`/`SaleForm`/`VentaDetalle` → `brand`. **Sweep de color**: `indigo-*`/`purple-*`/`blue-*`/`cyan-*` → `brand-*`; `green-*` éxito → `emerald-*`; `green-*` acciones/focus → `brand-*`. **0 residuos** de indigo/purple/blue/green (verificado con grep).
+- [x] **2.4 Duplicaciones eliminadas**: `ClientEstadoFinansa..tsx` (nombre corrupto con doble punto, dead code) renombrado a `ClientEstadoFinansa.tsx` y reescrito con StatCard; `ClientResumenFinansas.tsx` reescrito con Card (agrega fila "Total Histórico"); **ClienteDetalle** ahora los reusa en vez de duplicar el markup. **EditarVenta** reusa `SaleForm` (era dead code con 0 importadores) vía nuevo prop `showFinancialFields=false` — solo muestra tipo+descripción porque el backend `updateSale` solo persiste `{productType, descriptionProduct}` (evita campos engañosos).
+- [x] **2.5 Migración a primitivos**: Dashboard (6 StatCards + Card + Button, banner brand, spinner brand), AdminPanel (StatCards + Card), StateDetalleTransaction (6 StatCards), Login (Field/Button/Alert, brand). Eliminado `DashboardMetricCard.tsx` (huérfano).
+
+⚠️ **Pendiente Fase 2**: no hay vista previa visual en este entorno (sin screenshot). Verificar en navegador: dashboard, login, detalle de venta/cliente y editar venta. `PageHeader`/`Badge`/`Input`/`Select` primitivos creados pero aún no aplicados masivamente en tablas/filtros (siguiente paso opcional).
+
 ## ✅ Fase 1 — Performance (skill `vercel-react-best-practices`)
 
 - [x] **1.1 Lazy loading de rutas**: `React.lazy` + `<Suspense>` en `src/App.tsx`. 10 páginas lazy (Login queda eager), fallback `<Load />`. Build genera chunks por ruta.

@@ -28,7 +28,7 @@ const PrimerCuota: React.FC<PrimerCuotaProps> = ({ firstFeeDate, fecha, payFirst
           type="date"
           value={firstFeeDate}
           onChange={onChange}
-          icon={<Calendar className="w-4 h-4 text-indigo-600" />}
+          icon={<Calendar className="w-4 h-4 text-brand-600" />}
           error={errors?.firstFeeDate}
           min={fecha}
         />
@@ -42,12 +42,12 @@ const PrimerCuota: React.FC<PrimerCuotaProps> = ({ firstFeeDate, fecha, payFirst
           name="payFirstFee"
           checked={Boolean(payFirstFee)}
           onChange={onChange}
-          className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+          className="h-4 w-4 text-brand-600 border-gray-300 rounded"
           disabled={disabled}
           title={disabled ? 'La primera cuota no es hoy, no se puede pagar ahora' : 'Pagar la primera cuota ahora'}
         />
         <label htmlFor="payFirstFee" className="text-sm text-gray-700 flex items-center gap-2">
-          <CheckCircle className="w-4 h-4 text-indigo-500" /> Pagar primera cuota ahora
+          <CheckCircle className="w-4 h-4 text-brand-500" /> Pagar primera cuota ahora
         </label>
       </div>
 

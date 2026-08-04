@@ -9,7 +9,7 @@ type Props = {
 const SaleStatusBadge: React.FC<Props> = ({ sale, selectedStatus }) => {
   if (sale.status.toString() === "COMPLETED") {
     return (
-      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
         Completada
       </span>
     );

@@ -43,7 +43,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, searchTerm }) => {
                         {/* Celda Cliente: Es la cabecera de la tarjeta en móvil */}
                         <td className="p-4 flex items-center border-b border-gray-200 md:border-b-0 md:table-cell md:px-6 md:py-4 md:whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <div className="w-10 h-10 bg-gradient-to-r from-brand-500 to-brand-600 rounded-full flex items-center justify-center">
                               <span className="text-white font-medium text-sm">
                                 {cliente.name.split(' ').map((n: string) => n[0]).join('')}
                               </span>
@@ -61,14 +61,14 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, searchTerm }) => {
                           <div className="text-sm text-gray-500">{cliente.telefono}</div>
                         </td>
                         <td className="px-6 py-4 block md:table-cell text-right md:text-left relative border-b border-gray-200 md:border-b-0 last:md:border-b-0 before:content-[attr(data-label)] before:absolute before:left-6 before:text-sm before:font-bold before:text-gray-500 md:before:content-none" data-label="Estado">
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
                             {cliente.direccion}
                           </span>
                         </td>
                         <td className="px-6 py-4 block md:table-cell text-right md:text-left relative before:content-[attr(data-label)] before:absolute before:left-6 before:text-sm before:font-bold before:text-gray-500 md:before:content-none" data-label="Acciones">
                           <Link 
                             to={`/dashboard/clientes/${cliente.id}`}
-                            className="text-indigo-600 hover:text-indigo-900 mr-4"
+                            className="text-brand-600 hover:text-brand-900 mr-4"
                           >
                             Ver Detalles
                           </Link>

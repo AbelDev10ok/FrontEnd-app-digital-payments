@@ -32,7 +32,7 @@ const SubmitBar: React.FC<Props> = ({ cancelTo = '/dashboard/ventas', isDisabled
         type="submit"
         disabled={isDisabled}
         aria-disabled={isDisabled}
-        className={`inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-xl shadow-md hover:from-indigo-700 hover:to-indigo-600 transition-all duration-200 ${isDisabled ? 'opacity-50 cursor-not-allowed hover:from-indigo-600 hover:to-indigo-500' : ''}`}
+        className={`inline-flex items-center px-6 py-3 bg-gradient-to-r from-brand-600 to-brand-500 text-white rounded-xl shadow-md hover:from-brand-700 hover:to-brand-600 transition-all duration-200 ${isDisabled ? 'opacity-50 cursor-not-allowed hover:from-brand-600 hover:to-brand-500' : ''}`}
       >
         {submitLabel}
       </button>

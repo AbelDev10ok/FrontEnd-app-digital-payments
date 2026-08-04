@@ -1,5 +1,7 @@
 import { Shield, Users, Settings, Database, AlertTriangle } from 'lucide-react';
 import Layout from '@/shared/components/layout/Layout';
+import { StatCard, Card } from '@/shared/components/ui';
+import type { StatTone } from '@/shared/components/ui';
 
 interface AdminPanelProps {
   user: { email?: string; role?: string } | null;
@@ -7,103 +9,91 @@ interface AdminPanelProps {
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ user, onLogout }) => {
-  const adminStats = [
+  const adminStats: {
+    name: string;
+    value: string;
+    icon: typeof Users;
+    tone: StatTone;
+  }[] = [
     {
       name: 'Total Usuarios',
       value: '1,234',
       icon: Users,
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600',
+      tone: 'brand',
     },
     {
       name: 'Configuraciones',
       value: '45',
       icon: Settings,
-      color: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-600',
+      tone: 'success',
     },
     {
       name: 'Base de Datos',
       value: '99.9%',
       icon: Database,
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-600',
+      tone: 'neutral',
     },
     {
       name: 'Alertas',
       value: '3',
       icon: AlertTriangle,
-      color: 'from-red-500 to-red-600',
-      bgColor: 'bg-red-50',
-      textColor: 'text-red-600',
+      tone: 'danger',
     },
   ];
 
   return (
     <Layout title="Panel de Administración" user={user} onLogout={onLogout}>
       <div className="space-y-6">
-        {/* Admin Welcome Section */}
-        <div className="bg-gradient-to-r from-red-500 to-pink-600 rounded-3xl p-8 text-white">
+        <div className="bg-gradient-to-r from-brand-600 to-brand-700 rounded-3xl p-8 text-white">
           <div className="flex items-center space-x-4">
             <Shield className="w-12 h-12 text-white" />
             <div>
               <h2 className="text-3xl font-bold mb-2">Panel de Administración</h2>
-              <p className="text-red-100 text-lg">
+              <p className="text-brand-100 text-lg">
                 Control total del sistema y gestión de usuarios
               </p>
             </div>
           </div>
         </div>
 
-        {/* Admin Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {adminStats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                </div>
-                <div className={`${stat.bgColor} p-3 rounded-xl`}>
-                  <stat.icon className={`w-6 h-6 ${stat.textColor}`} />
-                </div>
-              </div>
-            </div>
+          {adminStats.map((stat) => (
+            <StatCard
+              key={stat.name}
+              label={stat.name}
+              value={stat.value}
+              icon={<stat.icon className="w-6 h-6" />}
+              tone={stat.tone}
+            />
           ))}
         </div>
 
-        {/* Admin Tools */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* User Management */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <Card className="p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Gestión de Usuarios</h3>
             <div className="space-y-3">
-              <button className="w-full text-left p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors duration-200">
+              <button className="w-full text-left p-4 bg-brand-50 rounded-xl hover:bg-brand-100 transition-colors duration-200">
                 <div className="flex items-center space-x-3">
-                  <Users className="w-5 h-5 text-blue-600" />
-                  <span className="font-medium text-blue-900">Ver todos los usuarios</span>
+                  <Users className="w-5 h-5 text-brand-600" />
+                  <span className="font-medium text-brand-900">Ver todos los usuarios</span>
                 </div>
               </button>
-              <button className="w-full text-left p-4 bg-green-50 rounded-xl hover:bg-green-100 transition-colors duration-200">
+              <button className="w-full text-left p-4 bg-emerald-50 rounded-xl hover:bg-emerald-100 transition-colors duration-200">
                 <div className="flex items-center space-x-3">
-                  <Shield className="w-5 h-5 text-green-600" />
-                  <span className="font-medium text-green-900">Gestionar permisos</span>
+                  <Shield className="w-5 h-5 text-emerald-600" />
+                  <span className="font-medium text-emerald-900">Gestionar permisos</span>
                 </div>
               </button>
             </div>
-          </div>
+          </Card>
 
-          {/* System Settings */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <Card className="p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Configuración del Sistema</h3>
             <div className="space-y-3">
-              <button className="w-full text-left p-4 bg-purple-50 rounded-xl hover:bg-purple-100 transition-colors duration-200">
+              <button className="w-full text-left p-4 bg-brand-50 rounded-xl hover:bg-brand-100 transition-colors duration-200">
                 <div className="flex items-center space-x-3">
-                  <Settings className="w-5 h-5 text-purple-600" />
-                  <span className="font-medium text-purple-900">Configuración general</span>
+                  <Settings className="w-5 h-5 text-brand-600" />
+                  <span className="font-medium text-brand-900">Configuración general</span>
                 </div>
               </button>
               <button className="w-full text-left p-4 bg-orange-50 rounded-xl hover:bg-orange-100 transition-colors duration-200">
@@ -113,11 +103,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, onLogout }) => {
                 </div>
               </button>
             </div>
-          </div>
+          </Card>
         </div>
 
-        {/* Recent Admin Actions */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <Card className="p-6">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Acciones Recientes de Admin</h3>
           <div className="space-y-4">
             {[
@@ -126,10 +115,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, onLogout }) => {
               { action: 'Alerta resuelta: Error de conexión', time: 'Hace 30 min', type: 'warning' },
             ].map((item, index) => (
               <div key={index} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
-                <div className={`w-2 h-2 rounded-full ${
-                  item.type === 'success' ? 'bg-green-500' :
-                  item.type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
-                }`}></div>
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    item.type === 'success'
+                      ? 'bg-emerald-500'
+                      : item.type === 'warning'
+                        ? 'bg-yellow-500'
+                        : 'bg-brand-500'
+                  }`}
+                ></div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">{item.action}</p>
                   <p className="text-xs text-gray-500">{item.time}</p>
@@ -137,7 +131,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, onLogout }) => {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       </div>
     </Layout>
   );

@@ -133,7 +133,7 @@ export default function CronogramaFees({transaction, formatDate, formatCurrency,
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                         {fee.paid ? (
-                          <div className="text-green-600">
+                          <div className="text-emerald-600">
                             <div className="font-medium flex items-center">
                               <CheckCircle className="w-4 h-4 mr-2" />
                               {formatCurrency(fee.paidAmount || fee.amount)}
@@ -154,7 +154,7 @@ export default function CronogramaFees({transaction, formatDate, formatCurrency,
                             <button
                             onClick={() => openPaymentModal({ id: fee.id, amount: transaction.amountFee, numberFee: fee.numberFee }, transaction.remainingAmount)}
                             disabled={processingFee === fee.id}
-                            className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                            className="px-3 py-1 bg-brand-600 text-white text-sm rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50"
                           >
                             {processingFee === fee.id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
@@ -165,7 +165,7 @@ export default function CronogramaFees({transaction, formatDate, formatCurrency,
                           )}
                             <button
                             onClick={() => setEditingFee({ id: fee.id, date: fee.expirationDate, amount: fee.amount, paymentDate: fee.paymentDate, isPaid: fee.paid })}
-                            className="px-3 py-1 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors"
+                            className="px-3 py-1 bg-brand-600 text-white text-sm rounded-lg hover:bg-brand-700 transition-colors"
                             title="Posponer vencimiento"
                           >
                               <Edit className="w-4 h-4" />
