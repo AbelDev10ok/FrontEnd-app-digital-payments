@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { User } from 'lucide-react';
-import { Client } from '../../types/client';
+import { Client } from '@/shared/types/client';
 
 interface Props {
   value?: string | number; // sellerId as string

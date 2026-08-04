@@ -1,7 +1,7 @@
 import { ModalPay } from "@/features/ventaDetalle/components/ModalPay";
 import PostponeFeeModal from "@/features/ventaDetalle/components/PosponedFeeModal";
 import { salesService } from "@/features/ventas/services/salesServices";
-import { SaleResponseDto } from "@/types/sales";
+import { SaleResponseDto } from "@/shared/types/sales";
 import { CheckCircle, Loader2, Edit } from "lucide-react";
 
 import { useState } from "react";

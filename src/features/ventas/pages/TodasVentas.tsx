@@ -8,7 +8,7 @@ import { useSalesFilters } from "@/features/ventas/hooks/useSalesFilters";
 import HeaderTransaction from "@/features/ventas/components/HeaderTransaction";
 import { DashboardLayout } from "@/shared";
 import { Paginación } from "@/shared/components/ui";
-import { FetchParamsSales } from "@/types/sales";
+import { FetchParamsSales } from "@/shared/types/sales";
 import { salesService } from "@features/ventas/services/salesServices";
 import SalesFilters from "@features/ventas/components/SalesFilters";
 import SaleTable from "@features/ventas/components/SaleTable";

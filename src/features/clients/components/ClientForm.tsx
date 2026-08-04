@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Client } from '@/types/client';
+import { Client } from '@/shared/types/client';
 import InputWithIcon from '@/features/crearVentas/components/InputWithIcon';
 import AutocompleteSeller from '@/shared/components/AutocompleteSeller';
 import SubmitBar from '@/features/crearVentas/components/SubmitBar';

@@ -1,4 +1,4 @@
-import { SaleResponseDto } from "@/types/sales";
+import { SaleResponseDto } from "@/shared/types/sales";
 import { User, CreditCard, Phone } from "lucide-react";
 
 interface ClientInfoDetalleProps {

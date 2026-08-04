@@ -1,4 +1,4 @@
-import { SaleResponseDto } from "@/types/sales";
+import { SaleResponseDto } from "@/shared/types/sales";
 import { Calendar, Clock, Package } from "lucide-react";
 
 
@@ -10,9 +10,6 @@ interface InfoTransactionDetalleProps {
 
 
 export default function InfoTransactionDetalle({transaction, isLoan, formatDate}: InfoTransactionDetalleProps) {
-
-  console.log("info transaction detalle", transaction.realFinalPayment)
-
   return (
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Información de la Transacción</h3>

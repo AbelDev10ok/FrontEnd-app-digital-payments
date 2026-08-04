@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Client } from "@/@/../types/client";
+import { Client } from "@/shared/types/client";
 import { clientService } from "@features/clients/services/clientServices";
 
 export interface VendedorOption {

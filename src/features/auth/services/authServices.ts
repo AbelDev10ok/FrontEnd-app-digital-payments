@@ -1,4 +1,5 @@
 import { useAuthStore } from "@features/auth/store/authStore";
+import { AUTH_API_URL } from "@/shared/config/api";
 
 interface ApiResponse<T> {
   message: string;
@@ -6,9 +7,20 @@ interface ApiResponse<T> {
   data: T;
 }
 
+interface LoginResponse {
+  username: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
+interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
 // authServices.ts
-export async function login(email: string, password: string) {
-  const response = await fetch('http://localhost:8080/auth/login', {
+export async function login(email: string, password: string): Promise<LoginResponse> {
+  const response = await fetch(`${AUTH_API_URL}/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -16,7 +28,7 @@ export async function login(email: string, password: string) {
     body: JSON.stringify({ email, password }),
   });
 
-  const apiResponse: ApiResponse<any> = await response.json();
+  const apiResponse: ApiResponse<LoginResponse> = await response.json();
 
   if (response.ok && apiResponse.status === 'OK') {
     return apiResponse.data;
@@ -25,8 +37,9 @@ export async function login(email: string, password: string) {
   }
 }
 // Función para refrescar el token
-export async function refreshToken(refreshToken: string) {
-  const response = await fetch('http://localhost:8080/auth/refresh-token', {
+// El endpoint /auth/refresh-token responde raw ({ accessToken, refreshToken }), sin envelope
+export async function refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
+  const response = await fetch(`${AUTH_API_URL}/refresh-token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -34,13 +47,12 @@ export async function refreshToken(refreshToken: string) {
     body: JSON.stringify({ refreshToken }),
   });
 
-  const apiResponse: ApiResponse<any> = await response.json();
-
-  if (response.ok && apiResponse.status === 'OK') {
-    return apiResponse.data;
-  } else {
-    throw new Error(apiResponse.message || 'Refresh token expired or invalid');
+  if (response.ok) {
+    return response.json();
   }
+
+  const errorMessage = await response.text();
+  throw new Error(errorMessage || 'Refresh token expired or invalid');
 }
 
 // Función para hacer peticiones autenticadas con refresh automático

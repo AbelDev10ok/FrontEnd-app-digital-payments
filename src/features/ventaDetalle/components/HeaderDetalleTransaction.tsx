@@ -1,4 +1,4 @@
-import { SaleResponseDto } from "@/types/sales";
+import { SaleResponseDto } from "@/shared/types/sales";
 import { ArrowLeft, Package, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";

@@ -23,3 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Skills del CLI `skills` (symlinks a la caché; restaurar con `skills experimental_install` vía skills-lock.json)
+.agents/
+.claude/
+

@@ -1,7 +1,7 @@
 import { AlertCircle } from 'lucide-react';
 
 import Load from '@/shared/components/feedback/Load.tsx';
-import { FetchParamsClients } from '@/types/client';
+import { FetchParamsClients } from '@/shared/types/client';
 import { DashboardLayout } from '@/shared/components/layout';
 import HeaderClientes from '@/features/clients/components/HeaderClientes';
 import ClientTable from '../components/ClientTable';

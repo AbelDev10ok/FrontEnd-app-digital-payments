@@ -37,7 +37,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, component: Co
 
   // Forward auth info to the single child element if possible
   if (React.isValidElement(children)) {
-    return React.cloneElement(children, { user, onLogout: logout });
+    return React.cloneElement(children as React.ReactElement<any>, { user, onLogout: logout });
   }
 
   return <>{children}</>;

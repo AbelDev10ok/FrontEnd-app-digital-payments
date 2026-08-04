@@ -5,7 +5,7 @@ export function formatCurrency(amount: number, currency = 'ARS') {
       currency,
       maximumFractionDigits: 0,
     }).format(amount);
-  } catch (err) {
+  } catch {
     // Fallback
     return `${amount.toFixed(2)} ${currency}`;
   }

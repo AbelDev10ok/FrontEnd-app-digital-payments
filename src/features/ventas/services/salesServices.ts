@@ -1,21 +1,14 @@
 import { authenticatedFetch } from "@/features/auth/services/authServices";
-import { Client } from "@/types/client";
-import type { DashboardStatsDto } from "@/types/dashboard";
+import { Client } from "@/shared/types/client";
+import type { DashboardStatsDto } from "@/shared/types/dashboard";
 import {
   CreateSaleRequest,
   ProductTypeDto,
   SaleResponseDto,
   UpdateSaleRequest,
-} from "@/types/sales";
-
-const API_BASE_URL = "http://localhost:8080/api/loans";
-
-// Definición de la interfaz para la nueva estructura de respuesta
-interface ApiResponse<T> {
-  message: string;
-  status: string; // O un enum si se prefieren valores fijos como 'OK', 'BAD_REQUEST'
-  data: T;
-}
+} from "@/shared/types/sales";
+import { CLIENTS_API_URL, LOANS_API_URL, PRODUCT_TYPES_API_URL } from "@/shared/config/api";
+import { handleResponse } from "@/shared/utils/http";
 
 export interface Page<T> {
   content: T[];
@@ -46,20 +39,10 @@ export interface Page<T> {
   empty: boolean;
 }
 
-// Función de ayuda para manejar la nueva respuesta de la API
-async function handleResponse<T>(response: Response): Promise<T> {
-  const apiResponse: ApiResponse<T> = await response.json();
-  if (response.ok && apiResponse.status === "OK") {
-    return apiResponse.data;
-  } else {
-    throw new Error(apiResponse.message || "Ocurrió un error");
-  }
-}
-
 export const salesService = {
   async getSellers(): Promise<Client[]> {
     const response = await authenticatedFetch(
-      "http://localhost:8080/api/clients/vendedores",
+      `${CLIENTS_API_URL}/vendedores`,
     );
     if (!response.ok) {
       throw new Error("Error al obtener los vendedores");
@@ -69,7 +52,7 @@ export const salesService = {
 
   async getClientsBySeller(sellerId: number): Promise<Client[]> {
     const response = await authenticatedFetch(
-      `http://localhost:8080/api/clients/vendedor/${sellerId}/clientes`,
+      `${CLIENTS_API_URL}/vendedor/${sellerId}/clientes`,
     );
     if (!response.ok) {
       throw new Error("Error al obtener los clientes del vendedor");
@@ -77,18 +60,9 @@ export const salesService = {
     return response.json();
   },
 
-  async getProductDescriptions(
-    productType: string,
-  ): Promise<SaleResponseDto[]> {
-    const response = await authenticatedFetch(
-      `${API_BASE_URL}/search-by-description?description=${productType}`,
-    );
-    return handleResponse<SaleResponseDto[]>(response);
-  },
-
   async getProductTypes(): Promise<ProductTypeDto[]> {
     const response = await authenticatedFetch(
-      "http://localhost:8080/api/product-types/all",
+      `${PRODUCT_TYPES_API_URL}/all`,
     );
     if (!response.ok) {
       throw new Error("Error al obtener los tipos de productos");
@@ -100,7 +74,7 @@ export const salesService = {
     productType: string = "PRESTAMO",
   ): Promise<SaleResponseDto[]> {
     const response = await authenticatedFetch(
-      `${API_BASE_URL}?productType=${productType}`,
+      `${LOANS_API_URL}?productType=${productType}`,
     );
     return handleResponse<SaleResponseDto[]>(response);
   },
@@ -116,7 +90,7 @@ export const salesService = {
     status?: string;
     productType?: string;
   }): Promise<Page<SaleResponseDto>> {
-    const url = new URL(API_BASE_URL);
+    const url = new URL(LOANS_API_URL);
     url.searchParams.append("page", params.page.toString());
     url.searchParams.append("size", params.size.toString());
     if (params.year) url.searchParams.append("year", params.year.toString());
@@ -129,82 +103,25 @@ export const salesService = {
     if (params.status) url.searchParams.append("status", params.status);
     if (params.productType)
       url.searchParams.append("productType", params.productType);
-    console.log("URL completa:", url.toString());
-    console.log("Parámetros enviados:", {
-      page: params.page,
-      size: params.size,
-      year: params.year,
-      month: params.month,
-      day: params.day,
-      clientName: params.clientName,
-      descriptionProduct: params.descriptionProduct,
-      status: params.status,
-      productType: params.productType,
-    });
 
     const response = await authenticatedFetch(url.toString());
     return handleResponse<Page<SaleResponseDto>>(response);
-  },
-
-  async getFeesDue(params: {
-    page: number;
-    size: number;
-    date?: string;
-    clientName?: string;
-    descriptionProduct?: string;
-    productType?: string;
-  }): Promise<Page<SaleResponseDto>> {
-    const url = new URL(`${API_BASE_URL}/delayed-fees`);
-    url.searchParams.append("page", params.page.toString());
-    url.searchParams.append("size", params.size.toString());
-    const date = params.date || new Date().toISOString().split("T")[0];
-    url.searchParams.append("date", date);
-
-    if (params.clientName)
-      url.searchParams.append("clientName", params.clientName);
-    if (params.descriptionProduct)
-      url.searchParams.append("descriptionProduct", params.descriptionProduct);
-    if (params.productType)
-      url.searchParams.append(
-        "productType",
-        Number(params.productType).toString(),
-      );
-
-    const response = await authenticatedFetch(url.toString());
-    return handleResponse<Page<SaleResponseDto>>(response);
-  },
-
-  async getFeesDueOn(
-    productType: string,
-    date: string,
-  ): Promise<SaleResponseDto[]> {
-    const url = new URL(`${API_BASE_URL}/fees-to-charge-today`);
-    url.searchParams.append("date", date);
-    url.searchParams.append("productType", productType);
-    const response = await authenticatedFetch(url.toString());
-    return handleResponse<SaleResponseDto[]>(response);
   },
 
   async getAllLoans(): Promise<SaleResponseDto[]> {
     const response = await authenticatedFetch(
-      `${API_BASE_URL}?productType=VENTA`,
+      `${LOANS_API_URL}?productType=VENTA`,
     );
     return handleResponse<SaleResponseDto[]>(response);
   },
 
   async getSaleById(id: number): Promise<SaleResponseDto> {
-    const response = await authenticatedFetch(`${API_BASE_URL}/${id}`);
+    const response = await authenticatedFetch(`${LOANS_API_URL}/${id}`);
     return handleResponse<SaleResponseDto>(response);
   },
 
   async createSale(saleData: CreateSaleRequest): Promise<SaleResponseDto> {
-    console.log(
-      "Enviando solicitud de creación de venta con los siguientes datos:",
-      saleData,
-    );
-    console.log("Endpoint al que se está enviando la solicitud:", API_BASE_URL);
-    console.log("data en formato JSON:", JSON.stringify(saleData));
-    const response = await authenticatedFetch(API_BASE_URL, {
+    const response = await authenticatedFetch(LOANS_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(saleData),
@@ -213,7 +130,7 @@ export const salesService = {
   },
 
   async updateSale(id: number, saleData: UpdateSaleRequest): Promise<void> {
-    const response = await authenticatedFetch(`${API_BASE_URL}/${id}`, {
+    const response = await authenticatedFetch(`${LOANS_API_URL}/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(saleData),
@@ -224,13 +141,13 @@ export const salesService = {
         const apiResponse = await response.json();
         throw new Error(apiResponse.message);
       } catch (e) {
-        throw new Error(e.message);
+        throw new Error(e instanceof Error ? e.message : "Ocurrió un error desconocido");
       }
     }
   },
 
   async deleteSale(id: number): Promise<void> {
-    const response = await authenticatedFetch(`${API_BASE_URL}/deleted/${id}`, {
+    const response = await authenticatedFetch(`${LOANS_API_URL}/deleted/${id}`, {
       method: "DELETE",
     });
 
@@ -239,7 +156,7 @@ export const salesService = {
         const apiResponse = await response.json();
         throw new Error(apiResponse.message);
       } catch (e) {
-        throw new Error(e.message);
+        throw new Error(e instanceof Error ? e.message : "Ocurrió un error desconocido");
       }
     }
   },
@@ -249,7 +166,7 @@ export const salesService = {
     amount: number,
     date: string,
   ): Promise<void> {
-    const url = `${API_BASE_URL}/collects-fee/${feeId}/pay?amount=${amount}&date=${date}`;
+    const url = `${LOANS_API_URL}/collects-fee/${feeId}/pay?amount=${amount}&date=${date}`;
     const response = await authenticatedFetch(url, { method: "POST" });
 
     if (!response.ok) {
@@ -259,14 +176,14 @@ export const salesService = {
         throw new Error(apiResponse.message);
       } catch (e) {
         // Si el cuerpo no es JSON o hay otro error, lanza un error genérico
-        throw new Error(e.message);
+        throw new Error(e instanceof Error ? e.message : "Ocurrió un error desconocido");
       }
     }
     // Si la respuesta es ok, no se necesita procesar el cuerpo si se espera que esté vacío
   },
 
   async postponeFee(
-    saleId: number,
+    _saleId: number,
     feeId: number,
     newDateExpiration: string,
     amount: number,
@@ -286,7 +203,7 @@ export const salesService = {
       params.append("amount", amount.toString());
     }
 
-    const url = `${API_BASE_URL}/fee/${feeId}/postpone?${params.toString()}`;
+    const url = `${LOANS_API_URL}/fee/${feeId}/postpone?${params.toString()}`;
 
     const response = await authenticatedFetch(url, { method: "POST" });
 
@@ -305,8 +222,7 @@ export const salesService = {
   },
 
   async deleteFee(feeId: number): Promise<void> {
-    console.log(`Intentando eliminar la cuota con ID: ${feeId}`);
-    const response = await authenticatedFetch(`${API_BASE_URL}/fee/${feeId}`, {
+    const response = await authenticatedFetch(`${LOANS_API_URL}/fee/${feeId}`, {
       method: "DELETE",
     });
 
@@ -315,7 +231,7 @@ export const salesService = {
         const apiResponse = await response.json();
         throw new Error(apiResponse.message);
       } catch (e) {
-        throw new Error(e.message);
+        throw new Error(e instanceof Error ? e.message : "Ocurrió un error desconocido");
       }
     }
   },
@@ -328,7 +244,7 @@ export const salesService = {
     totalRevenue: number;
     totalOutstanding: number;
   }> {
-    const response = await authenticatedFetch(`${API_BASE_URL}/stats`);
+    const response = await authenticatedFetch(`${LOANS_API_URL}/stats`);
     // Se asume que este endpoint también sigue el nuevo formato
     return handleResponse<{
       totalSales: number;
@@ -344,32 +260,12 @@ export const salesService = {
     year: number,
     month: number,
   ): Promise<DashboardStatsDto> {
-    const url = new URL(`${API_BASE_URL}/stats`);
+    const url = new URL(`${LOANS_API_URL}/stats`);
     url.searchParams.append("year", year.toString());
     url.searchParams.append("month", month.toString());
 
     const urlString = url.toString();
-    console.log("📡 [salesService] GET request a:", urlString);
-
-    try {
-      const response = await authenticatedFetch(urlString);
-      console.log(
-        "📡 [salesService] Response status:",
-        response.status,
-        "ok:",
-        response.ok,
-      );
-
-      const clonedResponse = response.clone();
-      const rawText = await clonedResponse.text();
-      console.log("📡 [salesService] Raw response body:", rawText);
-
-      const result = await handleResponse<DashboardStatsDto>(response);
-      console.log("✅ [salesService] getDashboardStats parseado:", result);
-      return result;
-    } catch (err) {
-      console.error("❌ [salesService] Error en getDashboardStats:", err);
-      throw err;
-    }
+    const response = await authenticatedFetch(urlString);
+    return handleResponse<DashboardStatsDto>(response);
   },
 };

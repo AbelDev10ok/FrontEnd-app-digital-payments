@@ -1,4 +1,4 @@
-import { SaleResponseDto } from "@/types/sales";
+import { SaleResponseDto } from "@/shared/types/sales";
 import { DollarSign, CreditCard, CheckCircle, Hash, TrendingUp } from "lucide-react";
 
 interface InfoDetalleTransactionProps {

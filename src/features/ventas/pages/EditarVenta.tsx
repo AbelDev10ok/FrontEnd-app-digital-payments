@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/shared/components/layout';
 import Load from '@/shared/components/feedback/Load';
 import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
 import { salesService } from '@/features/ventas/services/salesServices';
-import { ProductTypeDto, SaleResponseDto, UpdateSaleRequest } from '@/types/sales';
+import { ProductTypeDto, SaleResponseDto, UpdateSaleRequest } from '@/shared/types/sales';
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -82,7 +82,6 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
     };
 
     try {
-      // @ts-ignore
       await salesService.updateSale(parseInt(id), updatePayload);
       navigate(`/dashboard/ventas/${id}`);
     } catch (err) {

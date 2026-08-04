@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import InputWithIcon from '@/features/crearVentas/components/InputWithIcon';
 import SubmitBar from '@/features/crearVentas/components/SubmitBar';
-import { SaleResponseDto, ProductTypeDto } from '@/types/sales';
+import { SaleResponseDto, ProductTypeDto } from '@/shared/types/sales';
 import SelectWithIcon from '@/features/crearVentas/components/SelectWithIcon';
 import { Tv, DollarSign } from 'lucide-react';
 
@@ -72,7 +72,6 @@ const SaleForm: React.FC<SaleFormProps> = ({
   }, [isPrestamo]);
 
   useEffect(() => {
-    console.log('Initial Values:', initialValues);
     if (initialValues) {
       setFormData({
         descriptionProduct: initialValues.descriptionProduct || '',

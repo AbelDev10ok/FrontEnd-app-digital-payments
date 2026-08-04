@@ -1,7 +1,7 @@
 import { memo, useState } from "react";
 import { Search, Calendar, X, SlidersHorizontal } from "lucide-react";
 import { DebouncedInput } from "@/shared/components/ui";
-// import { ProductTypeDto } from '@/types/sales';
+// import { ProductTypeDto } from '@/shared/types/sales';
 
 interface SalesFiltersProps {
   searchTerm: string;

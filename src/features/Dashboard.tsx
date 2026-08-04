@@ -32,9 +32,6 @@ const Dashboard: React.FC<PageProps> = ({ user, onLogout }) => {
     refresh,
   } = useDashboardMetrics();
 
-  console.log("Dashboard renderizado", metrics?.totalActiveClients);
-
-
   const cards = [
     {
       label: 'Ventas',

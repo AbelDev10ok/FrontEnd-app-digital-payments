@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { salesService } from '@/features/ventas/services/salesServices';
 import { clientService } from '@/features/clients/services/clientServices';
-import type { DashboardStatsDto } from '@/types/dashboard';
+import type { DashboardStatsDto } from '@/shared/types/dashboard';
 
 export interface DashboardMetrics {
   totalSales: number;
@@ -28,29 +28,15 @@ export const useDashboardMetrics = () => {
     setError(null);
 
     try {
-      console.log('📊 [Dashboard] Iniciando fetch de métricas', { year, month });
-      
-      const clientStatsPromise = clientService.getClientStats()
-        .then(stats => {
-          console.log('✅ [Dashboard] Client stats recibidos:', stats);
-          return stats;
-        })
-        .catch(err => {
-          console.error('❌ [Dashboard] Error en getClientStats:', err);
-          throw err;
-        });
+      const clientStatsPromise = clientService.getClientStats();
 
       let dashStats: DashboardStatsDto;
       try {
-        console.log(`📊 [Dashboard] Intentando getDashboardStats(${year}, ${month})`);
         dashStats = await salesService.getDashboardStats(year, month);
-        console.log('✅ [Dashboard] DashboardStats recibidos:', dashStats);
       } catch (err) {
-        console.warn('⚠️ [Dashboard] Error en getDashboardStats, intentando fallback:', err);
         // Fallback a estadísticas globales si el endpoint específico de mes/año no está disponible.
         try {
           const globalStats = await salesService.getSalesStats();
-          console.log('✅ [Dashboard] Fallback: getSalesStats recibidos:', globalStats);
           dashStats = {
             totalSales: globalStats.totalSales,
             totalRevenue: globalStats.totalRevenue,
@@ -59,8 +45,7 @@ export const useDashboardMetrics = () => {
             totalProfit: 0,
             totalOverdueFees: 0,
           };
-        } catch (fallbackErr) {
-          console.error('❌ [Dashboard] Error en fallback (getSalesStats):', fallbackErr);
+        } catch {
           throw new Error(`No se pudo obtener estadísticas: ${err instanceof Error ? err.message : 'Error desconocido'}`);
         }
       }
@@ -77,11 +62,9 @@ export const useDashboardMetrics = () => {
         totalActiveClients: clientStats.totalActiveClients,
       };
 
-      console.log('✅ [Dashboard] Métricas finales combinadas:', merged);
       setMetrics(merged);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Error al cargar métricas';
-      console.error('❌ [Dashboard] Error final:', errorMsg, err);
       setError(errorMsg);
       setMetrics(null);
     } finally {

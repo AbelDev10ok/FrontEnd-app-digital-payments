@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Client } from '@/types/client';
+import { Client } from '@/shared/types/client';
 import {salesService } from '@/features/ventas/services/salesServices';
 import { clientService } from '@/features/clients/services/clientServices';
-import { CreateSaleRequest, ProductTypeDto, SaleFormData, SaleType } from '@/types/sales';
+import { CreateSaleRequest, ProductTypeDto, SaleFormData, SaleType } from '@/shared/types/sales';
 
 
 const getLocalDateString = (date: Date) => {
@@ -188,7 +188,7 @@ export default function useSaleForm(initialType: SaleType) {
         }
       }
     }
-  }, [formData.cliente, displayedClients, sellers]);
+  }, [formData.cliente, formData.sellerId, displayedClients, sellers]);
 
   // Auto-completar descripción si el tipo de producto es PRESTAMO
   useEffect(() => {

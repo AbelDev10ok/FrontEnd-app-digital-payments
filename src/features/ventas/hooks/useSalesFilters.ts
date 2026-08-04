@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ProductTypeDto } from "../../../types/sales";
+import { ProductTypeDto } from "@/shared/types/sales";
 import { useSalesFilterStore } from "../store/salesFilterStore";
 
 export const useSalesFilters = () => {

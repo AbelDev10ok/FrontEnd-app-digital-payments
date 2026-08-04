@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Link as LinkIcon } from "lucide-react";
 import SaleStatusBadge from "./SaleStatusBadge";
 import { formatCurrency } from "@/shared/utils/formatCurrency";
-import { SaleResponseDto } from "@/types/sales";
+import { SaleResponseDto } from "@/shared/types/sales";
 
 type Props = {
   sale: SaleResponseDto;

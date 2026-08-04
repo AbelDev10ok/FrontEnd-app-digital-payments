@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { salesService, ProductTypeDto } from '../services/salesServices';
+import { salesService } from '../services/salesServices';
+import { ProductTypeDto } from '@/shared/types/sales';
 
 export default function useProductTypes() {
   const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);

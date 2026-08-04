@@ -1,4 +1,4 @@
-import { SaleResponseDto } from "@/types/sales";
+import { SaleResponseDto } from "@/shared/types/sales";
 import React from "react";
 import SaleRow from "./SaleRow";
 
@@ -13,8 +13,6 @@ const SaleTable: React.FC<Props> = ({
   emptyMessage,
   selectedStatus,
 }) => {
-  console.log("table ", sales);
-
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
       <div className="overflow-x-auto">

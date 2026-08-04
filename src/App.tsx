@@ -8,14 +8,10 @@ import AdminPanel from '@/features/adminPanel/AdminPanel';
 import ProtectedRoute from '@/shared/ProtectedRoute';
 import TokenRefreshHandler from '@/shared/TokenRefreshHandler';
 
-// import TodasLasVentas from './pages/ventas/Cobrar';
-// import VentasACobrarHoy from './pages/ventas/Todas';
 import CrearVenta from '@/features/crearVentas/pages/CrearTransaccion';
-// import VentasACobrar from './features/ventas/pages/VentasACobrar';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import Clientes from '@/features/clients/pages/Clientes';
 import CrearCliente from '@/features/clients/pages/CrearCliente';
-import Ventas from '@/pages/ventas/Ventas';
 import TodasVentas from '@/features/ventas/pages/TodasVentas';
 import VentaDetalle from '@/features/ventaDetalle/pages/VentaDetalle';
 import EditarVenta from '@/features/ventas/pages/EditarVenta';
@@ -87,12 +83,6 @@ function App() {
           
           {/* --- RUTAS DE VENTAS (Ordenadas para evitar conflictos) --- */}
           {/* Rutas estáticas y específicas van primero */}
-          {/* <Route
-            path="/dashboard/ventas/cobrar-hoy"
-            element={
-              <ProtectedRoute requiredRole="ROLE_USER" component={VentasACobrar} />
-            }
-          /> */}
           <Route
             path="/dashboard/ventas/todas"
             element={
@@ -126,14 +116,6 @@ function App() {
             }
           />
 
-          {/* Ruta general de ventas (posiblemente antigua), se deja al final para no interferir. */}
-          <Route
-            path="/dashboard/ventas"
-            element={
-              <ProtectedRoute requiredRole="ROLE_USER" component={Ventas} />
-            }
-          />
-          
           {/* Ruta protegida para administradores */}
           <Route
             path="/admin"

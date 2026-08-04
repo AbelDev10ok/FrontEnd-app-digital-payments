@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, DollarSign, CreditCard, Banknote, Loader2, AlertCircle, ShoppingBag, Trash2 } from 'lucide-react';
 import Load from '@/shared/components/feedback/Load';
-import { Client } from '@/types/client';
+import { Client } from '@/shared/types/client';
 import InfoCliente from '@features/clients/components/InfoCliente';
 import { clientService } from '@features/clients/services/clientServices';
 import { DashboardLayout } from '@/shared/components/layout';
@@ -112,7 +112,6 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
           clientService.calcularTotalPrestamosPagados(parseInt(id))
         ]);
 
-        console.log({ deudaVentas, ventasPagadas, deudaPrestamos, prestamosPagados });
         setFinancialStats({
           deudaVentas,
           ventasPagadas,

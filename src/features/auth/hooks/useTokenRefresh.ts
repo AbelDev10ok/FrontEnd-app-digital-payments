@@ -6,7 +6,6 @@ export const useTokenRefresh = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    console.log('useTokenRefresh: isAuthenticated =', isAuthenticated);
     if (isAuthenticated) {
       // Verificar inmediatamente al montar
       checkTokenExpiration();

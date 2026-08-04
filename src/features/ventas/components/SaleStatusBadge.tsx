@@ -1,4 +1,4 @@
-import { SaleResponseDto } from "@/types/sales";
+import { SaleResponseDto } from "@/shared/types/sales";
 import React from "react";
 
 type Props = {
@@ -7,8 +7,6 @@ type Props = {
 };
 
 const SaleStatusBadge: React.FC<Props> = ({ sale, selectedStatus }) => {
-  console.log("STATUS: ", selectedStatus.toString());
-
   if (sale.status.toString() === "COMPLETED") {
     return (
       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">

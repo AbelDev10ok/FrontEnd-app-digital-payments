@@ -14,9 +14,6 @@ type FilterClienteProps = {
 
 
 const FilterCliente = ({searchTerm, setSearchTerm, selectedVendedorId, setSelectedVendedorId, vendedoresOptions, showFilters, setShowFilters}:FilterClienteProps) => {
-  
-  console.log("Rendering FilterCliente");
-  
   return (
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <div className="flex flex-col sm:flex-row gap-4">

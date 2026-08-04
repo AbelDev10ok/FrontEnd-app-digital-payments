@@ -1,5 +1,5 @@
 import { useState} from 'react';
-import { Client, ClientRequest } from '@/@/../types/client';
+import { Client, ClientRequest } from '@/shared/types/client';
 import { clientService } from '@features/clients/services/clientServices';
 
 export const useClients = () => {

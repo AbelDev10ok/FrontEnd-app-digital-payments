@@ -1,4 +1,4 @@
-import { Client } from "@/types/client";
+import { Client } from "@/shared/types/client";
 import { Link } from "react-router-dom";
 
 

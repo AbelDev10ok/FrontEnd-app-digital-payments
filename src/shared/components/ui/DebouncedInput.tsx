@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useRef, memo } from 'react';
 
 interface DebouncedInputProps {

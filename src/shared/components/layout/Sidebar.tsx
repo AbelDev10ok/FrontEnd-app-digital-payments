@@ -12,7 +12,7 @@ import {
   Package,
 } from 'lucide-react';
 import { salesService } from '@/features/ventas/services/salesServices';
-import { ProductTypeDto } from '@/types/sales';
+import { ProductTypeDto } from '@/shared/types/sales';
 
 interface SidebarProps {
   isOpen: boolean;

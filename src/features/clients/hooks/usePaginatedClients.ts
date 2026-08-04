@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Client } from '@/@/../types/client';
+import { Client } from '@/shared/types/client';
 import { Page } from '@features/clients/services/clientServices';
 
 type FetchFn = (params: { page: number; size: number }) => Promise<Page<Client>>;
@@ -10,6 +10,7 @@ export default function usePaginatedClients(fetchFn: FetchFn, deps: unknown[] = 
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(initialPage);
   const [totalPages, setTotalPages] = useState<number>(0);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
 
   useEffect(() => {
     let mounted = true;
@@ -33,10 +34,10 @@ export default function usePaginatedClients(fetchFn: FetchFn, deps: unknown[] = 
     load();
     return () => { mounted = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, ...deps]);
+  }, [page, refreshKey, ...deps]);
 
   const refresh = () => {
-    setPage(p => p);
+    setRefreshKey(k => k + 1);
   };
 
   return { clients, loading, error, page, setPage, totalPages, refresh } as const;

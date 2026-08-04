@@ -13,7 +13,6 @@ export default defineConfig({
       '@infrastructure': path.resolve(__dirname, './src/infrastructure'),
       '@hooks': path.resolve(__dirname, './src/shared/hooks'),
       '@utils': path.resolve(__dirname, './src/shared/utils'),
-      '@types': path.resolve(__dirname, './src/shared/types'),
     },
   },
   optimizeDeps: {

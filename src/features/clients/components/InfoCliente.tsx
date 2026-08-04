@@ -1,4 +1,4 @@
-import { Client } from "@/types/client"
+import { Client } from "@/shared/types/client"
 import { Mail, MapPin, Phone, TrendingUp, User2 } from "lucide-react"
 
 type InfoClienteProps = {
@@ -59,7 +59,7 @@ const InfoCliente: React.FC<InfoClienteProps> = ({ client }) => {
 
 
             {/* si es vendedor */}
-            {client.vendedor && (
+            {client.seller && (
               <div className="md:col-span-2 flex items-center space-x-4 bg-teal-50 border border-teal-200 p-4 rounded-xl">
                 <div className="bg-teal-100 p-3 rounded-full">
                   <TrendingUp className="w-6 h-6 text-teal-700" />

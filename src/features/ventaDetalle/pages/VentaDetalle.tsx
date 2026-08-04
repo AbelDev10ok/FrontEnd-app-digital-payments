@@ -16,7 +16,7 @@ import CronogramaFees from '../components/CronogramaFees';
 import HeaderDetalleTransaction from '../components/HeaderDetalleTransaction';
 import ClientInfoDetalle from '../components/ClientInfoDetalle';
 import InfoTransactionDetalle from '../components/InfoTransactionDetalle';
-import { SaleResponseDto } from '@/types/sales';
+import { SaleResponseDto } from '@/shared/types/sales';
 import Modal from '@/shared/components/ui/Modal'; 
 
 interface PageProps {
@@ -109,7 +109,6 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
         setError(null);
         const transactionData = await salesService.getSaleById(parseInt(id));
         setTransaction(transactionData);
-        console.log("Venta Detalle", transactionData)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al cargar la transacción');
       } finally {
