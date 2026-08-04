@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, AlertCircle, ShoppingBag, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, ShoppingBag, Trash2 } from 'lucide-react';
 import Load from '@/shared/components/feedback/Load';
 import { Client } from '@/shared/types/client';
 import InfoCliente from '@features/clients/components/InfoCliente';
@@ -9,7 +9,7 @@ import ClientResumenFinansas from '@features/clients/components/ClientResumenFin
 import { clientService } from '@features/clients/services/clientServices';
 import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
-import { Card } from '@/shared/components/ui';
+import { Alert, Card } from '@/shared/components/ui';
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -143,12 +143,7 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
   if (error || !client) {
     return (
       <DashboardLayout title="Gestión de Clientes" user={user} onLogout={onLogout}>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <div className="flex items-center text-red-800">
-            <AlertCircle className="w-5 h-5 mr-3" />
-            <span className="text-sm">{error}</span>
-          </div>
-        </div>
+        <Alert tone="danger">{error}</Alert>
       </DashboardLayout>
     );
   }

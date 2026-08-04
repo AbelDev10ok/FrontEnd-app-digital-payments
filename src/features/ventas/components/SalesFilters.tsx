@@ -1,6 +1,7 @@
 import { memo, useState } from "react";
 import { Search, Calendar, X, SlidersHorizontal } from "lucide-react";
 import { DebouncedInput } from "@/shared/components/ui/DebouncedInput";
+import { Input, Select } from "@/shared/components/ui";
 // import { ProductTypeDto } from '@/shared/types/sales';
 
 interface SalesFiltersProps {
@@ -70,7 +71,7 @@ const SalesFilters = ({
             value={searchClientName}
             onChange={onClientNameChange}
             placeholder="Buscar por nombre cliente..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+            className="pl-10 pr-4"
           />
         </div>
       )}
@@ -82,12 +83,12 @@ const SalesFilters = ({
           value={searchTerm}
           onChange={onSearchChange}
           placeholder="Buscar por descripcion producto..."
-          className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+          className="pl-10 pr-4"
         />
       </div>
 
       {/* Filtro por año */}
-      <select
+      <Select
         value={year}
         onChange={(e) => {
           setYear(e.target.value);
@@ -95,7 +96,7 @@ const SalesFilters = ({
           setShowCalendar(false);
         }}
         disabled={!!specificDate}
-        className="w-full sm:w-auto px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className="sm:w-auto disabled:bg-gray-100 disabled:cursor-not-allowed"
       >
         <option value="">Año</option>
         {years.map((y) => (
@@ -103,10 +104,10 @@ const SalesFilters = ({
             {y}
           </option>
         ))}
-      </select>
+      </Select>
 
       {/* Filtro por mes */}
-      <select
+      <Select
         value={month}
         onChange={(e) => {
           setMonth(e.target.value);
@@ -114,7 +115,7 @@ const SalesFilters = ({
           setShowCalendar(false);
         }}
         disabled={!!specificDate}
-        className="w-full sm:w-auto px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className="sm:w-auto disabled:bg-gray-100 disabled:cursor-not-allowed"
       >
         <option value="">Mes</option>
         {months.map((m) => (
@@ -122,7 +123,7 @@ const SalesFilters = ({
             {m.label}
           </option>
         ))}
-      </select>
+      </Select>
 
       {/* Botón para calendario específico */}
       <button
@@ -191,7 +192,7 @@ const SalesFilters = ({
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <input
+            <Input
               type="date"
               value={specificDate}
               onChange={(e) => {
@@ -199,7 +200,7 @@ const SalesFilters = ({
                 setYear("");
                 setMonth("");
               }}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 mb-4"
+              className="mb-4"
             />
             <div className="flex justify-end space-x-2">
               <button

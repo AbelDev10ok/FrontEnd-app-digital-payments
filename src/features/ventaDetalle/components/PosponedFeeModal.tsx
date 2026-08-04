@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Calendar, DollarSign, Trash2 } from "lucide-react";
 import { salesService } from "@/features/ventas/services/salesServices";
+import { Input } from "@/shared/components/ui";
 
 interface PostponeFeeModalProps {
   isOpen: boolean;
@@ -122,7 +123,7 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Calendar className="h-5 w-5 text-gray-400" />
                 </div>
-                <input
+                <Input
                   type="date"
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
@@ -131,7 +132,7 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                       ? new Date(saleDate).toISOString().split("T")[0]
                       : undefined
                   }
-                  className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                  className="pl-10 transition-all"
                   required
                 />
               </div>
@@ -151,11 +152,11 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Calendar className="h-5 w-5 text-gray-400" />
                   </div>
-                  <input
+                  <Input
                     type="date"
                     value={newPaymentDate}
                     onChange={(e) => setNewPaymentDate(e.target.value)}
-                    className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                    className="pl-10 transition-all"
                   />
                 </div>
               </div>
@@ -168,12 +169,12 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <DollarSign className="h-5 w-5 text-gray-400" />
                   </div>
-                  <input
+                  <Input
                     type="number"
                     value={newAmount}
                     onChange={(e) => setNewAmount(e.target.value)}
                     step="0.01"
-                    className="pl-10 w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                    className="pl-10 transition-all"
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-2">

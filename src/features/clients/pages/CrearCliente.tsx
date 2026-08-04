@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { UserPlus, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
+import { UserPlus, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useClients } from '@/features/clients/hooks/useClients';
 import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import ClientForm, { ClientFormData } from '@features/clients/components/ClientForm';
+import { Alert, PageHeader } from '@/shared/components/ui';
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -55,67 +56,27 @@ const CrearCliente: React.FC<PageProps> = ({ user, onLogout }) => {
     }
   };
 
-  // if (error) {
-  //   return (
-  //         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-  //           <div className="flex items-center text-red-800">
-  //             <AlertCircle className="w-5 h-5 mr-3" />
-  //             <span className="text-sm">{error}</span>
-  //           </div>
-  //         </div>
-  //       )
-  // }
-
-  if (success) {
-    return (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-            <div className="flex items-center text-emerald-800">
-              <CheckCircle className="w-5 h-5 mr-3" />
-              <span className="text-sm">Cliente creado exitosamente. Redirigiendo...</span>
-            </div>
-          </div>
-        )      
-  }
-
-
   return (
     <DashboardLayout title="Crear Nuevo Cliente" user={user} onLogout={onLogout}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+        <PageHeader
+          title="Nuevo Cliente"
+          subtitle="Completa la información del cliente"
+          icon={<UserPlus className="w-6 h-6 text-brand-600" />}
+          actions={
             <Link
               to="/dashboard/clientes"
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </Link>
-            <UserPlus className="w-8 h-8 text-brand-600" />
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Nuevo Cliente</h2>
-              <p className="text-sm text-gray-500">Completa la información del cliente</p>
-            </div>
-          </div>
-        </div>
+          }
+        />
 
-        {/* Error */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-            <div className="flex items-center text-red-800">
-              <AlertCircle className="w-5 h-5 mr-3" />
-              <span className="text-sm">{error}</span>
-            </div>
-          </div>
-        )}
+        {error && <Alert tone="danger">{error}</Alert>}
 
-        {/* Success */}
         {success && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-            <div className="flex items-center text-emerald-800">  
-              <CheckCircle className="w-5 h-5 mr-3" />
-              <span className="text-sm">Cliente creado exitosamente. Redirigiendo...</span>
-            </div>
-          </div>
+          <Alert tone="success">Cliente creado exitosamente. Redirigiendo...</Alert>
         )}
 
 

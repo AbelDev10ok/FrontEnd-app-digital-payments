@@ -17,7 +17,9 @@ import HeaderDetalleTransaction from '../components/HeaderDetalleTransaction';
 import ClientInfoDetalle from '../components/ClientInfoDetalle';
 import InfoTransactionDetalle from '../components/InfoTransactionDetalle';
 import { SaleResponseDto } from '@/shared/types/sales';
-import Modal from '@/shared/components/ui/Modal'; 
+import Modal from '@/shared/components/ui/Modal';
+import { Badge } from '@/shared/components/ui';
+import type { BadgeTone } from '@/shared/components/ui';
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -37,19 +39,15 @@ const getStatusIcon = (status: string) => {
   }
 };
 
-const STATUS_BADGE_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-  PAID: { bg: 'bg-emerald-100', text: 'text-emerald-800', label: 'Pagada' },
-  PENDING: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Pendiente' },
+const STATUS_BADGE_CONFIG: Record<string, { tone: BadgeTone; label: string }> = {
+  PAID: { tone: 'success', label: 'Pagada' },
+  PENDING: { tone: 'neutral', label: 'Pendiente' },
 };
 
 const getStatusBadge = (status: string) => {
   const config = STATUS_BADGE_CONFIG[status] || STATUS_BADGE_CONFIG.PENDING;
 
-  return (
-    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${config.bg} ${config.text}`}>
-      {config.label}
-    </span>
-  );
+  return <Badge tone={config.tone}>{config.label}</Badge>;
 };
 
 const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {

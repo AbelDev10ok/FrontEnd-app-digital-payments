@@ -1,4 +1,5 @@
 import { useEffect, useRef, memo } from 'react';
+import { inputBaseClass } from './Input';
 
 interface DebouncedInputProps {
   value: string;
@@ -46,7 +47,7 @@ const DebouncedInputComponent = ({
       type="text"
       placeholder={placeholder}
       defaultValue={value}
-      className={className}
+      className={`${inputBaseClass} ${className}`}
     />
   );
 };

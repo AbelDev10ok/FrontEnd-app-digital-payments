@@ -24,7 +24,7 @@ const FilterCliente = ({searchTerm, setSearchTerm, selectedVendedorId, setSelect
                 onChange={setSearchTerm}
                 placeholder="Buscar clientes..."
                 delay={800}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                className="pl-10 pr-4"
               />
             </div>
             <div className="relative">

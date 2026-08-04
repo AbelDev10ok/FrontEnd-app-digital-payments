@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
+import { Pencil, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { clientService } from '@/features/clients/services/clientServices';
@@ -7,6 +7,7 @@ import { useClients } from '@features/clients/hooks/useClients';
 import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import ClientForm, { ClientFormData } from '@features/clients/components/ClientForm';
 import Load from '@/shared/components/feedback/Load';
+import { Alert, PageHeader } from '@/shared/components/ui';
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -78,48 +79,29 @@ const EditarCliente: React.FC<PageProps> = ({ user, onLogout }) => {
     }
   };
 
-  if(error){
-    return (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-            <div className="flex items-center text-red-800">
-              <AlertCircle className="w-5 h-5 mr-3" />
-              <span className="text-sm">{error}</span>
-            </div>
-          </div>
-        )
-  }
-
-  if(success){
-      return (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-            <div className="flex items-center text-emerald-800">
-              <CheckCircle className="w-5 h-5 mr-3" />
-              <span className="text-sm">Cliente actualizado exitosamente. Redirigiendo...</span>
-            </div>
-          </div>
-        )
-  }
-
   return (
     <DashboardLayout title="Editar Cliente" user={user} onLogout={onLogout}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+        <PageHeader
+          title="Editar Cliente"
+          subtitle="Modifica la información del cliente"
+          icon={<Pencil className="w-6 h-6 text-brand-600" />}
+          actions={
             <Link
               to="/dashboard/clientes"
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </Link>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Editar Cliente</h2>
-              <p className="text-sm text-gray-500">Modifica la información del cliente</p>
-            </div>
-          </div>
-        </div>
+          }
+        />
 
-        {/* Form */}
+        {error && <Alert tone="danger">{error}</Alert>}
+
+        {success && (
+          <Alert tone="success">Cliente actualizado exitosamente. Redirigiendo...</Alert>
+        )}
+
         {initialLoading ? (
           <Load />
         ) : (

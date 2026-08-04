@@ -1,4 +1,5 @@
 import React from 'react';
+import { Field, Select } from '@/shared/components/ui';
 
 interface Option { value: string | number; label: string }
 
@@ -17,23 +18,22 @@ interface Props {
 
 const SelectWithIcon: React.FC<Props> = ({ id, name, label, value, onChange, options, icon, required, error, className = '' }) => {
   return (
-    <div>
-      {label && <label htmlFor={id} className="text-sm font-medium text-gray-700 mb-2 block">{label}</label>}
+    <Field label={label ?? ''} htmlFor={id} error={error} required={required}>
       <div className="relative">
         {icon && <div className="absolute left-3 top-3 text-gray-400">{icon}</div>}
-        <select
+        <Select
           id={id}
           name={name}
           value={value}
           onChange={onChange}
           required={required}
-          className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 ${error ? 'border-red-500' : 'border-gray-200'} ${className}`}
+          invalid={!!error}
+          className={`${icon ? 'pl-10 pr-4' : ''} py-3 ${className}`}
         >
           {options.map(o => <option key={String(o.value)} value={o.value}>{o.label}</option>)}
-        </select>
+        </Select>
       </div>
-      {error && <div className="text-xs text-red-600 mt-1">{error}</div>}
-    </div>
+    </Field>
   );
 };
 

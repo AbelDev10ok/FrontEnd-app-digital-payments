@@ -3,6 +3,15 @@
 Documento de trabajo para no olvidar las mejoras pendientes. Marcá con ✅ lo terminado.
 Referencias con `archivo:línea` verificadas contra el código actual.
 
+## ✅ Fase 3 — Pulido con primitivos + perf (skills `vercel-react-best-practices` + `frontend-design`)
+
+- [x] **3.1 Badge primitivo aplicado**: `VentaDetalle.tsx` (`STATUS_BADGE_CONFIG` ahora `{tone, label}` con `<Badge tone=...>`), `SaleStatusBadge.tsx` (reescrito con Badge; COMPLETED=success, CANCELED=neutral, A_COBRAR=danger, default=warning), `ClientResumenFinansas.tsx` (estado `<Badge tone={deudaTotal>0?'warning':'success'}>`). **Bug preexistente arreglado en `ClientTable.tsx`**: la celda "estado" mostraba la **dirección** del cliente con badge verde — ahora es texto plano con `data-label="Dirección"`.
+- [x] **3.2 PageHeader aplicado**: `HeaderClientes` (título + "Nuevo Cliente"), `TransactionHeader`, `HeaderTransaction` (título + "Crear Venta"), `CrearCliente` y `EditarCliente` (back arrow en `actions`). Alert primitivo en bloques error/éxito de `CrearCliente`, `EditarCliente` y `ClienteDetalle`. **Bug visual preexistente**: `CrearCliente`/`EditarCliente` renderizaban éxito/error como `<div>` a página completa sin layout → ahora dentro de `DashboardLayout` con `Alert`.
+- [x] **3.3 Input/Select primitivos**: `Input` y `Select` ganan prop `invalid` (borde/ring rojo). `InputWithIcon`/`SelectWithIcon` reescritos con `Field` + `Input`/`Select` (elimina el string de clases duplicado). Migrados: `SalesFilters` (DebouncedInput→clases base, selects→`Select`, date→`Input`), `FilterCliente`, `ModalPay`, `PosponedFeeModal`, select de `SaleForm`. `inputBaseClass` exportado desde `Input.tsx` y usado por `DebouncedInput` (fuente única de estilos).
+- [x] **3.4 Dead code**: `VentasACobrar.tsx` ya no existía (eliminado en F0 con `src/components/`); `MEJORAS.md:44` quedó desactualizado → corregido.
+- [x] **3.5 Perf**: `useSalesFilters` — `setYear`/`setMonth` envueltos en `useCallback` (antes arrows nuevas por render rompían el `memo(SalesFilters)`). Verificado que `useClients` no tiene useEffect y que los `deps` de `usePaginatedSales`/`usePaginatedClients` son primitivos/estables (`productTypes` viene de `useState`).
+- [x] **3.6 Verificación**: `npx tsc -p tsconfig.app.json` limpio, `npm run lint` 0 errores, `npm test` **58/58**, `npm run build` OK (chunks por ruta, `Select`/`Badge`/`PageHeader`/`Input` ahora en chunks compartidos).
+
 ## ✅ Fase 2 — Diseño (skills `frontend-design` + decisiones de usuario)
 
 **Dirección aprobada**: color primario único **emerald/teal financiero** (`brand`), tipografía **stack del sistema** (sin Google Fonts), primitivos UI compartidos, **signature = StatCard** (card con franja de acento superior + chip de icono), resto disciplinado.
@@ -13,7 +22,7 @@ Referencias con `archivo:línea` verificadas contra el código actual.
 - [x] **2.4 Duplicaciones eliminadas**: `ClientEstadoFinansa..tsx` (nombre corrupto con doble punto, dead code) renombrado a `ClientEstadoFinansa.tsx` y reescrito con StatCard; `ClientResumenFinansas.tsx` reescrito con Card (agrega fila "Total Histórico"); **ClienteDetalle** ahora los reusa en vez de duplicar el markup. **EditarVenta** reusa `SaleForm` (era dead code con 0 importadores) vía nuevo prop `showFinancialFields=false` — solo muestra tipo+descripción porque el backend `updateSale` solo persiste `{productType, descriptionProduct}` (evita campos engañosos).
 - [x] **2.5 Migración a primitivos**: Dashboard (6 StatCards + Card + Button, banner brand, spinner brand), AdminPanel (StatCards + Card), StateDetalleTransaction (6 StatCards), Login (Field/Button/Alert, brand). Eliminado `DashboardMetricCard.tsx` (huérfano).
 
-⚠️ **Pendiente Fase 2**: no hay vista previa visual en este entorno (sin screenshot). Verificar en navegador: dashboard, login, detalle de venta/cliente y editar venta. `PageHeader`/`Badge`/`Input`/`Select` primitivos creados pero aún no aplicados masivamente en tablas/filtros (siguiente paso opcional).
+⚠️ **Pendiente Fase 2**: no hay vista previa visual en este entorno (sin screenshot). Verificar en navegador: dashboard, login, detalle de venta/cliente y editar venta. El aplicado masivo de `PageHeader`/`Badge`/`Input`/`Select` en tablas/filtros se completó en la **Fase 3**.
 
 ## ✅ Fase 1 — Performance (skill `vercel-react-best-practices`)
 
@@ -41,7 +50,7 @@ Referencias con `archivo:línea` verificadas contra el código actual.
   - Métodos de `salesService` sin uso real: `getProductDescriptions` (`/search-by-description`), `getFeesDue` (`/delayed-fees`) y `getFeesDueOn` (`/fees-to-charge-today`) — los dos primeros endpoints NO existen en el backend (verificado); `getFeesDueOn` solo lo usaba el hook legacy `useSales.ts`.
   - Página legacy `src/pages/ventas/Ventas.tsx` (ruta `/dashboard/ventas` en `App.tsx`, comentario "AUN NO LO ESTOY UTILIZANDO") y el hook huérfano `src/features/ventas/hooks/useSales.ts`. Directorio `src/pages/ventas/` eliminado.
 - [x] **Alias rotos en `tsconfig.app.json`**: quitados `@config/*` y `@presentation/*`.
-- [x] **Limpiar `App.tsx`**: eliminados imports y ruta comentados (`VentasACobrar`, `cobrar-hoy`). ⏳ Pendiente decidir qué hacer con `VentasACobrar.tsx` (todo comentado, sin ruta).
+- [x] **Limpiar `App.tsx`**: eliminados imports y ruta comentados (`VentasACobrar`, `cobrar-hoy`). `VentasACobrar.tsx` ya no existía al llegar a Fase 3 (eliminado en F0 junto a `src/components/`).
 - [x] **Migración a feature folders terminada**: `src/types/*` movido a `src/shared/types/` (`client.ts`, `dashboard.ts`, `sales.ts` + barrel `index.ts`). Imports actualizados a `@/shared/types/*` (se intentó con `@types/*` pero TS reserva ese prefijo para paquetes de tipos ambientales → `TS6137`, ver `AGENTS.md`). Arreglados imports relativos legacy que apuntaban a `src/types` (`useClients.ts`, `useClientsFilters.ts`, `usePaginatedClients.ts`, `useSalesFilters.ts`, `AutocompleteSeller.tsx`). Alias `@types/*` eliminado de `tsconfig.app.json`/`vite.config.ts`/`vitest.config.ts`. Directorios legacy `src/pages/`, `src/components/`, `src/hooks/`, `src/utils/` y `src/types/` eliminados. `src/pages/ventas/Ventas.tsx` era dead code con data de endpoint inexistente → eliminada. Migrar, no extender.
 
 ## Prioridad baja

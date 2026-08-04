@@ -1,4 +1,4 @@
-import { Card } from "@/shared/components/ui";
+import { Badge, Card } from "@/shared/components/ui";
 
 type ClientResumenFinansas = {
   formatCurrency: (amount: number) => string;
@@ -41,13 +41,9 @@ const ClientResumenFinansas: React.FC<ClientResumenFinansas> = ({ formatCurrency
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Estado:</span>
-            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-              deudaTotal > 0
-                ? 'bg-red-100 text-red-800'
-                : 'bg-emerald-100 text-emerald-800'
-            }`}>
+            <Badge tone={deudaTotal > 0 ? 'warning' : 'success'}>
               {deudaTotal > 0 ? 'Con Deuda' : 'Al día'}
-            </span>
+            </Badge>
           </div>
         </div>
       </div>

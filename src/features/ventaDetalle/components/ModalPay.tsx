@@ -1,4 +1,5 @@
 import ErrorMessage from "@/shared/components/feedback/ErrorMessage";
+import { Input } from "@/shared/components/ui";
 import { X, Loader2 } from "lucide-react";
 
 export interface ModalPayProps {
@@ -74,7 +75,7 @@ export const ModalPay: React.FC<ModalPayProps> = ({
             >
               Fecha de Pago
             </label>
-            <input
+            <Input
               type="date"
               id="paymentDate"
               value={paymentDate}
@@ -83,7 +84,7 @@ export const ModalPay: React.FC<ModalPayProps> = ({
               min={dateSale}
               // no puede ser menor a la fecha de venta
               // max={paymentDate}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              className="py-3"
             />
           </div>
           <div>
@@ -97,7 +98,7 @@ export const ModalPay: React.FC<ModalPayProps> = ({
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
                 €
               </span>
-              <input
+              <Input
                 type="number"
                 id="paymentAmount"
                 value={paymentAmount}
@@ -105,7 +106,7 @@ export const ModalPay: React.FC<ModalPayProps> = ({
                 min="0"
                 max={selectedFee.amount}
                 step="0.01"
-                className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                className="pl-8 py-3"
                 placeholder="0.00"
               />
             </div>

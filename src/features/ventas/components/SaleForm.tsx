@@ -5,6 +5,7 @@ import InputWithIcon from '@/features/crearVentas/components/InputWithIcon';
 import SubmitBar from '@/features/crearVentas/components/SubmitBar';
 import { SaleResponseDto, ProductTypeDto } from '@/shared/types/sales';
 import SelectWithIcon from '@/features/crearVentas/components/SelectWithIcon';
+import { Select } from '@/shared/components/ui';
 import { Tv, DollarSign } from 'lucide-react';
 
 export interface SaleFormData {
@@ -270,18 +271,18 @@ const SaleForm: React.FC<SaleFormProps> = ({
                 Frecuencia de Pago *
               </label>
               <div className="relative">
-                <select
+                <Select
                   id="payments"
                   name="payments"
                   value={formData.payments}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 appearance-none bg-white"
+                  className="appearance-none"
                 >
                   <option value="SEMANAL">Semanal</option>
                   <option value="QUINCENAL">Quincenal</option>
                   <option value="MENSUAL">Mensual</option>
                   <option value="CONTADO">Contado</option>
-                </select>
+                </Select>
               </div>
             </div>
           )}

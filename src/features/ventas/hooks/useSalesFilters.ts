@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ProductTypeDto } from "@/shared/types/sales";
 import { useSalesFilterStore } from "../store/salesFilterStore";
 
@@ -20,13 +20,13 @@ export const useSalesFilters = () => {
   const year = persistedYear.toString();
   const month = persistedMonth.toString().padStart(2, "0");
 
-  const setYear = (newYear: string) => {
+  const setYear = useCallback((newYear: string) => {
     setPersistedFilter({ year: parseInt(newYear, 10) });
-  };
+  }, [setPersistedFilter]);
 
-  const setMonth = (newMonth: string) => {
+  const setMonth = useCallback((newMonth: string) => {
     setPersistedFilter({ month: parseInt(newMonth, 10) });
-  };
+  }, [setPersistedFilter]);
 
   const getFinalDate = () => {
     if (specificDate) return specificDate;

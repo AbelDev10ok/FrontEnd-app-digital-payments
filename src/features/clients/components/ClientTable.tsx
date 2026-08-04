@@ -22,7 +22,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, searchTerm }) => {
                         Contacto
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Direccion
+                        Dirección
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Acciones
@@ -60,10 +60,8 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, searchTerm }) => {
                           <div className="text-sm text-gray-900">{cliente.email}</div>
                           <div className="text-sm text-gray-500">{cliente.telefono}</div>
                         </td>
-                        <td className="px-6 py-4 block md:table-cell text-right md:text-left relative border-b border-gray-200 md:border-b-0 last:md:border-b-0 before:content-[attr(data-label)] before:absolute before:left-6 before:text-sm before:font-bold before:text-gray-500 md:before:content-none" data-label="Estado">
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
-                            {cliente.direccion}
-                          </span>
+                        <td className="px-6 py-4 block md:table-cell text-right md:text-left relative border-b border-gray-200 md:border-b-0 last:md:border-b-0 before:content-[attr(data-label)] before:absolute before:left-6 before:text-sm before:font-bold before:text-gray-500 md:before:content-none" data-label="Dirección">
+                          <div className="text-sm text-gray-900">{cliente.direccion}</div>
                         </td>
                         <td className="px-6 py-4 block md:table-cell text-right md:text-left relative before:content-[attr(data-label)] before:absolute before:left-6 before:text-sm before:font-bold before:text-gray-500 md:before:content-none" data-label="Acciones">
                           <Link 

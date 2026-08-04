@@ -1,5 +1,6 @@
 import { SaleResponseDto } from "@/shared/types/sales";
 import React from "react";
+import { Badge } from "@/shared/components/ui";
 
 type Props = {
   sale: SaleResponseDto;
@@ -8,19 +9,11 @@ type Props = {
 
 const SaleStatusBadge: React.FC<Props> = ({ sale, selectedStatus }) => {
   if (sale.status.toString() === "COMPLETED") {
-    return (
-      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
-        Completada
-      </span>
-    );
+    return <Badge tone="success">Completada</Badge>;
   }
 
   if (sale.status.toString() === "CANCELED") {
-    return (
-      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-        Cancelada
-      </span>
-    );
+    return <Badge tone="neutral">Cancelada</Badge>;
   }
 
   if (
@@ -28,18 +21,10 @@ const SaleStatusBadge: React.FC<Props> = ({ sale, selectedStatus }) => {
     sale.status.toString() !== "CANCELED" &&
     selectedStatus === "A_COBRAR"
   ) {
-    return (
-      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-        A Cobrar
-      </span>
-    );
+    return <Badge tone="danger">A Cobrar</Badge>;
   }
 
-  return (
-    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-      Activa
-    </span>
-  );
+  return <Badge tone="warning">Activa</Badge>;
 };
 
 export default SaleStatusBadge;
