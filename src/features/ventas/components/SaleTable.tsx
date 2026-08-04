@@ -1,16 +1,19 @@
-import { SaleResponseDto } from '@/types/sales';
-import React from 'react';
-import SaleRow from './SaleRow';
-
+import { SaleResponseDto } from "@/types/sales";
+import React from "react";
+import SaleRow from "./SaleRow";
 
 type Props = {
   sales: SaleResponseDto[];
+  selectedStatus: string;
   emptyMessage?: string;
 };
 
-const SaleTable: React.FC<Props> = ({ sales, emptyMessage }) => {
-
-  console.log("table ", sales)
+const SaleTable: React.FC<Props> = ({
+  sales,
+  emptyMessage,
+  selectedStatus,
+}) => {
+  console.log("table ", sales);
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
@@ -18,23 +21,37 @@ const SaleTable: React.FC<Props> = ({ sales, emptyMessage }) => {
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Venta</th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto de cuota</th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Venta
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Cliente
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Monto de cuota
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Estado
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Acciones
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {sales.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                  {emptyMessage ?? 'No hay ventas registradas'}
+                  {emptyMessage ?? "No hay ventas registradas"}
                 </td>
               </tr>
             ) : (
               sales.map((sale) => (
-                <SaleRow key={sale.id} sale={sale} />
+                <SaleRow
+                  key={sale.id}
+                  sale={sale}
+                  selectedStatus={selectedStatus}
+                />
               ))
             )}
           </tbody>

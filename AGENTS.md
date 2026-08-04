@@ -1,230 +1,55 @@
 # AGENTS.md - FrontEnd-app-digital-payments
 
-## Build, Lint, and Test Commands
+SPA de cobros/ventas en React 18 + TypeScript + Vite. Consume un backend Spring Boot separado (repo: `App-cobros`) en `http://localhost:8080`.
 
-### Development
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
+## Commands
 
-### Code Quality
-- `npm run lint` - Run ESLint on all files
-- ESLint can be run on specific files/directories: `npx eslint src/components/Button.tsx`
+- `npm run dev` - dev server (Vite)
+- `npm run build` - `vite build` only; does NOT typecheck
+- `npm run lint` - `eslint .` (flat config `eslint.config.js`)
+- Typecheck: `npx tsc -p tsconfig.app.json` (`noEmit` is set)
+- No test framework, no formatter, no CI, no `.env` files.
 
-### Type Checking
-- TypeScript checking is handled by IDE and build process
-- No separate type-check command in package.json
+**Package manager gotcha:** `package.json` declares `packageManager: pnpm@9.15.4`, but the repo only ships `package-lock.json` (no `pnpm-lock.yaml`). Use `npm`, not `pnpm`.
 
-### Testing
-> Note: No testing framework appears to be configured in this repository.
-> To add testing capabilities, consider installing Vitest or Jest with React Testing Library.
+## Architecture
 
-## Code Style Guidelines
+- Routing: React Router v7 (`react-router-dom`), all routes centralized in `src/App.tsx`.
+- State: Zustand (`src/features/auth/store/authStore.ts`, persisted to localStorage under key `auth-store`).
+- Styling: Tailwind CSS 3 + `lucide-react` icons. No UI component library.
+- Feature folders under `src/features/*` (auth, clients, ventas, crearVentas, ventaDetalla, dashboard, adminPanel). Legacy flat dirs remain (`src/pages/`, `src/components/`, `src/hooks/`, `src/utils/`, `src/types/`) — feature folders are the target; migrate, don't extend legacy.
+- Barrel exports via `index.ts` in feature/shared folders.
 
-### Imports
-1. **Order**:
-   - React imports first
-   - Then third-party libraries (alphabetical)
-   - Then internal imports (absolute paths preferred)
-   - Then relative imports
+### Path aliases (verified in `vite.config.ts` + `tsconfig.app.json`)
 
-2. **Path Preferences**:
-   - Use absolute paths with `@/` alias when available (configured in tsconfig.json)
-   - Prefer named exports over default exports when importing multiple items from same file
-   - Group imports from same module together
+`@/`, `@features/*`, `@shared/*`, `@infrastructure/*`, `@hooks/*`, `@utils/*`, `@types/*`.
+**Gotcha:** `@config/*` and `@presentation/*` exist only in tsconfig, not in `vite.config.ts` — they will fail at build time. Don't use them. `@hooks/*` maps to `src/shared/hooks` (a separate `src/hooks/` dir also exists).
 
-Example:
-```typescript
-// Good
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/shared/components/ui';
-import { useAuthStore } from '@/features/auth/store/authStore';
-import { formatCurrency } from '@/shared/utils/formatCurrency';
-import type { Sale } from '@/types/sales';
+## Backend API conventions
 
-// Also good for multiple items from same module
-import { Button, Input, Modal } from '@/shared/components/ui';
-```
+- Base URL `http://localhost:8080` is hardcoded in `src/features/auth/services/authServices.ts`, `salesServices.ts`, and `clientServices.ts`. There is no env-based config; changing it means editing those files.
+- Response envelope (unless noted): `{ message, status, data }` with `status === 'OK'`. Unwrap via `handleResponse` (see `salesServices.ts`) or check `response.ok && apiResponse.status === 'OK'`.
+- Auth endpoints: `/auth/login`, `/auth/refresh-token` (no `/api` prefix). Domain endpoints: `/api/loans`, `/api/clients`, `/api/product-types`, etc.
+- Dates are sent as `YYYY-MM-DD` strings.
+- Pagination uses a Spring-style `Page<T>` DTO (`content`, `totalPages`, `totalElements`, `page` is 0-indexed) — see `Page<T>` in `salesServices.ts` and the `usePaginatedSales`/`usePaginatedClients` hooks.
 
-### Formatting
-- Follow Prettier standards (though not explicitly configured, code appears to follow common TS/React conventions)
-- Max line length: 100 characters
-- Use 2 spaces for indentation
-- Semicolons required
-- Single quotes for strings
-- Trailing commas in multi-line objects/arrays
+## Auth & roles
 
-### Types and Interfaces
-- Use interfaces for object shapes that may be extended
-- Use type aliases for complex types, unions, intersections
-- Always type props in React components
-- Avoid `any` type; use `unknown` when type is truly unknown and narrow it
-- Define types in `/types` directory or alongside components if component-specific
+- JWT access/refresh tokens; role is decoded from the JWT `authorities` claim in `authStore.ts`.
+- `authenticatedFetch` (in `authServices.ts`) adds the Bearer header, retries once after a 401 with a refreshed token, and logs out + redirects to `/login` if refresh fails. All services must use it.
+- `TokenRefreshHandler` (mounted once in `App.tsx`) refreshes every 4 min and on tab focus.
+- Roles: `ROLE_ADMIN` → `/admin`, `ROLE_USER` → `/dashboard`. `ProtectedRoute` handles role-based redirects and injects `user`/`onLogout` props.
+- **Route order matters** in `App.tsx`: static ventas routes (`/todas`, `/crear`, `/editar/:id`) must be declared before the dynamic `/dashboard/ventas/:id`.
 
-Example:
-```typescript
-// Good
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
+## Conventions
 
-type UserRole = 'ROLE_ADMIN' | 'ROLE_USER';
+- **Spanish** for all user-facing text, error messages, comments, and git commit messages.
+- Envelope statuses from the backend: `COMPLETED`, `ACTIVE`, `CANCELED`. The UI hardcodes display of `A_COBRAR` (see `src/ERRORES.md`) because the backend never returns it.
+- eslint `react-refresh/only-export-components` warns when a component file exports non-components — export the component and hooks separately.
+- `src/utils/apiClient.ts` (`ApiClient`) is dead code; do not use it.
 
-interface Props {
-  user: User;
-  onLogout: () => void;
-  role?: UserRole;
-}
-```
+## Reference docs (Spanish)
 
-### Naming Conventions
-- **Components**: PascalCase (e.g., `UserProfile.tsx`)
-- **Functions and variables**: camelCase (e.g., `const getUserData = () => {}`)
-- **Constants**: UPPER_SNAKE_CASE (e.g., `const API_BASE_URL = '/api'`)
-- **Files**: 
-  - Components: PascalCase (e.g., `SaleForm.tsx`)
-  - Hooks: camelCase with `use` prefix (e.g., `useSales.ts`)
-  - Utils: camelCase (e.g., `formatCurrency.ts`)
-  - Types: PascalCase (e.g., `sales.ts`)
-- **CSS classes**: kebab-case (following Tailwind conventions)
-
-### Error Handling
-- Use try/catch for asynchronous operations
-- Handle promise rejections appropriately
-- Display user-friendly error messages using shared components
-- Log errors to console in development only
-- Create custom error types when needed for specific error handling
-
-Example:
-```typescript
-try {
-  const data = await api.fetchSales();
-  setSales(data);
-} catch (error) {
-  if (error instanceof Error) {
-    toast.error(`Failed to load sales: ${error.message}`);
-  } else {
-    toast.error('An unexpected error occurred');
-  }
-  console.error('Fetch sales error:', error);
-}
-```
-
-### React Specific Guidelines
-- Use functional components with hooks
-- Keep components small and focused
-- Extract complex logic to custom hooks
-- Use React.memo() only when performance testing shows benefit
-- Follow hooks rules: only call hooks at top level, only in React functions
-- Use appropriate dependency arrays in useEffect, useCallback, useMemo
-- Clean up subscriptions and timers in useEffect return functions
-
-Example:
-```typescript
-import { useEffect, useState } from 'react';
-
-export function useSales() {
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    let cancelled = false;
-    
-    const fetchSales = async () => {
-      try {
-        setLoading(true);
-        const data = await api.getSales();
-        if (!cancelled) {
-          setSales(data);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.error('Failed to fetch sales:', error);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-    
-    fetchSales();
-    
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-  
-  return { sales, loading };
-}
-```
-
-### State Management
-- Use Zustand (already configured in authStore) for global state
-- Keep component state local when it doesn't need to be shared
-- Derive state when possible instead of duplicating in state
-- Update state immutably
-
-Example:
-```typescript
-// Good - deriving state
-const completedSales = sales.filter(sale => sale.completed);
-const totalRevenue = completedSales.reduce((sum, sale) => sum + sale.priceTotal, 0);
-
-// Avoid duplicating state that can be derived
-// DON'T: store both sales and completedSales separately when completedSales can be derived
-```
-
-### File Organization
-- Group related files by feature/domain (already partially implemented)
-- Each feature gets its own folder under `/features`
-- Shared components, hooks, utils go under `/shared`
-- Types go in `/types` directory
-- Keep index.ts files for barrel exports when beneficial
-
-### Accessibility
-- Use semantic HTML elements
-- Provide meaningful alt text for images
-- Ensure proper color contrast (Tailwind classes help)
-- Implement keyboard navigation where appropriate
-- Use ARIA attributes when needed
-
-### Performance
-- Lazy load routes and heavy components
-- Use useMemo and useCallback appropriately
-- Avoid inline object/function creation in renders when possible
-- Optimize images and assets
-
-Example:
-```typescript
-// Good - memoizing expensive calculations
-const expensiveValue = useMemo(() => {
-  return computeExpensiveValue(a, b);
-}, [a, b]);
-
-// Good - preventing function re-creation
-const handleClick = useCallback(() => {
-  doSomething();
-}, []);
-```
-
-## Additional Notes
-
-### Current Architecture Observations
-- Uses Vite as build tool
-- React 18 with TypeScript
-- Tailwind CSS for styling
-- Zustand for state management (auth)
-- React Router v7 for routing
-- Features organized by domain (auth, clients, ventas, etc.)
-
-### Recommended Improvements
-1. Add testing framework (Vitest + React Testing Library)
-2. Configure Prettier for consistent formatting
-3. Add commit linting and formatting hooks
-4. Consider implementing error boundaries
-5. Add loading states and skeleton UIs for better UX
-
-This AGENTS.md file should provide clear guidelines for agents working in this repository.
+- `ARREGLOS.md` — known bugs fixed, refactor checklist, pending work.
+- `src/ERRORES.md` — current open issues; keep it updated when fixing.
+- `Readm.md` — stale exercise spec unrelated to this app; ignore.

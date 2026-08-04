@@ -1,20 +1,21 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Link as LinkIcon } from 'lucide-react';
-import SaleStatusBadge from './SaleStatusBadge';
-import { formatCurrency } from '@/shared/utils/formatCurrency';
-import { SaleResponseDto } from '@/types/sales';
+import React from "react";
+import { Link } from "react-router-dom";
+import { Link as LinkIcon } from "lucide-react";
+import SaleStatusBadge from "./SaleStatusBadge";
+import { formatCurrency } from "@/shared/utils/formatCurrency";
+import { SaleResponseDto } from "@/types/sales";
 
 type Props = {
   sale: SaleResponseDto;
+  selectedStatus: string;
 };
 
-const SaleRow: React.FC<Props> = ({ sale }) => {
+const SaleRow: React.FC<Props> = ({ sale, selectedStatus }) => {
   // Use shared formatCurrency util (defaults to ARS)
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      timeZone: 'UTC'
+    return new Date(dateString).toLocaleDateString("es-ES", {
+      timeZone: "UTC",
     });
   };
 
@@ -26,24 +27,37 @@ const SaleRow: React.FC<Props> = ({ sale }) => {
             <span className="text-white font-medium text-sm">#{sale.id}</span>
           </div>
           <div className="ml-4">
-            <div className="text-sm font-medium text-gray-900">{sale.descriptionProduct}</div>
-            <div className="text-sm text-gray-500">{formatDate(sale.dateSale)}</div>
+            <div className="text-sm font-medium text-gray-900">
+              {sale.descriptionProduct}
+            </div>
+            <div className="text-sm text-gray-500">
+              {formatDate(sale.dateSale)}
+            </div>
           </div>
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm font-medium text-gray-900">{sale.client.name}</div>
+        <div className="text-sm font-medium text-gray-900">
+          {sale.client.name}
+        </div>
         <div className="text-sm text-gray-500">{sale.client.telefono}</div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm font-medium text-gray-900">{formatCurrency(sale.amountFee)}</div>
-        <div className="text-sm text-gray-500">Deuda : {formatCurrency(sale.remainingAmount)}</div>
+        <div className="text-sm font-medium text-gray-900">
+          {formatCurrency(sale.amountFee)}
+        </div>
+        <div className="text-sm text-gray-500">
+          Deuda : {formatCurrency(sale.remainingAmount)}
+        </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <SaleStatusBadge sale={sale} />
+        <SaleStatusBadge sale={sale} selectedStatus={selectedStatus} />
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-        <Link to={`/dashboard/ventas/${sale.id}`} className="text-green-600 hover:text-green-900 mr-4">
+        <Link
+          to={`/dashboard/ventas/${sale.id}`}
+          className="text-green-600 hover:text-green-900 mr-4"
+        >
           <LinkIcon className="w-4 h-4 inline mr-1" /> Ver
         </Link>
       </td>

@@ -67,8 +67,6 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     setSelectedProductType,
   ]);
 
-  // const statusOptions = ['Todos', 'COMPLETED', 'ACTIVE', 'CANCELED'];
-
   const { productTypes, loading: productTypesLoading } = useProductTypes();
 
   const fetcher = async ({ page, size }: { page: number; size: number }) => {
@@ -128,13 +126,6 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
           setSpecificDate={setSpecificDate}
           showCalendar={showCalendar}
           setShowCalendar={setShowCalendar}
-          // selectedStatus={selectedStatus}
-          // onStatusChange={setSelectedStatus}
-          // showStatusFilter={false}
-          // selectedProductType={selectedProductType}
-          // onProductTypeChange={setSelectedProductType}
-          // productTypes={productTypes}
-          // statusOptions={statusOptions}
         />
         {salesLoading || productTypesLoading ? (
           <Load />
@@ -149,6 +140,7 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
                 ? "No se encontraron ventas que coincidan con los filtros"
                 : "No hay ventas registradas"
             }
+            selectedStatus={selectedStatus}
           />
         )}
 
