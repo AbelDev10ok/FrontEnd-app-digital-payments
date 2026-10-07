@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react';
+import { tones } from '@/shared/theme';
 
 export type BadgeTone = 'brand' | 'success' | 'warning' | 'danger' | 'neutral';
 
-const toneConfig: Record<BadgeTone, string> = {
-  brand: 'bg-brand-50 text-brand-700 ring-brand-200',
-  success: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  warning: 'bg-amber-50 text-amber-700 ring-amber-200',
-  danger: 'bg-red-50 text-red-700 ring-red-200',
-  neutral: 'bg-gray-100 text-gray-700 ring-gray-200',
+const toneClass: Record<BadgeTone, string> = {
+  brand: `${tones.brand.bg} ${tones.brand.text} ${tones.brand.border.replace('border-', 'ring-')}`,
+  success: `${tones.success.bg} ${tones.success.text} ${tones.success.border.replace('border-', 'ring-')}`,
+  warning: `${tones.warning.bg} ${tones.warning.text} ${tones.warning.border.replace('border-', 'ring-')}`,
+  danger: `${tones.danger.bg} ${tones.danger.text} ${tones.danger.border.replace('border-', 'ring-')}`,
+  neutral: `${tones.neutral.bg} ${tones.neutral.text} ${tones.neutral.border.replace('border-', 'ring-')}`,
 };
 
 export interface BadgeProps {
@@ -19,7 +20,7 @@ export interface BadgeProps {
 export default function Badge({ tone = 'neutral', children, className = '' }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset ${toneConfig[tone]} ${className}`}
+      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 ring-inset ${toneClass[tone]} ${className}`}
     >
       {children}
     </span>

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSalesFilterStore } from "../salesFilterStore";
 
 describe("salesFilterStore", () => {
@@ -34,5 +34,17 @@ describe("salesFilterStore", () => {
     const stored = sessionStorage.getItem("sales-filters-storage");
     expect(stored).toContain('"year":2025');
     expect(stored).toContain('"month":11');
+  });
+
+  it("sanitiza year/month null guardados en sessionStorage al rehidratar", async () => {
+    sessionStorage.setItem(
+      "sales-filters-storage",
+      '{"state":{"year":null,"month":null},"version":1}',
+    );
+    vi.resetModules();
+    const { useSalesFilterStore: store } = await import("../salesFilterStore");
+    const { year, month } = store.getState();
+    expect(year).toBe(new Date().getFullYear());
+    expect(month).toBe(new Date().getMonth() + 1);
   });
 });

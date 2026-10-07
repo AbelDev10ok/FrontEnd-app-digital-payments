@@ -24,7 +24,7 @@ const PrimerCuota: React.FC<PrimerCuotaProps> = ({ firstFeeDate, fecha, payFirst
         <InputWithIcon
           id="firstFeeDate"
           name="firstFeeDate"
-          label="Fecha primera cuota (opcional)"
+          label="Fecha del primer pago"
           type="date"
           value={firstFeeDate}
           onChange={onChange}

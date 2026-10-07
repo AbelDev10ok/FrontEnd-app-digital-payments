@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Client } from '@/shared/types/client';
 import {salesService } from '@/features/ventas/services/salesServices';
 import { clientService } from '@/features/clients/services/clientServices';
-import { CreateSaleRequest, ProductTypeDto, SaleFormData, SaleType } from '@/shared/types/sales';
+import { CreateSaleRequest, ProductDto, ProductTypeDto, SaleFormData, SaleType } from '@/shared/types/sales';
 
 
 const getLocalDateString = (date: Date) => {
@@ -12,12 +12,24 @@ const getLocalDateString = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
+const getInterestRateNumber = (formData: SaleFormData): number => {
+  const rate = Number(formData.interestRate);
+  return formData.interestRate !== '' && !isNaN(rate) ? rate : NaN;
+};
+
 const validateForm = (formData: SaleFormData, displayedClients: Client[]): Record<string, string> => {
   const newErrors: Record<string, string> = {};
 
   if (!formData.cliente || Number(formData.cliente) === 0) newErrors.cliente = formData.sellerId ? 'Selecciona un cliente del vendedor seleccionado' : 'Selecciona un cliente';
-  if (!formData.productTypeId) newErrors.productTypeId = 'Selecciona un tipo de producto';
-  if (!(formData.payments === 'CONTADO' && formData.payFirstFee)) {
+  if (formData.tipo === 'VENTA') {
+    if (!formData.productTypeId) newErrors.productTypeId = 'Selecciona una categoría';
+    if (!formData.productId) newErrors.productId = 'Selecciona un producto';
+    const cantidad = Number(formData.cantidad);
+    if (!formData.cantidad || !Number.isInteger(cantidad) || cantidad < 1) {
+      newErrors.cantidad = 'Ingresa una cantidad válida';
+    }
+  }
+  if (formData.tipo !== 'PRESTAMO' && !(formData.payments === 'CONTADO' && formData.payFirstFee)) {
     if (!formData.amountFee || Number(formData.amountFee) <= 0) newErrors.amountFee = 'Ingresa un valor de cuota válido';
   }
   if (!formData.cost || Number(formData.cost) <= 0) newErrors.cost = 'Ingresa un costo válido';
@@ -33,34 +45,62 @@ const validateForm = (formData: SaleFormData, displayedClients: Client[]): Recor
     if (!belongs) newErrors.cliente = 'El cliente no pertenece al vendedor seleccionado';
   }
 
-  if (Number(formData.cost) >= Number(formData.amountFee) * Number(formData.quantityFees) && formData.payments !== 'CONTADO') {
-    newErrors.cost = 'El costo no puede ser menor o igual al monto total de la venta';
+  if (formData.tipo === 'PRESTAMO') {
+    if (formData.payments === 'CONTADO') newErrors.payments = 'Un préstamo no puede ser a contado';
+    const rate = getInterestRateNumber(formData);
+    if (isNaN(rate)) newErrors.interestRate = 'Ingresa un porcentaje de interés';
+    else if (rate < 0) newErrors.interestRate = 'El interés no puede ser negativo';
+  } else {
+    const total = Number(formData.amountFee) * Number(formData.quantityFees);
+    if (Number(formData.cost) >= total) {
+      newErrors.cost = 'El costo no puede ser menor o igual al monto total de la venta';
+    }
   }
 
   return newErrors;
 };
 
+export const calculateLoanTotals = (formData: SaleFormData): { totalToPay: number; amountFee: number } | null => {
+  if (formData.tipo !== 'PRESTAMO') return null;
+  const rate = getInterestRateNumber(formData);
+  const capital = Number(formData.cost);
+  const quantityFees = Number(formData.quantityFees);
+  if (isNaN(rate) || !capital || capital <= 0 || !quantityFees || quantityFees < 1) return null;
+  const totalToPay = Math.round(capital * (1 + rate / 100) * 100) / 100;
+  const amountFee = Math.round((totalToPay / quantityFees) * 100) / 100;
+  return { totalToPay, amountFee };
+};
+
+const createInitialFormData = (tipo: SaleType): SaleFormData => ({
+  cliente: 0,
+  sellerId: '',
+  tipo,
+  descripcion: '',
+  fecha: getLocalDateString(new Date()),
+  payments: 'SEMANAL',
+  quantityFees: 1,
+  amountFee: '',
+  cost: '',
+  cantidad: '1',
+  interestRate: '',
+  productTypeId: '',
+  productId: '',
+  firstFeeDate: '',
+  payFirstFee: false,
+  firstFeeAmount: '',
+});
+
 export default function useSaleForm(initialType: SaleType) {
   const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
+  const [products, setProducts] = useState<ProductDto[]>([]);
   const [sellers, setSellers] = useState<Client[]>([]);
   const [displayedClients, setDisplayedClients] = useState<Client[]>([]);
 
-  const [formData, setFormData] = useState<SaleFormData>({
-    cliente: 0,
-    sellerId: '',
-    tipo: initialType,
-    descripcion: initialType === 'PRESTAMO' ? 'Préstamo personal' : '',
-    fecha: getLocalDateString(new Date()),
-    payments: 'SEMANAL',
-    quantityFees: 1,
-    amountFee: '',
-    cost: '',
-    productCategory: initialType === 'PRESTAMO' ? 'PRESTAMO' : '',
-    productTypeId: '',
-    firstFeeDate: '',
-    payFirstFee: false,
-    firstFeeAmount: '',
-  });
+  const [formData, setFormData] = useState<SaleFormData>(() => createInitialFormData(initialType));
+
+  useEffect(() => {
+    setFormData(createInitialFormData(initialType));
+  }, [initialType]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -94,15 +134,21 @@ export default function useSaleForm(initialType: SaleType) {
       return false;
     }
 
+    const loanTotals = calculateLoanTotals(formData);
+
     const saleRequest: CreateSaleRequest = {
       clientId: Number(formData.cliente),
+      kind: formData.tipo,
       descriptionProduct: formData.descripcion,
       payments: formData.payments as 'SEMANAL' | 'MENSUAL' | 'QUINCENAL' | 'CONTADO',
       quantityFees: Number(formData.quantityFees),
-      amountFee: Number(formData.amountFee),
+      amountFee: loanTotals ? loanTotals.amountFee : Number(formData.amountFee),
       cost: Number(formData.cost),
-      productType: Number(formData.productTypeId),
       dateSale: formData.fecha,
+      ...(loanTotals ? { interestRate: Number(formData.interestRate) } : {}),
+      ...(formData.tipo === 'VENTA' && formData.productTypeId ? { productType: Number(formData.productTypeId) } : {}),
+      ...(formData.tipo === 'VENTA' ? { product: Number(formData.productId) } : {}),
+      ...(formData.tipo === 'VENTA' ? { quantity: Number(formData.cantidad) } : {}),
       ...(formData.firstFeeDate ? { firstFeeDate: formData.firstFeeDate } : {}),
       ...(formData.payFirstFee ? { payFirstFee: Boolean(formData.payFirstFee) } : {}),
       ...(formData.payFirstFee && formData.firstFeeAmount ? { firstFeeAmount: Number(formData.firstFeeAmount) } : {}),
@@ -111,9 +157,9 @@ export default function useSaleForm(initialType: SaleType) {
 
     try {
       setIsSubmitting(true);
-      await salesService.createSale(saleRequest);
+      const response = await salesService.createSale(saleRequest);
       setIsSubmitting(false);
-      return true;
+      return response;
     } catch (err) {
       setIsSubmitting(false);
       console.error(err);
@@ -132,6 +178,15 @@ export default function useSaleForm(initialType: SaleType) {
       }
     };
 
+    const fetchProducts = async () => {
+      try {
+        const prods = await salesService.getProducts();
+        setProducts(prods);
+      } catch (err) {
+        console.error('Error fetching products', err);
+      }
+    };
+
     const fetchSellers = async () => {
       try {
         const s = await salesService.getSellers();
@@ -142,8 +197,26 @@ export default function useSaleForm(initialType: SaleType) {
     };
 
     fetchProductTypes();
+    fetchProducts();
     fetchSellers();
   }, []);
+
+  // Al elegir un producto del catálogo se toma su nombre como descripción, su
+  // precio como costo y su categoría (el costo y la categoría no son editables).
+  // La cantidad multiplica el costo y arma la descripción "N x Nombre" (V9).
+  useEffect(() => {
+    if (!formData.productId) return;
+    const product = products.find((p) => p.id === Number(formData.productId));
+    if (!product) return;
+    const cantidad = Number(formData.cantidad);
+    if (!formData.cantidad || !Number.isInteger(cantidad) || cantidad < 1) return;
+    setFormData((prev) => ({
+      ...prev,
+      descripcion: cantidad > 1 ? `${cantidad} x ${product.name}` : product.name,
+      ...(product.price != null && product.price > 0 ? { cost: String(product.price * cantidad) } : {}),
+      ...(product.productTypeId != null ? { productTypeId: String(product.productTypeId) } : {}),
+    }) as unknown as SaleFormData);
+  }, [formData.productId, formData.cantidad, products]);
 
   // fetch clients for seller or all clients
   useEffect(() => {
@@ -191,17 +264,6 @@ export default function useSaleForm(initialType: SaleType) {
     }
   }, [formData.cliente, formData.sellerId, displayedClients, sellers]);
 
-  // Auto-completar descripción si el tipo de producto es PRESTAMO
-  useEffect(() => {
-    if (productTypes.length > 0 && formData.productTypeId) {
-      const selectedType = productTypes.find(pt => String(pt.id) === String(formData.productTypeId));
-      
-      if (selectedType?.name === 'PRESTAMO') {
-         setFormData(prev => ({ ...prev, descripcion: 'Préstamo personal' }));
-      }
-    }
-  }, [formData.productTypeId, productTypes]);
-
   // sync first fee date with sale date rules
   useEffect(() => {
     const saleDate = formData.fecha;
@@ -228,6 +290,7 @@ export default function useSaleForm(initialType: SaleType) {
     isSubmittingDisabled,
     isSubmitting,
     productTypes,
+    products,
     sellers,
     displayedClients,
   };

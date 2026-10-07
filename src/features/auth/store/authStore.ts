@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { login as loginService, refreshToken as refreshTokenService } from '@features/auth/services/authServices'; 
+import {
+  login as loginService,
+  logout as logoutService,
+  refreshAccessToken as refreshTokenService,
+} from '@features/auth/services/authServices';
 
 export interface User {
   email: string;
@@ -103,6 +107,11 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        const { refreshToken: currentRefreshToken } = get();
+        if (currentRefreshToken) {
+          // Invalida el refresh token en el backend (best-effort); el estado local se limpia siempre.
+          void logoutService(currentRefreshToken);
+        }
         set({
           user: null,
           accessToken: null,

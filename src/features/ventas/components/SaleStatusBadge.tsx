@@ -1,6 +1,7 @@
 import { SaleResponseDto } from "@/shared/types/sales";
 import React from "react";
 import { Badge } from "@/shared/components/ui";
+import { saleStatusTone, saleStatusLabel } from "@/shared/utils/statusUi";
 
 type Props = {
   sale: SaleResponseDto;
@@ -8,23 +9,18 @@ type Props = {
 };
 
 const SaleStatusBadge: React.FC<Props> = ({ sale, selectedStatus }) => {
-  if (sale.status.toString() === "COMPLETED") {
-    return <Badge tone="success">Completada</Badge>;
-  }
+  // Con el filtro "A Cobrar" activo, las ventas activas se presentan como
+  // pendientes de cobro (tienen cuotas vencidas) aunque su estado sea ACTIVE.
+  const effectiveStatus =
+    selectedStatus === "A_COBRAR" && sale.status === "ACTIVE"
+      ? "A_COBRAR"
+      : sale.status;
 
-  if (sale.status.toString() === "CANCELED") {
-    return <Badge tone="neutral">Cancelada</Badge>;
-  }
-
-  if (
-    sale.status.toString() !== "COMPLETED" &&
-    sale.status.toString() !== "CANCELED" &&
-    selectedStatus === "A_COBRAR"
-  ) {
-    return <Badge tone="danger">A Cobrar</Badge>;
-  }
-
-  return <Badge tone="warning">Activa</Badge>;
+  return (
+    <Badge tone={saleStatusTone(effectiveStatus)}>
+      {saleStatusLabel(effectiveStatus)}
+    </Badge>
+  );
 };
 
 export default SaleStatusBadge;

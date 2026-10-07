@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { X, Calendar, DollarSign, Trash2 } from "lucide-react";
 import { salesService } from "@/features/ventas/services/salesServices";
-import { Input } from "@/shared/components/ui";
+import { Button, Input } from "@/shared/components/ui";
 
 interface PostponeFeeModalProps {
   isOpen: boolean;
@@ -53,11 +53,13 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
       setLoading(false);
       return;
     }
-    // if (amountVal > maxAmount && isPaid) {
-    //   setError(`El monto no puede ser mayor a la deuda actual (${maxAmount})`);
-    //   setLoading(false);
-    //   return;
-    // }
+    // El recálculo del backend devuelve al saldo: remaining += (oldAmount - newAmount).
+    // Para que el saldo nunca quede negativo debe cumplirse newAmount - oldAmount <= remaining.
+    if (isPaid && currentAmount != null && amountVal - currentAmount > maxAmount) {
+      setError("El monto no puede superar el saldo restante de la venta");
+      setLoading(false);
+      return;
+    }
 
     try {
       await salesService.postponeFee(
@@ -99,10 +101,10 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6 m-4 shadow-xl border border-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm">
+      <div className="bg-white rounded-card w-full max-w-md p-6 m-4 shadow-xl">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="font-display text-lg font-bold tracking-tight text-brand-950">
             {isPaid ? "Editar Cuota Pagada" : "Posponer Vencimiento"}
           </h3>
           <button
@@ -191,32 +193,30 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
           )}
 
           <div className="flex justify-between items-center pt-2">
-            <button
-              type="button"
+            <Button
+              variant="dangerOutline"
               onClick={handleDelete}
-              className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-medium flex items-center gap-2"
               disabled={loading}
               title="Eliminar cuota"
+              leftIcon={<Trash2 className="w-4 h-4" />}
             >
-              <Trash2 className="w-4 h-4" />
               <span className="hidden sm:inline">Eliminar</span>
-            </button>
+            </Button>
             <div className="flex gap-3">
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 onClick={onClose}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors font-medium"
                 disabled={loading}
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="px-4 py-2 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50 font-medium shadow-sm shadow-brand-200"
+                variant="primary"
                 disabled={loading}
               >
                 {loading ? "Guardando..." : "Confirmar Cambio"}
-              </button>
+              </Button>
             </div>
           </div>
         </form>

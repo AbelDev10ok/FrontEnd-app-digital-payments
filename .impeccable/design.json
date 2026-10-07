@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-05T01:14:48.9494546Z",
+  "title": "Design System: Cobros&Ventas",
+  "extensions": {
+    "colorMeta": {
+      "brand-primary": {
+        "role": "primary",
+        "displayName": "Verde comercial activo",
+        "canonical": "#1a8059",
+        "tonalRamp": ["#07261c", "#114332", "#13523b", "#166749", "#1a8059", "#2a9e70", "#7fd2ac", "#eefaf4"]
+      },
+      "brand-deep": {
+        "role": "primary",
+        "displayName": "Verde bosque",
+        "canonical": "#07261c",
+        "tonalRamp": ["#07261c", "#114332", "#13523b", "#166749", "#1a8059", "#2a9e70", "#7fd2ac", "#eefaf4"]
+      },
+      "brand-soft": {
+        "role": "primary",
+        "displayName": "Menta de marca",
+        "canonical": "#eefaf4",
+        "tonalRamp": ["#07261c", "#114332", "#13523b", "#166749", "#1a8059", "#2a9e70", "#7fd2ac", "#eefaf4"]
+      },
+      "neutral-bg": {
+        "role": "neutral",
+        "displayName": "Niebla clara",
+        "canonical": "#f9fafb",
+        "tonalRamp": ["#030712", "#111827", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#e5e7eb", "#f9fafb"]
+      },
+      "neutral-surface": {
+        "role": "neutral",
+        "displayName": "Papel blanco",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#030712", "#111827", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#e5e7eb", "#ffffff"]
+      },
+      "neutral-text": {
+        "role": "neutral",
+        "displayName": "Tinta de trabajo",
+        "canonical": "#111827",
+        "tonalRamp": ["#030712", "#111827", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#e5e7eb", "#f9fafb"]
+      },
+      "neutral-muted": {
+        "role": "neutral",
+        "displayName": "Grafito secundario",
+        "canonical": "#6b7280",
+        "tonalRamp": ["#030712", "#111827", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#e5e7eb", "#f9fafb"]
+      },
+      "neutral-border": {
+        "role": "neutral",
+        "displayName": "Borde vaporoso",
+        "canonical": "#f3f4f6",
+        "tonalRamp": ["#030712", "#111827", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#e5e7eb", "#f9fafb"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Archivo Display",
+        "purpose": "Títulos de página y encabezados con presencia dentro del shell operativo."
+      },
+      "body": {
+        "displayName": "System Sans",
+        "purpose": "Lectura y controles familiares en formularios, tablas y navegación."
+      },
+      "label": {
+        "displayName": "Operational Label",
+        "purpose": "Eyebrows, encabezados de tabla y metadatos compactos."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card",
+        "value": "0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.08)",
+        "purpose": "Separación tenue y persistente de tarjetas sobre el fondo general."
+      },
+      {
+        "name": "card-hover",
+        "value": "0 4px 6px -1px rgb(16 24 40 / 0.08), 0 2px 4px -2px rgb(16 24 40 / 0.06)",
+        "purpose": "Elevación pequeña al interactuar con una tarjeta accionable."
+      }
+    ],
+    "motion": [
+      {
+        "name": "standard-transition",
+        "value": "color/background-color 200ms ease",
+        "purpose": "Respuesta breve para hover, foco y selección de controles."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal compacta con verde de marca, semibold y foco visible.",
+      "html": "<button class=\"ds-btn-primary\">Registrar cobro</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border:0;border-radius:12px;background:#1a8059;color:#fff;font:600 14px/20px ui-sans-serif,system-ui,sans-serif;box-shadow:0 10px 15px -3px rgb(26 128 89 / .2),0 4px 6px -4px rgb(26 128 89 / .2);transition:background-color 200ms ease}.ds-btn-primary:hover{background:#166749}.ds-btn-primary:focus-visible{outline:2px solid #1a8059;outline-offset:2px}.ds-btn-primary:active{background:#13523b}.ds-btn-primary:disabled{opacity:.6;cursor:not-allowed}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Acción secundaria de bajo peso con superficie blanca y borde neutro.",
+      "html": "<button class=\"ds-btn-secondary\">Cancelar</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;color:#07261c;font:600 14px/20px ui-sans-serif,system-ui,sans-serif;transition:background-color 200ms ease}.ds-btn-secondary:hover{background:#eefaf4}.ds-btn-secondary:focus-visible{outline:2px solid #1a8059;outline-offset:2px}.ds-btn-secondary:active{background:#d7f2e4}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Campo de formulario blanco, compacto y con foco de marca explícito.",
+      "html": "<label class=\"ds-field\"><span>Buscar cliente</span><input class=\"ds-input\" placeholder=\"Nombre o teléfono\"></label>",
+      "css": ".ds-field{display:grid;gap:8px;color:#374151;font:500 14px/20px ui-sans-serif,system-ui,sans-serif}.ds-input{width:100%;padding:10px 16px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;color:#111827;font:400 14px/20px ui-sans-serif,system-ui,sans-serif;transition:border-color 200ms ease,box-shadow 200ms ease}.ds-input::placeholder{color:#9ca3af}.ds-input:hover{border-color:#d1d5db}.ds-input:focus-visible{outline:0;border-color:#2a9e70;box-shadow:0 0 0 2px rgb(42 158 112 / .25)}"
+    },
+    {
+      "name": "Card Surface",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "White work surface with soft border and restrained ambient depth.",
+      "html": "<section class=\"ds-card\"><h2>Cuotas pendientes</h2><p>Revisá próximos vencimientos</p></section>",
+      "css": ".ds-card{padding:24px;border:1px solid #f3f4f6;border-radius:16px;background:#fff;box-shadow:0 1px 2px rgb(16 24 40 / .04),0 1px 3px rgb(16 24 40 / .08);color:#111827;font-family:ui-sans-serif,system-ui,sans-serif;transition:box-shadow 200ms ease}.ds-card h2{margin:0 0 8px;font:700 18px/24px Archivo,ui-sans-serif,system-ui,sans-serif;letter-spacing:-.025em}.ds-card p{margin:0;color:#6b7280;font-size:14px;line-height:20px}"
+    },
+    {
+      "name": "Active Navigation Item",
+      "kind": "nav",
+      "refersTo": "navigation-active",
+      "description": "Current destination marked with pale brand surface and clear label contrast.",
+      "html": "<a class=\"ds-nav-active\" href=\"#\"><span aria-hidden=\"true\">●</span> Cobros de hoy</a>",
+      "css": ".ds-nav-active{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;background:#eefaf4;color:#166749;box-shadow:0 1px 2px rgb(0 0 0 / .05);font:500 14px/20px ui-sans-serif,system-ui,sans-serif;text-decoration:none;transition:background-color 200ms ease}.ds-nav-active:hover{background:#d7f2e4}.ds-nav-active:focus-visible{outline:2px solid #1a8059;outline-offset:2px}"
+    },
+    {
+      "name": "Selected Filter Chip",
+      "kind": "chip",
+      "refersTo": "filter-chip-selected",
+      "description": "Compact selected filter using the same brand language as navigation.",
+      "html": "<button class=\"ds-filter-chip\" aria-pressed=\"true\">Todas</button>",
+      "css": ".ds-filter-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid #b0e5cb;border-radius:9999px;background:#eefaf4;color:#166749;font:500 12px/16px ui-sans-serif,system-ui,sans-serif;transition:background-color 200ms ease,border-color 200ms ease}.ds-filter-chip:hover{background:#d7f2e4;border-color:#7fd2ac}.ds-filter-chip:focus-visible{outline:2px solid #1a8059;outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Libro de caja vivo",
+    "overview": "La interfaz acompaña una operación cotidiana: registrar una venta o préstamo, ordenar sus cuotas y dejar asentado cada cobro. Su carácter es preciso y operativo. La identidad verde le da continuidad de marca, mientras el espacio, la jerarquía y los estados ayudan a encontrar rápido lo que el negocio necesita atender. El sistema combina tipografía de títulos con personalidad y controles familiares de aplicación. Las superficies son claras; los acentos intensos se reservan para acciones, navegación activa y datos de estado. La densidad debe permitir revisar listas y cifras con rapidez en escritorio y seguir usando las tareas principales desde móvil.",
+    "keyCharacteristics": [
+      "Verde comercial activo como señal de marca y acción.",
+      "Jerarquía compacta, títulos Archivo y etiquetas de sección espaciadas.",
+      "Superficies claras con capas y sombras discretas.",
+      "Estados semánticos distinguibles sin competir con el contenido."
+    ],
+    "rules": [
+      {
+        "name": "The Green Has a Job Rule",
+        "body": "El verde más intenso identifica marca, acción o selección; no sustituye los tonos semánticos de éxito, advertencia y error.",
+        "section": "colors"
+      },
+      {
+        "name": "The Scan Before Read Rule",
+        "body": "En listados y resúmenes, los nombres, estados y montos deben poder localizarse antes de leer el texto auxiliar.",
+        "section": "typography"
+      },
+      {
+        "name": "The Surface Does the Grouping Rule",
+        "body": "Priorizar fondo y borde para agrupar; reservar sombras más fuertes para modales o acciones elevadas.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do usar el verde de marca para acciones principales y navegación activa.",
+      "Do usar font-mono tabular-nums para importes y columnas numéricas alineadas.",
+      "Do mantener visibles los estados con color semántico, texto y una etiqueta comprensible.",
+      "Do preferir fondo y borde para agrupar; aplicar elevación según la función.",
+      "Do conservar layouts responsive y áreas táctiles utilizables en móvil."
+    ],
+    "donts": [
+      "Don't usar el verde de marca como sustituto de colores de éxito, advertencia o error.",
+      "Don't añadir sombras fuertes a todas las tarjetas o controles.",
+      "Don't reducir la jerarquía de estados a color sin texto o forma auxiliar.",
+      "Don't inventar nuevas escalas de radio o tipografías cuando los tokens existentes cubren el componente."
+    ]
+  }
+}

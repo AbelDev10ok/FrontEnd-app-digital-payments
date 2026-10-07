@@ -1,12 +1,12 @@
 import { memo, useState } from "react";
-import { Search, Calendar, X, SlidersHorizontal } from "lucide-react";
+import { Search, X, SlidersHorizontal, RotateCcw } from "lucide-react";
 import { DebouncedInput } from "@/shared/components/ui/DebouncedInput";
-import { Input, Select } from "@/shared/components/ui";
-// import { ProductTypeDto } from '@/shared/types/sales';
+import { Button, Select } from "@/shared/components/ui";
 
 interface SalesFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  isLoan?: boolean;
   searchClientName?: string;
   onClientNameChange?: (value: string) => void;
   year: string;
@@ -15,17 +15,13 @@ interface SalesFiltersProps {
   setMonth: (value: string) => void;
   specificDate: string;
   setSpecificDate: (value: string) => void;
-  showCalendar: boolean;
-  setShowCalendar: (value: boolean) => void;
-  // selectedProductType: string;
-  // onProductTypeChange: (value: string) => void;
-  // productTypes: ProductTypeDto[];
-  // productTypeOptions?: string[];
+  onClearFilters?: () => void;
 }
 
 const SalesFilters = ({
   searchTerm,
   onSearchChange,
+  isLoan = false,
   searchClientName = "",
   onClientNameChange,
   year,
@@ -34,11 +30,7 @@ const SalesFilters = ({
   setMonth,
   specificDate,
   setSpecificDate,
-  showCalendar,
-  setShowCalendar,
-  // selectedProductType,
-  // onProductTypeChange,
-  // productTypes,
+  onClearFilters,
 }: SalesFiltersProps) => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
@@ -61,11 +53,22 @@ const SalesFilters = ({
     { value: "12", label: "Diciembre" },
   ];
 
+  const setToday = () => {
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      "0",
+    )}-${String(now.getDate()).padStart(2, "0")}`;
+    setSpecificDate(today);
+    setYear("");
+    setMonth("");
+  };
+
   const filters = (
     <div className="flex flex-wrap items-center gap-4">
       {/* Búsqueda por nombre de cliente */}
       {onClientNameChange && (
-        <div className="relative flex-grow">
+        <div className="relative flex-grow max-w-xs">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
           <DebouncedInput
             value={searchClientName}
@@ -76,16 +79,18 @@ const SalesFilters = ({
         </div>
       )}
 
-      {/* Búsqueda por descripción de producto */}
-      <div className="relative flex-grow">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
-        <DebouncedInput
-          value={searchTerm}
-          onChange={onSearchChange}
-          placeholder="Buscar por descripcion producto..."
-          className="pl-10 pr-4"
-        />
-      </div>
+      {/* Búsqueda por descripción de producto (solo ventas) */}
+      {!isLoan && (
+        <div className="relative flex-grow max-w-xs">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
+          <DebouncedInput
+            value={searchTerm}
+            onChange={onSearchChange}
+            placeholder="Buscar por descripcion producto..."
+            className="pl-10 pr-4"
+          />
+        </div>
+      )}
 
       {/* Filtro por año */}
       <Select
@@ -93,10 +98,10 @@ const SalesFilters = ({
         onChange={(e) => {
           setYear(e.target.value);
           setSpecificDate("");
-          setShowCalendar(false);
         }}
         disabled={!!specificDate}
         className="sm:w-auto disabled:bg-gray-100 disabled:cursor-not-allowed"
+        aria-label="Año"
       >
         <option value="">Año</option>
         {years.map((y) => (
@@ -112,10 +117,10 @@ const SalesFilters = ({
         onChange={(e) => {
           setMonth(e.target.value);
           setSpecificDate("");
-          setShowCalendar(false);
         }}
         disabled={!!specificDate}
         className="sm:w-auto disabled:bg-gray-100 disabled:cursor-not-allowed"
+        aria-label="Mes"
       >
         <option value="">Mes</option>
         {months.map((m) => (
@@ -125,38 +130,47 @@ const SalesFilters = ({
         ))}
       </Select>
 
-      {/* Botón para calendario específico */}
-      <button
-        onClick={() => setShowCalendar(!showCalendar)}
-        className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 hover:bg-gray-50"
-      >
-        <Calendar className="w-5 h-5 mr-2" />
-        Fecha específica
-      </button>
+      {/* Preset de fecha: hoy */}
+      <Button variant="secondary" size="sm" onClick={setToday}>
+        Hoy
+      </Button>
+
+      {/* Limpiar todos los filtros */}
+      {onClearFilters && (
+        <Button
+          variant="dangerOutline"
+          size="sm"
+          onClick={onClearFilters}
+          leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+        >
+          Limpiar filtros
+        </Button>
+      )}
     </div>
   );
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+    <div className="bg-white rounded-card p-6 shadow-card">
       <div className="flex items-center justify-between gap-4 mb-4 md:hidden">
         <span className="text-sm font-semibold">Filtros</span>
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => setShowMobileFilters(true)}
-          className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl bg-white hover:bg-gray-50"
+          leftIcon={<SlidersHorizontal className="w-5 h-5" />}
         >
-          <SlidersHorizontal className="w-5 h-5" />
           Abrir filtros
-        </button>
+        </Button>
       </div>
 
       <div className="hidden md:block">{filters}</div>
 
       {/* Modal de filtros para mobile */}
       {showMobileFilters && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl w-full max-w-lg p-6 mx-4">
+        <div className="fixed inset-0 bg-gray-950/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-card shadow-xl w-full max-w-lg p-6 mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Filtros</h3>
+              <h3 className="font-display text-lg font-bold tracking-tight text-brand-950">Filtros</h3>
               <button
                 onClick={() => setShowMobileFilters(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -166,60 +180,13 @@ const SalesFilters = ({
             </div>
             {filters}
             <div className="mt-4 flex justify-end gap-2">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setShowMobileFilters(false)}
-                className="px-4 py-2 text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50"
               >
                 Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal para calendario */}
-      {showCalendar && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg max-w-md w-full mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">
-                Seleccionar fecha específica
-              </h3>
-              <button
-                onClick={() => setShowCalendar(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <Input
-              type="date"
-              value={specificDate}
-              onChange={(e) => {
-                setSpecificDate(e.target.value);
-                setYear("");
-                setMonth("");
-              }}
-              className="mb-4"
-            />
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => {
-                  setSpecificDate("");
-                  setYear("");
-                  setMonth("");
-                  setShowCalendar(false);
-                }}
-                className="px-4 py-2 text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50"
-              >
-                Limpiar
-              </button>
-              <button
-                onClick={() => setShowCalendar(false)}
-                className="px-4 py-2 bg-brand-600 text-white rounded-xl hover:bg-brand-700"
-              >
-                Aplicar
-              </button>
+              </Button>
             </div>
           </div>
         </div>

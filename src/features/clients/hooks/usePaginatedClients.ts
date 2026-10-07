@@ -10,6 +10,7 @@ export default function usePaginatedClients(fetchFn: FetchFn, deps: unknown[] = 
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(initialPage);
   const [totalPages, setTotalPages] = useState<number>(0);
+  const [totalElements, setTotalElements] = useState<number>(0);
   const [refreshKey, setRefreshKey] = useState<number>(0);
 
   useEffect(() => {
@@ -20,9 +21,9 @@ export default function usePaginatedClients(fetchFn: FetchFn, deps: unknown[] = 
         setError(null);
         const data = await fetchFn({ page, size });
         if (!mounted) return;
-        // console.log('usePaginatedClients - data.content:', data.content);
         setClients(Array.isArray(data.content) ? data.content : []);
         setTotalPages(data.totalPages);
+        setTotalElements(data.totalElements);
       } catch (err) {
         if (!mounted) return;
         setError(err instanceof Error ? err.message : 'Error fetching clients');
@@ -40,5 +41,5 @@ export default function usePaginatedClients(fetchFn: FetchFn, deps: unknown[] = 
     setRefreshKey(k => k + 1);
   };
 
-  return { clients, loading, error, page, setPage, totalPages, refresh } as const;
+  return { clients, loading, error, page, setPage, totalPages, totalElements, refresh } as const;
 }

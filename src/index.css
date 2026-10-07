@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Selección de texto con el verde de marca (lenguaje de la landing) */
+  ::selection {
+    background-color: #d7f2e4;
+    color: #114332;
+  }
+}

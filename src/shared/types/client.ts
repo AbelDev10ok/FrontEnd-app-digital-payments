@@ -8,6 +8,7 @@ export interface Client {
   sellerName?: string;
   seller: boolean;
   dni?: string;
+  deudaTotal?: number;
 }
 
 

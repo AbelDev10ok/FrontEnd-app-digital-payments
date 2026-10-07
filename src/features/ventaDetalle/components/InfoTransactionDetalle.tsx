@@ -11,8 +11,8 @@ interface InfoTransactionDetalleProps {
 
 export default function InfoTransactionDetalle({transaction, isLoan, formatDate}: InfoTransactionDetalleProps) {
   return (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Información de la Transacción</h3>
+        <div className="bg-white rounded-card p-6 shadow-card">
+            <h3 className="font-display text-lg font-bold tracking-tight text-brand-950 mb-4">Información de la Transacción</h3>
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <Calendar className="w-5 h-5 text-gray-400" />
@@ -33,7 +33,9 @@ export default function InfoTransactionDetalle({transaction, isLoan, formatDate}
                 <div className="flex items-center space-x-3">
                   <Clock className="w-5 h-5 text-gray-400" /> 
                   <div>
-                    <p className="text-sm text-gray-500">Fecha Finalizacion de Venta</p>
+                    <p className="text-sm text-gray-500">
+                      {transaction.status === 'CANCELED' ? 'Fecha de anulación' : 'Fecha Finalización de Venta'}
+                    </p>
                     <p className="font-medium text-gray-900">{formatDate(transaction.realFinalPayment)}</p>
                   </div>              
                 </div>

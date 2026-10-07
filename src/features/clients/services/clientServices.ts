@@ -1,8 +1,7 @@
 import { authenticatedFetch } from "@/features/auth/services/authServices";
-import type { ClientStatsDto } from "@/shared/types/dashboard";
 import { Client, ClientRequest } from "@/shared/types/client";
 import { CLIENTS_API_URL } from "@/shared/config/api";
-import { getErrorMessage, handleResponse } from "@/shared/utils/http";
+import { getErrorMessage } from "@/shared/utils/http";
 
 export interface Page<T> {
   content: T[];
@@ -186,12 +185,6 @@ export const clientService = {
       throw new Error('Error al obtener los vendedores activos');
     }
     return response.json();
-  },
-
-  async getClientStats(): Promise<ClientStatsDto> {
-    const urlString = `${CLIENTS_API_URL}/stats`;
-    const response = await authenticatedFetch(urlString);
-    return handleResponse<ClientStatsDto>(response);
   },
 
 };

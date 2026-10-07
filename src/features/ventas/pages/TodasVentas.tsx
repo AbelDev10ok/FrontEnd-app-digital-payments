@@ -1,14 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ErrorMessage from "@/shared/components/feedback/ErrorMessage";
 import Load from "@/shared/components/feedback/Load";
 import usePaginatedSales from "@/features/ventas/hooks/usePaginatedSales";
-import useProductTypes from "@/features/ventas/hooks/useProductTypes";
 import { useSalesFilters } from "@/features/ventas/hooks/useSalesFilters";
 import HeaderTransaction from "@/features/ventas/components/HeaderTransaction";
 import DashboardLayout from "@/shared/components/layout/DashboardLayout";
 import Paginación from "@/shared/components/ui/Paginacion";
-import { FetchParamsSales } from "@/shared/types/sales";
+import { FetchParamsSales, SaleKind } from "@/shared/types/sales";
 import { salesService } from "@features/ventas/services/salesServices";
 import SalesFilters from "@features/ventas/components/SalesFilters";
 import SaleTable from "@features/ventas/components/SaleTable";
@@ -20,10 +19,10 @@ interface PageProps {
 
 const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
   const {
-    searchClientName,
-    setSearchClientName,
     searchDescription,
     setSearchDescription,
+    searchClientName,
+    setSearchClientName,
     selectedStatus,
     setSelectedStatus,
     selectedProductType,
@@ -34,31 +33,37 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     setMonth,
     specificDate,
     setSpecificDate,
-    showCalendar,
-    setShowCalendar,
     date,
   } = useSalesFilters();
 
-  const [searchParams] = useSearchParams();
+  const [selectedKind, setSelectedKind] = useState<SaleKind | "">("");
+
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     const clientNameParam = searchParams.get("clientName");
     if (clientNameParam) {
       setSearchClientName(clientNameParam);
     }
-    // read status from URL and update filter
+
+    // read from URL params
     const statusParam = searchParams.get("status");
     if (statusParam) {
       setSelectedStatus(statusParam);
     } else {
       setSelectedStatus("Todos");
     }
-    // read productType from URL and update filter
     const productTypeParam = searchParams.get("productType");
     if (productTypeParam) {
       setSelectedProductType(productTypeParam);
     } else {
       setSelectedProductType("");
+    }
+    const kindParam = searchParams.get("kind");
+    if (kindParam === "VENTA" || kindParam === "PRESTAMO") {
+      setSelectedKind(kindParam);
+    } else {
+      setSelectedKind("VENTA");
     }
   }, [
     searchParams,
@@ -67,24 +72,30 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     setSelectedProductType,
   ]);
 
-  const { productTypes, loading: productTypesLoading } = useProductTypes();
-
   const fetcher = async ({ page, size }: { page: number; size: number }) => {
     const params: FetchParamsSales = { page, size };
-    if (searchDescription.trim())
+    if (selectedKind !== "PRESTAMO" && searchDescription.trim())
       params.descriptionProduct = searchDescription.trim();
     if (searchClientName.trim()) params.clientName = searchClientName.trim();
-    if (selectedStatus !== "Todos")
-      params.status = selectedStatus.toUpperCase();
+    if (selectedStatus !== "Todos") {
+      if (selectedStatus === "A_COBRAR") {
+        params.aCobrar = true;
+      } else {
+        params.status = selectedStatus.toUpperCase();
+      }
+    }
     if (selectedProductType) params.productType = selectedProductType;
+    if (selectedKind) params.kind = selectedKind;
     if (specificDate) {
       const [y, m, d] = specificDate.split("-").map(Number);
       params.year = y;
       params.month = m;
       params.day = d;
     } else {
-      if (year) params.year = parseInt(year);
-      if (month) params.month = parseInt(month);
+      const y = parseInt(year, 10);
+      const m = parseInt(month, 10);
+      if (!isNaN(y) && y >= 2000 && y <= 2100) params.year = y;
+      if (!isNaN(m) && m >= 1 && m <= 12) params.month = m;
     }
     return salesService.getAllSalesPaginated(params);
   };
@@ -96,26 +107,51 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     page,
     setPage,
     totalPages,
+    totalElements,
   } = usePaginatedSales(fetcher, [
     searchDescription,
     searchClientName,
     selectedStatus,
     selectedProductType,
-    productTypes,
+    selectedKind,
     year,
     month,
     specificDate,
   ]);
 
+  const resetFilters = () => {
+    setSearchDescription("");
+    setSearchClientName("");
+    setSelectedStatus("Todos");
+    setSelectedProductType("");
+    setSpecificDate("");
+    setYear("");
+    setMonth("");
+    const nextParams = new URLSearchParams();
+    if (selectedKind) nextParams.set("kind", selectedKind);
+    setSearchParams(nextParams);
+  };
+
+  const anyFilterActive = Boolean(
+    searchDescription ||
+    searchClientName ||
+    selectedStatus !== "Todos" ||
+    selectedProductType ||
+    date,
+  );
+
+  const pageTtitle = selectedKind === "PRESTAMO" ? "Todos los Préstamos" : "Todas las Ventas";
+
   return (
-    <DashboardLayout title="Todas las Ventas" user={user} onLogout={onLogout}>
+    <DashboardLayout title={pageTtitle} user={user} onLogout={onLogout}>
       <div className="space-y-6">
-        <HeaderTransaction title="Todas las Ventas" />
+        <HeaderTransaction isLoan={selectedKind === "PRESTAMO"} />
         {salesError && <ErrorMessage message={salesError} />}
 
         <SalesFilters
           searchTerm={searchDescription}
           onSearchChange={setSearchDescription}
+          isLoan={selectedKind === "PRESTAMO"}
           searchClientName={searchClientName}
           onClientNameChange={setSearchClientName}
           year={year}
@@ -124,28 +160,32 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
           setMonth={setMonth}
           specificDate={specificDate}
           setSpecificDate={setSpecificDate}
-          showCalendar={showCalendar}
-          setShowCalendar={setShowCalendar}
+          onClearFilters={resetFilters}
         />
-        {salesLoading || productTypesLoading ? (
+        {salesLoading ? (
           <Load />
         ) : (
-          <SaleTable
-            sales={sales}
-            emptyMessage={
-              searchDescription ||
-              searchClientName ||
-              selectedStatus !== "Todos" ||
-              date
-                ? "No se encontraron ventas que coincidan con los filtros"
-                : "No hay ventas registradas"
-            }
-            selectedStatus={selectedStatus}
-          />
+          <>
+            {!salesLoading && totalElements > 0 && (
+              <p className="text-sm text-gray-500">
+                {totalElements}{" "}
+                {totalElements === 1 ? "resultado" : "resultados"}
+              </p>
+            )}
+            <SaleTable
+              sales={sales}
+              emptyMessage={
+                anyFilterActive
+                  ? "No se encontraron ventas que coincidan con los filtros"
+                  : "No hay ventas registradas"
+              }
+              selectedStatus={selectedStatus}
+            />
+          </>
         )}
 
         {/* Paginación */}
-        {!salesLoading && !productTypesLoading && totalPages > 1 && (
+        {!salesLoading && totalPages > 1 && (
           <Paginación page={page} setPage={setPage} totalPages={totalPages} />
         )}
       </div>

@@ -7,8 +7,8 @@ interface ClientInfoDetalleProps {
 
 export default function ClientInfoDetalle({transaction}: ClientInfoDetalleProps) {
   return (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Información del Cliente</h3>
+        <div className="bg-white rounded-card p-6 shadow-card">
+            <h3 className="font-display text-lg font-bold tracking-tight text-brand-950 mb-4">Información del Cliente</h3>
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <User className="w-5 h-5 text-gray-400" />

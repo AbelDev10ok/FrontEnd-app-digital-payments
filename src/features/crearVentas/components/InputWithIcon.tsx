@@ -15,6 +15,7 @@ interface Props {
   min?: number | string;
   max?: number | string;
   step?: number | string;
+  disabled?: boolean;
   className?: string;
 }
 
@@ -32,6 +33,7 @@ const InputWithIcon: React.FC<Props> = ({
   min,
   max,
   step,
+  disabled,
   className = ''
 }) => {
   return (
@@ -49,6 +51,7 @@ const InputWithIcon: React.FC<Props> = ({
           min={min}
           max={max}
           step={step}
+          disabled={disabled}
           invalid={!!error}
           className={`${icon ? 'pl-10 pr-4' : ''} py-3 ${className}`}
         />

@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { salesService } from '@/features/ventas/services/salesServices';
-import { clientService } from '@/features/clients/services/clientServices';
-import type { DashboardStatsDto } from '@/shared/types/dashboard';
+import type {
+  DashboardAnual,
+  MonthlySales,
+  ProductTypeSales,
+  TopClient,
+} from '@/shared/types/dashboard';
+
+export interface SalesStatusSummary {
+  completadas: number;
+  pendientes: number;
+}
 
 export interface DashboardMetrics {
   totalSales: number;
@@ -10,7 +19,13 @@ export interface DashboardMetrics {
   totalOutstanding: number;
   totalProfit: number;
   totalActiveClients: number;
-  totalOverdueFees?: number;
+  totalOverdueFees: number;
+  overdueAmount: number;
+  statusSummary: SalesStatusSummary;
+  anual: DashboardAnual;
+  monthlySeries: MonthlySales[];
+  topClients: TopClient[];
+  productTypeBreakdown: ProductTypeSales[];
 }
 
 const getCurrentYear = () => new Date().getFullYear();
@@ -46,38 +61,25 @@ export const useDashboardMetrics = () => {
     setError(null);
 
     try {
-      const clientStatsPromise = clientService.getClientStats();
-
-      let dashStats: DashboardStatsDto;
-      try {
-        dashStats = await salesService.getDashboardStats(year, month);
-      } catch (err) {
-        // Fallback a estadísticas globales si el endpoint específico de mes/año no está disponible.
-        try {
-          const globalStats = await salesService.getSalesStats();
-          dashStats = {
-            totalSales: globalStats.totalSales,
-            totalRevenue: globalStats.totalRevenue,
-            totalCollected: 0,
-            totalOutstanding: globalStats.totalOutstanding,
-            totalProfit: 0,
-            totalOverdueFees: 0,
-          };
-        } catch {
-          throw new Error(`No se pudo obtener estadísticas: ${err instanceof Error ? err.message : 'Error desconocido'}`);
-        }
-      }
-
-      const clientStats = await clientStatsPromise;
+      const dashStats = await salesService.getDashboardStats(year, month);
 
       const merged: DashboardMetrics = {
-        totalSales: dashStats.totalSales,
-        totalRevenue: dashStats.totalRevenue,
-        totalCollected: dashStats.totalCollected,
-        totalOutstanding: dashStats.totalOutstanding,
-        totalProfit: dashStats.totalProfit,
-        totalOverdueFees: dashStats.totalOverdueFees ?? 0,
-        totalActiveClients: clientStats.totalActiveClients,
+        totalSales: dashStats.resumen.totalVentas,
+        totalRevenue: dashStats.resumen.totalVendido,
+        totalCollected: dashStats.resumen.totalCobrado,
+        totalOutstanding: dashStats.resumen.pendientePorCobrar,
+        totalProfit: dashStats.resumen.ganancia,
+        totalOverdueFees: dashStats.resumen.cuotasVencidas.cantidad,
+        overdueAmount: dashStats.resumen.cuotasVencidas.monto,
+        statusSummary: {
+          completadas: dashStats.resumen.completadas,
+          pendientes: dashStats.resumen.pendientes,
+        },
+        anual: dashStats.anual,
+        totalActiveClients: dashStats.clientes.activos,
+        monthlySeries: dashStats.serie12Meses,
+        topClients: dashStats.topClientes,
+        productTypeBreakdown: dashStats.porTipoProducto,
       };
 
       setMetrics(merged);

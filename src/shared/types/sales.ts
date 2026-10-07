@@ -10,23 +10,32 @@ import { Client } from "./client";
     clientName?: string;
     descriptionProduct?: string;
     status?: string;
+    aCobrar?: boolean;
     productType?: string;
+    kind?: SaleKind;
+    typePayments?: string;
+    minAmount?: number;
+    maxAmount?: number;
+    sort?: string;
   };
 
-  export type SaleType = 'VENTA' | 'PRESTAMO';
+  export type SaleKind = 'VENTA' | 'PRESTAMO';
+  export type SaleType = SaleKind;
 
 export interface SaleFormData {
   cliente: number | string;
   sellerId: string;
-  tipo: SaleType;
+  tipo: SaleKind;
   descripcion: string;
   fecha: string;
   payments: string;
   quantityFees: number | string;
   amountFee: number | string;
   cost: number | string;
-  productCategory: string;
+  cantidad: number | string;
+  interestRate: number | string;
   productTypeId: string;
+  productId: string;
   firstFeeDate: string;
   payFirstFee: boolean;
   firstFeeAmount: number | string;
@@ -35,6 +44,7 @@ export interface SaleFormData {
 
 export interface CreateSaleRequest {
   clientId: number;
+  kind: SaleKind;
   descriptionProduct: string;
   dateSale: string;
   finalPaymentDate?: string;
@@ -42,7 +52,11 @@ export interface CreateSaleRequest {
   quantityFees?: number;
   amountFee?: number;
   cost: number;
-  productType: number;
+  quantity?: number;
+  interestRate?: number;
+  productType?: number | null;
+  // Producto del catálogo (opcional, solo VENTA)
+  product?: number | null;
   // Campos opcionales para pago de primera cuota al crear
   firstFeeDate?: string;
   payFirstFee?: boolean;
@@ -52,11 +66,32 @@ export interface CreateSaleRequest {
 export interface ProductTypeDto {
   id: number;
   name: string;
+  icon?: string | null;
+}
+
+export interface ProductDto {
+  id: number;
+  name: string;
+  price?: number | null;
+  stock?: number | null;
+  productTypeId?: number | null;
+  productTypeName?: string | null;
+}
+
+export interface SalesCountsDto {
+  total: number;
+  active: number;
+  completed: number;
+  canceled: number;
+  aCobrar: number;
 }
 
 export interface UpdateSaleRequest {
   descriptionProduct: string;
-  productType: number;
+  productType?: number | null;
+  // Producto del catálogo (opcional)
+  product?: number | null;
+  kind: SaleKind;
 
 }
 
@@ -74,11 +109,17 @@ export interface SaleResponseDto {
   amountFee: number;
   fees: FeeDto[];
   cost: number;
-  productType: ProductTypeDto;
+  interestRate: number | null;
+  productType: ProductTypeDto | null;
+  product?: ProductDto | null;
+  quantity?: number;
   paidFeesCount: number;
   remainingAmount: number;
+  collectedAmount?: number;
+  refundAmount?: number;
   totalFees: number;
-  status: ''
+  status?: string;
+  kind: SaleKind;
 }
 
 export interface FeeDto {
@@ -90,6 +131,7 @@ export interface FeeDto {
   paid: boolean;
   paymentDate?: string;
   paidAmount?: number;
+  paymentMethod?: string;
   postponed: boolean;
   productDescription: string;
   status: 'PENDING' | 'PAID';

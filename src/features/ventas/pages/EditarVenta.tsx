@@ -6,7 +6,7 @@ import Load from '@/shared/components/feedback/Load';
 import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
 import { salesService } from '@/features/ventas/services/salesServices';
 import { ProductTypeDto, SaleResponseDto, UpdateSaleRequest } from '@/shared/types/sales';
-import SaleForm from '@/features/ventas/components/SaleForm';
+import SaleForm, { SaleFormData } from '@/features/ventas/components/SaleForm';
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -48,12 +48,15 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
     fetchData();
   }, [id]);
 
-  const handleFormSubmit = async (data: { productTypeId: number; descriptionProduct: string }) => {
-    if (!id) return;
+  const handleFormSubmit = async (data: SaleFormData) => {
+    if (!id || !sale) return;
 
     const updatePayload: UpdateSaleRequest = {
       productType: data.productTypeId,
+      // El form de edición no gestiona producto: se conserva el actual (solo VENTA)
+      product: sale.kind === 'VENTA' ? (sale.product?.id ?? null) : null,
       descriptionProduct: data.descriptionProduct,
+      kind: sale.kind,
     };
 
     try {
@@ -66,7 +69,7 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Editar Venta" user={user} onLogout={onLogout}>
+      <DashboardLayout title="Editar" user={user} onLogout={onLogout}>
         <Load message="Cargando datos de la venta..." />
       </DashboardLayout>
     );
@@ -80,14 +83,16 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
     );
   }
 
+  const isLoan = sale.kind === "PRESTAMO";
+
   return (
-    <DashboardLayout title={`Editar Venta #${sale.id}`} user={user} onLogout={onLogout}>
+    <DashboardLayout title={isLoan ? `Editar Préstamo #${sale.id}` : `Editar Venta #${sale.id}`} user={user} onLogout={onLogout}>
       <div className="p-4 max-w-2xl mx-auto">
         <div className="flex items-center mb-6">
-          <Link to={`/dashboard/ventas/${id}`} className="p-2 rounded-lg hover:bg-gray-100">
+          <Link to={`/dashboard/ventas/${id}`} className="p-2 rounded-xl hover:bg-gray-100">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
-          <h1 className="text-2xl font-semibold ml-2">Editar Venta</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight text-brand-950 ml-2">{isLoan ? "Editar Préstamo" : "Editar Venta"}</h1>
         </div>
 
         <SaleForm
@@ -98,6 +103,8 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
           cancelTo={`/dashboard/ventas/${id}`}
           onSubmit={handleFormSubmit}
           showFinancialFields={false}
+          productTypeLocked={sale.kind === 'VENTA' && !!sale.product}
+          descriptionProductLocked={sale.kind === 'VENTA' && !!sale.product}
         />
       </div>
     </DashboardLayout>

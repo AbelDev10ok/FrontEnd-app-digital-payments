@@ -1,6 +1,8 @@
-import { useState, memo } from 'react';
+import { useState, useEffect, memo } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import useNoIndex from '@hooks/useNoIndex';
+import { initCurrency } from '@/shared/utils/formatCurrency';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -13,6 +15,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, user
 
   // console.log('DashboardLayout renderizado');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useNoIndex();
+
+  useEffect(() => {
+    document.title = `${title} · Gestión de Cobros y Ventas`;
+  }, [title]);
+
+  // Carga la moneda del negocio una sola vez (single-flight) para toda la app
+  useEffect(() => {
+    initCurrency();
+  }, []);
 
   const handleLogout = () => {
     onLogout();
@@ -23,12 +35,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, user
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
+      {/* Resplandor decorativo como el hero de la landing */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(60rem_18rem_at_80%_-20%,#d7f2e4_0%,transparent_60%)]"
+      />
+
       {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} />
+      <Sidebar isOpen={sidebarOpen} onNavigate={() => setSidebarOpen(false)} />
 
       {/* Main Content */}
-      <div className="transition-all duration-300 lg:ml-64">
+      <div className="transition-all duration-300 lg:ml-64 relative">
         <Header
           title={title}
           user={user}

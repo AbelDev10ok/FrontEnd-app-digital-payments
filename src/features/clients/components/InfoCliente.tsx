@@ -1,5 +1,5 @@
 import { Client } from "@/shared/types/client"
-import { Mail, MapPin, Phone, TrendingUp, User2 } from "lucide-react"
+import { Mail, MapPin, Phone, TrendingUp, User2, Fingerprint } from "lucide-react"
 
 type InfoClienteProps = {
   client: Client
@@ -8,7 +8,7 @@ type InfoClienteProps = {
 
 const InfoCliente: React.FC<InfoClienteProps> = ({ client }) => {
   return (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-card shadow-card border border-gray-100 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Información de Contacto</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex items-center space-x-3">
@@ -31,9 +31,19 @@ const InfoCliente: React.FC<InfoClienteProps> = ({ client }) => {
               </div>
             </div>
             
+            <div className="flex items-center space-x-3">
+              <div className="bg-purple-50 p-2 rounded-lg">
+                <Fingerprint className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">DNI</p>
+                <p className="font-medium text-gray-900">{client.dni || 'No especificado'}</p>
+              </div>
+            </div>
+            
             <div className="flex items-center space-x-3 md:col-span-2">
-              <div className="bg-orange-50 p-2 rounded-lg">
-                <MapPin className="w-5 h-5 text-orange-600" />
+              <div className="bg-amber-50 p-2 rounded-lg">
+                <MapPin className="w-5 h-5 text-amber-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Dirección</p>
@@ -60,12 +70,12 @@ const InfoCliente: React.FC<InfoClienteProps> = ({ client }) => {
 
             {/* si es vendedor */}
             {client.seller && (
-              <div className="md:col-span-2 flex items-center space-x-4 bg-teal-50 border border-teal-200 p-4 rounded-xl">
-                <div className="bg-teal-100 p-3 rounded-full">
-                  <TrendingUp className="w-6 h-6 text-teal-700" />
+              <div className="md:col-span-2 flex items-center space-x-4 bg-brand-50 border border-brand-200 p-4 rounded-xl">
+                <div className="bg-brand-100 p-3 rounded-full">
+                  <TrendingUp className="w-6 h-6 text-brand-700" />
                 </div>
                 <div>
-                  <p className="font-semibold text-teal-800">Este cliente también es vendedor</p>
+                  <p className="font-semibold text-brand-800">Este cliente también es vendedor</p>
                   <p className="text-sm text-gray-600">Tiene acceso a funciones de venta en la plataforma.</p>
                 </div>
               </div>

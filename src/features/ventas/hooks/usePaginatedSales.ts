@@ -18,6 +18,7 @@ export default function usePaginatedSales(
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(initialPage);
   const [totalPages, setTotalPages] = useState<number>(0);
+  const [totalElements, setTotalElements] = useState<number>(0);
   const [refreshKey, setRefreshKey] = useState<number>(0);
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function usePaginatedSales(
         if (!mounted) return;
         setSales(data.content);
         setTotalPages(data.totalPages);
+        setTotalElements(data.totalElements);
       } catch (err) {
         if (!mounted) return;
         setError(err instanceof Error ? err.message : "Error fetching sales");
@@ -49,5 +51,5 @@ export default function usePaginatedSales(
     setRefreshKey((k) => k + 1);
   };
 
-  return { sales, loading, error, page, setPage, totalPages, refresh } as const;
+  return { sales, loading, error, page, setPage, totalPages, totalElements, refresh } as const;
 }

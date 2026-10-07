@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { authenticatedFetch, login, refreshToken } from "../authServices";
+import { authenticatedFetch, login, logout, refreshToken } from "../authServices";
 import { useAuthStore } from "@features/auth/store/authStore";
 
 const jsonResponse = (ok: boolean, status: number, body: unknown) => ({
@@ -129,13 +129,13 @@ describe("authenticatedFetch", () => {
     );
   });
 
-  it("reintenta una vez con el token refrescado tras un 401", async () => {
+  it("reintenta una vez con el token refrescado tras un 401 y persiste el refresh token rotado", async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse(false, 401, {}))
       .mockResolvedValueOnce(
         jsonResponse(true, 200, {
           accessToken: "newAccess",
-          refreshToken: "oldRefresh",
+          refreshToken: "newRefresh",
         }),
       )
       .mockResolvedValueOnce(jsonResponse(true, 200, {}));
@@ -148,6 +148,34 @@ describe("authenticatedFetch", () => {
     expect((retryInit.headers as Record<string, string>).Authorization).toBe(
       "Bearer newAccess",
     );
+    expect(useAuthStore.getState().refreshToken).toBe("newRefresh");
+  });
+
+  it("peticiones concurrentes con 401 comparten un solo refresh (single-flight)", async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(false, 401, {}))
+      .mockResolvedValueOnce(jsonResponse(false, 401, {}))
+      .mockResolvedValueOnce(
+        jsonResponse(true, 200, {
+          accessToken: "newAccess",
+          refreshToken: "newRefresh",
+        }),
+      )
+      .mockResolvedValueOnce(jsonResponse(true, 200, {}))
+      .mockResolvedValueOnce(jsonResponse(true, 200, {}));
+
+    const [a, b] = await Promise.all([
+      authenticatedFetch(url),
+      authenticatedFetch(url),
+    ]);
+
+    expect(a.ok).toBe(true);
+    expect(b.ok).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+    const refreshCalls = fetchMock.mock.calls.filter(([callUrl]) =>
+      (callUrl as string).includes("/auth/refresh-token"),
+    );
+    expect(refreshCalls).toHaveLength(1);
   });
 
   it("hace logout y lanza error si el refresh falla", async () => {
@@ -160,12 +188,49 @@ describe("authenticatedFetch", () => {
           throw new Error("sin json");
         },
         text: async () => "Refresh token expired",
-      });
+      })
+      .mockResolvedValueOnce(jsonResponse(true, 200, {}));
 
     await expect(authenticatedFetch(url)).rejects.toThrow();
 
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(false);
     expect(state.accessToken).toBeNull();
+    expect(fetchMock.mock.calls.some(([callUrl]) =>
+      (callUrl as string).includes("/auth/logout"),
+    )).toBe(true);
+  });
+});
+
+describe("logout", () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    vi.stubGlobal("fetch", fetchMock);
+    fetchMock.mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("envía POST a /auth/logout con el refresh token", async () => {
+    fetchMock.mockResolvedValue(jsonResponse(true, 200, {}));
+
+    await logout("rt-to-invalidate");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("/auth/logout"),
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ refreshToken: "rt-to-invalidate" }),
+      }),
+    );
+  });
+
+  it("no lanza error si la red falla (best-effort)", async () => {
+    fetchMock.mockRejectedValue(new Error("network down"));
+
+    await expect(logout("rt")).resolves.toBeUndefined();
   });
 });

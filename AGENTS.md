@@ -30,7 +30,7 @@ SPA de cobros/ventas en React 18 + TypeScript + Vite. Consume un backend Spring 
 
 ## Backend API conventions
 
-- Base URL `http://localhost:8080` is centralized in `src/shared/config/api.ts` (`AUTH_API_URL`, `CLIENTS_API_URL`, `LOANS_API_URL`, `PRODUCT_TYPES_API_URL`). All services must import from there, never hardcode the host.
+- Base URL `http://localhost:8080` is centralized in `src/shared/config/api.ts` (`AUTH_API_URL`, `CLIENTS_API_URL`, `LOANS_API_URL`, `PRODUCT_TYPES_API_URL`). All services must import from there, never hardcode the host. Override via `VITE_API_URL` (see `.env.example`).
 - Response envelope (unless noted): `{ message, status, data }` with `status === 'OK'`. Unwrap via `handleResponse` (see `src/shared/utils/http.ts`); `getErrorMessage` extracts the message from non-OK responses. Enveloped: loans/stats, clients/stats, auth-register/verify y auth-login. Raw (sin envelope): clients, sellers, product-types y **refresh-token** (`{ accessToken, refreshToken }` directo).
 - Auth endpoints: `/auth/login`, `/auth/refresh-token` (no `/api` prefix). Domain endpoints: `/api/loans`, `/api/clients`, `/api/product-types`, etc.
 - Dates are sent as `YYYY-MM-DD` strings.
@@ -39,7 +39,9 @@ SPA de cobros/ventas en React 18 + TypeScript + Vite. Consume un backend Spring 
 ## Auth & roles
 
 - JWT access/refresh tokens; role is decoded from the JWT `authorities` claim in `authStore.ts`.
+- Backend refresca con **rotación**: `/auth/refresh-token` invalida el token usado y devuelve uno nuevo; el frontend debe guardar SIEMPRE el `refreshToken` que devuelve la respuesta (nunca el viejo). El refresh usa single-flight (`refreshAccessToken` en `authServices.ts`) para que peticiones concurrentes con 401 compartan un único refresh y no roten en paralelo.
 - `authenticatedFetch` (in `authServices.ts`) adds the Bearer header, retries once after a 401 with a refreshed token, and logs out + redirects to `/login` if refresh fails. All services must use it.
+- `authStore.logout()` limpia el estado local Y llama `POST /auth/logout` con el refresh token (best-effort, ignora errores) para invalidarlo server-side.
 - `TokenRefreshHandler` (mounted once in `App.tsx`) refreshes every 4 min and on tab focus.
 - Roles: `ROLE_ADMIN` → `/admin`, `ROLE_USER` → `/dashboard`. `ProtectedRoute` handles role-based redirects and injects `user`/`onLogout` props.
 - **Route order matters** in `App.tsx`: static ventas routes (`/todas`, `/crear`, `/editar/:id`) must be declared before the dynamic `/dashboard/ventas/:id`.

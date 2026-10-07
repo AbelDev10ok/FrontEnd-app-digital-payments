@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, ShoppingBag, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, ShoppingBag, Trash2, CheckCircle2, AlertTriangle } from 'lucide-react';
 import Load from '@/shared/components/feedback/Load';
 import { Client } from '@/shared/types/client';
 import InfoCliente from '@features/clients/components/InfoCliente';
@@ -10,6 +10,7 @@ import { clientService } from '@features/clients/services/clientServices';
 import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
 import { Alert, Card } from '@/shared/components/ui';
+import Button from '@/shared/components/ui/Button';
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -148,6 +149,8 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
     );
   }
 
+  const deudaTotal = financialStats.deudaVentas + financialStats.deudaPrestamos;
+
   return (
     <DashboardLayout title={`Cliente: ${client.name}`} user={user} onLogout={onLogout}>
       <div className="space-y-6">
@@ -159,13 +162,20 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
-          <div className="w-12 h-12 bg-gradient-to-r from-brand-500 to-brand-600 rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 bg-brand-600 shadow-sm rounded-full flex items-center justify-center">
             <span className="text-white font-medium text-lg">
               {client.name.split(' ').map(n => n[0]).join('')}
             </span>
           </div>
           <div>
-            <h2 className="text-2xl font-semibold text-gray-900">{client.name}</h2>
+            <h2 className="text-2xl font-display font-bold tracking-tight text-gray-900 flex items-center gap-2">
+              {client.name}
+              {!loadingStats && (
+                deudaTotal > 0
+                  ? <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700"><AlertTriangle className="w-3.5 h-3.5" />Con deuda</span>
+                  : <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"><CheckCircle2 className="w-3.5 h-3.5" />Al día</span>
+              )}
+            </h2>
             <p className="text-sm text-gray-500">ID: {client.id}</p>
           </div>
         </div>
@@ -193,37 +203,42 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
         {/* Action Buttons */}
         <div className="flex justify-end space-x-4">
           <Link
-            to={`/dashboard/ventas/todas?clientName=${encodeURIComponent(client.name)}`}
-            className="px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors duration-200 flex items-center gap-2"
+            to={`/dashboard/ventas/todas?kind=VENTA&clientName=${encodeURIComponent(client.name)}`}
           >
-            <ShoppingBag className="w-5 h-5" />
-            Ver Ventas
+            <Button variant="secondary" size="lg" leftIcon={<ShoppingBag className="w-5 h-5" />}>
+              Ver Ventas
+            </Button>
           </Link>
           <Link
               to={`/dashboard/clientes/editar/${client.id}`}
-              className="px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors duration-200"
-          >Editar Cliente
+          >
+            <Button variant="secondary" size="lg">Editar Cliente</Button>
           </Link>
           {client.seller ? (
-            <button
+            <Button
+              variant="dangerOutline"
+              size="lg"
               onClick={handleDeshabilitarVendedor}
-              className="px-6 py-3 border border-red-200 text-red-700 bg-red-50 rounded-xl hover:bg-red-100 transition-colors duration-200">
+            >
               Deshabilitar Vendedor
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
+              variant="brandSoft"
+              size="lg"
               onClick={handleHabilitarVendedor}
-              className="px-6 py-3 border border-brand-200 text-brand-700 bg-brand-50 rounded-xl hover:bg-brand-100 transition-colors duration-200">
+            >
               Habilitar como Vendedor
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant="dangerOutline"
+            size="lg"
             onClick={handleEliminarCliente}
-            className="px-6 py-3 border border-red-200 text-red-700 bg-red-50 rounded-xl hover:bg-red-100 transition-colors duration-200 flex items-center gap-2"
+            leftIcon={<Trash2 className="w-5 h-5" />}
           >
-            <Trash2 className="w-5 h-5" />
             Eliminar Cliente
-          </button>
+          </Button>
         </div>
       </div>
     </DashboardLayout>

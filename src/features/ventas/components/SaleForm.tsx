@@ -16,7 +16,7 @@ export interface SaleFormData {
   quantityFees: number;
   payments: string;
   cost: number;
-  productTypeId: number;
+  productTypeId: number | null;
 }
 
 interface SaleFormState {
@@ -27,7 +27,7 @@ interface SaleFormState {
   quantityFees: string | number;
   payments: string;
   cost: string | number;
-  productTypeId: number;
+  productTypeId: number | null;
 }
 
 interface SaleFormProps {
@@ -39,6 +39,8 @@ interface SaleFormProps {
   productTypes: ProductTypeDto[];
   onDelete?: () => Promise<void> | void;
   showFinancialFields?: boolean;
+  productTypeLocked?: boolean;
+  descriptionProductLocked?: boolean;
 }
 
 const SaleForm: React.FC<SaleFormProps> = ({
@@ -49,7 +51,9 @@ const SaleForm: React.FC<SaleFormProps> = ({
   cancelTo,
   productTypes,
   onDelete,
-  showFinancialFields = true
+  showFinancialFields = true,
+  productTypeLocked = false,
+  descriptionProductLocked = false
 }) => {
   const [formData, setFormData] = useState<SaleFormState>({
     descriptionProduct: '',
@@ -58,21 +62,13 @@ const SaleForm: React.FC<SaleFormProps> = ({
     quantityFees: '',
     payments: 'MENSUAL',
     cost: '',
-    productTypeId: 0
+    productTypeId: null
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Determinar si el tipo seleccionado es PRESTAMO para ocultar la descripción
-  const selectedProductType = productTypes.find(pt => pt.id === formData.productTypeId);
-  const isPrestamo = selectedProductType?.name === "PRESTAMO";
-
-  // Auto-completar descripción si es préstamo
-  useEffect(() => {
-    if (isPrestamo) {
-      setFormData(prev => ({ ...prev, descriptionProduct: 'Préstamo personal' }));
-    }
-  }, [isPrestamo]);
+  // Determinar si la transacción es un préstamo por su kind (no por categoría)
+  const isPrestamo = initialValues?.kind === 'PRESTAMO';
 
   useEffect(() => {
     if (initialValues) {
@@ -85,7 +81,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
         quantityFees: initialValues.quantityFees || 1,
         payments: initialValues.typePayments,
         cost: initialValues.cost,
-        productTypeId: initialValues .productType?.id 
+        productTypeId: initialValues.productType?.id ?? null
       });
     }
   }, [initialValues]);
@@ -104,7 +100,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
         setFormData(prev => ({ ...prev, [name]: value }));
       }
     } else if (name === 'productTypeId') {
-      setFormData(prev => ({ ...prev, [name]: parseInt(value) || 0 }));
+      setFormData(prev => ({ ...prev, [name]: value === '' ? null : (parseInt(value) || null) }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -120,7 +116,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
     const quantityFees = Number(formData.quantityFees);
     const cost = Number(formData.cost);
 
-    if (!formData.descriptionProduct.trim()) {
+    if (!formData.descriptionProduct.trim() && !isPrestamo) {
       newErrors.descriptionProduct = 'La descripción es obligatoria';
     }
 
@@ -151,7 +147,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
       }
     }
 
-    if (!formData.productTypeId) {
+    if (!isPrestamo && !formData.productTypeId) {
       newErrors.productTypeId = 'El tipo de producto es obligatorio';
     }
 
@@ -178,23 +174,22 @@ const SaleForm: React.FC<SaleFormProps> = ({
 
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+    <div className="bg-white rounded-card shadow-card">
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Descripción */}
-          {!isPrestamo ? (
-            <div className="md:col-span-2">
-              <InputWithIcon
-                id="descriptionProduct"
-                name="descriptionProduct"
-                label="Descripción del Producto *"
-                value={formData.descriptionProduct}
-                onChange={handleInputChange}
-                placeholder="Ej: Televisor Samsung 50'"
-                error={errors.descriptionProduct}
-              />
-            </div>
-          ) : null}
+          <div className="md:col-span-2">
+            <InputWithIcon
+              id="descriptionProduct"
+              name="descriptionProduct"
+              label="Descripción del Producto *"
+              value={formData.descriptionProduct}
+              onChange={handleInputChange}
+              placeholder="Ej: Televisor Samsung 50'"
+              error={errors.descriptionProduct}
+              disabled={descriptionProductLocked}
+            />
+          </div>
 
           {/* Monto Total */}
           {showFinancialFields && (
@@ -217,19 +212,22 @@ const SaleForm: React.FC<SaleFormProps> = ({
             </div>
           )}
 
-          {/* Tipo de Producto */}
-          <div>
-            <SelectWithIcon
-              id="productTypeId"
-              name="productTypeId"
-              label="Tipo de Producto *"
-              value={formData.productTypeId}
-              onChange={handleInputChange}
-              options={[{ value: '', label: 'Selecciona un tipo' }, ...productTypes.map(pt => ({ value: String(pt.id), label: pt.name }))]}
-              icon={<Tv className="w-4 h-4 text-brand-600" />}
-              error={errors.productTypeId}
-            />
-          </div>
+          {/* Tipo de Producto (solo ventas) */}
+          {!isPrestamo && (
+            <div>
+              <SelectWithIcon
+                id="productTypeId"
+                name="productTypeId"
+                label="Tipo de Producto *"
+                value={formData.productTypeId ?? ''}
+                onChange={handleInputChange}
+                options={[{ value: '', label: 'Selecciona un tipo' }, ...productTypes.map(pt => ({ value: String(pt.id), label: pt.name }))]}
+                icon={<Tv className="w-4 h-4 text-brand-600" />}
+                error={errors.productTypeId}
+                disabled={productTypeLocked}
+              />
+            </div>
+          )}
 
           {/* Costo */}
           {showFinancialFields && (

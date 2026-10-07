@@ -20,11 +20,11 @@ const SaleRow: React.FC<Props> = ({ sale, selectedStatus }) => {
   };
 
   return (
-    <tr key={sale.id} className="hover:bg-gray-50">
+    <tr key={sale.id} className="hover:bg-gray-50/60 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
-          <div className="w-10 h-10 bg-gradient-to-r from-brand-500 to-brand-600 rounded-full flex items-center justify-center">
-            <span className="text-white font-medium text-sm">#{sale.id}</span>
+          <div className="w-10 h-10 bg-brand-600 shadow-sm rounded-full flex items-center justify-center">
+            <span className="text-white font-mono font-medium text-sm">#{sale.id}</span>
           </div>
           <div className="ml-4">
             <div className="text-sm font-medium text-gray-900">
@@ -43,10 +43,10 @@ const SaleRow: React.FC<Props> = ({ sale, selectedStatus }) => {
         <div className="text-sm text-gray-500">{sale.client.telefono}</div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm font-medium text-gray-900">
+        <div className="text-sm font-medium text-gray-900 font-mono tabular-nums">
           {formatCurrency(sale.amountFee)}
         </div>
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-gray-500 font-mono tabular-nums">
           Deuda : {formatCurrency(sale.remainingAmount)}
         </div>
       </td>

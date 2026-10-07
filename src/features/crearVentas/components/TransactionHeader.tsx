@@ -1,21 +1,23 @@
-import { Plus, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import React from 'react';
 import { PageHeader } from '@/shared/components/ui';
 
 interface Props {
-  title?: string;
-  subtitle?: string;
+  type?: "VENTA" | "PRESTAMO";
 }
 
-const TransactionHeader: React.FC<Props> = ({ title = 'Nueva Transacción', subtitle = 'Crear nueva venta' }) => {
+const TransactionHeader: React.FC<Props> = ({ type = "VENTA" }) => {
+  const isLoan = type === "PRESTAMO";
   return (
     <PageHeader
-      title={title}
-      subtitle={subtitle}
-      icon={<Plus className="w-6 h-6 text-brand-600" />}
+      subtitle={isLoan ? "Crear nuevo préstamo" : "Crear nueva venta"}
+      icon={<ArrowLeft className="w-6 h-6 text-brand-600" />}
       actions={
-        <Link to="/dashboard/ventas" className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+        <Link
+          to={isLoan ? "/dashboard/ventas/todas?kind=PRESTAMO" : "/dashboard/ventas/todas"}
+          className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+        >
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </Link>
       }

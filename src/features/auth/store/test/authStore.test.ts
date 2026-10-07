@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthStore } from "../authStore";
-import { login as loginService } from "@features/auth/services/authServices";
+import {
+  login as loginService,
+  logout as logoutService,
+} from "@features/auth/services/authServices";
 
 vi.mock("@features/auth/services/authServices", () => ({
   login: vi.fn(),
+  logout: vi.fn(),
+  refreshAccessToken: vi.fn(),
   refreshToken: vi.fn(),
 }));
 
@@ -76,6 +81,25 @@ describe("authStore", () => {
     expect(state.accessToken).toBeNull();
     expect(state.refreshToken).toBeNull();
     expect(state.user).toBeNull();
+  });
+
+  it("logout invoca al backend para invalidar el refresh token", () => {
+    useAuthStore.setState({
+      user: { email: "x@y.com", role: "ROLE_USER" },
+      accessToken: "t",
+      refreshToken: "rt-para-invalidar",
+      isAuthenticated: true,
+    });
+
+    useAuthStore.getState().logout();
+
+    expect(vi.mocked(logoutService)).toHaveBeenCalledWith("rt-para-invalidar");
+  });
+
+  it("logout sin refresh token no llama al backend", () => {
+    useAuthStore.getState().logout();
+
+    expect(vi.mocked(logoutService)).not.toHaveBeenCalled();
   });
 
   it("setTokens extrae rol y email del nuevo token", () => {

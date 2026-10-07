@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { neutral, neutralBg, radius } from '@/shared/theme';
 
 interface ModalProps {
   isOpen: boolean;
@@ -15,18 +16,22 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4"
+      className="fixed inset-0 bg-gray-950/50 backdrop-blur-sm z-50 flex justify-center items-center p-4"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
     >
       <div
-        className="relative w-full max-w-md bg-white rounded-lg shadow-xl p-6"
-        onClick={(e) => e.stopPropagation()} 
+        className={`relative w-full max-w-md bg-white ${radius.card} shadow-xl p-6`}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">{title}</h3>
+          <h3 className={`font-display text-lg font-bold tracking-tight text-brand-950`}>{title}</h3>
           <button
             onClick={onClose}
-            className="p-1 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+            aria-label="Cerrar"
+            className={`p-1.5 rounded-full ${neutral.muted} ${neutralBg.hover} hover:text-gray-800 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600`}
           >
             <X className="w-5 h-5" />
           </button>

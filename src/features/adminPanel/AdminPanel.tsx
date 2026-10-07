@@ -1,5 +1,5 @@
 import { Shield, Users, Settings, Database, AlertTriangle } from 'lucide-react';
-import Layout from '@/shared/components/layout/Layout';
+import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import { StatCard, Card } from '@/shared/components/ui';
 import type { StatTone } from '@/shared/components/ui';
 
@@ -42,14 +42,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, onLogout }) => {
   ];
 
   return (
-    <Layout title="Panel de Administración" user={user} onLogout={onLogout}>
+    <DashboardLayout title="Panel de Administración" user={user} onLogout={onLogout}>
       <div className="space-y-6">
-        <div className="bg-gradient-to-r from-brand-600 to-brand-700 rounded-3xl p-8 text-white">
+        <div className="rounded-card bg-brand-950 p-8 text-white">
           <div className="flex items-center space-x-4">
-            <Shield className="w-12 h-12 text-white" />
+            <Shield className="w-12 h-12 text-brand-300" />
             <div>
-              <h2 className="text-3xl font-bold mb-2">Panel de Administración</h2>
-              <p className="text-brand-100 text-lg">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-brand-300 mb-1">Administración</p>
+              <h2 className="text-3xl font-display font-bold tracking-tight text-white mb-2">Panel de Administración</h2>
+              <p className="text-brand-300 text-lg">
                 Control total del sistema y gestión de usuarios
               </p>
             </div>
@@ -96,10 +97,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, onLogout }) => {
                   <span className="font-medium text-brand-900">Configuración general</span>
                 </div>
               </button>
-              <button className="w-full text-left p-4 bg-orange-50 rounded-xl hover:bg-orange-100 transition-colors duration-200">
+              <button className="w-full text-left p-4 bg-amber-50 rounded-xl hover:bg-amber-100 transition-colors duration-200">
                 <div className="flex items-center space-x-3">
-                  <Database className="w-5 h-5 text-orange-600" />
-                  <span className="font-medium text-orange-900">Monitoreo de sistema</span>
+                  <Database className="w-5 h-5 text-amber-600" />
+                  <span className="font-medium text-amber-900">Monitoreo de sistema</span>
                 </div>
               </button>
             </div>
@@ -120,7 +121,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, onLogout }) => {
                     item.type === 'success'
                       ? 'bg-emerald-500'
                       : item.type === 'warning'
-                        ? 'bg-yellow-500'
+                        ? 'bg-amber-500'
                         : 'bg-brand-500'
                   }`}
                 ></div>
@@ -133,7 +134,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, onLogout }) => {
           </div>
         </Card>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 };
 

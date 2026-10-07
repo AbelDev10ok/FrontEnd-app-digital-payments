@@ -12,11 +12,12 @@ interface Props {
   options: Option[];
   icon?: React.ReactNode;
   required?: boolean;
+  disabled?: boolean;
   error?: string;
   className?: string;
 }
 
-const SelectWithIcon: React.FC<Props> = ({ id, name, label, value, onChange, options, icon, required, error, className = '' }) => {
+const SelectWithIcon: React.FC<Props> = ({ id, name, label, value, onChange, options, icon, required, disabled, error, className = '' }) => {
   return (
     <Field label={label ?? ''} htmlFor={id} error={error} required={required}>
       <div className="relative">
@@ -27,8 +28,9 @@ const SelectWithIcon: React.FC<Props> = ({ id, name, label, value, onChange, opt
           value={value}
           onChange={onChange}
           required={required}
+          disabled={disabled}
           invalid={!!error}
-          className={`${icon ? 'pl-10 pr-4' : ''} py-3 ${className}`}
+          className={`${icon ? 'pl-10 pr-4' : ''} py-3 ${disabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''} ${className}`}
         >
           {options.map(o => <option key={String(o.value)} value={o.value}>{o.label}</option>)}
         </Select>

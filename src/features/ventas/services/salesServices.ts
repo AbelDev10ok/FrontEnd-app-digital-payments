@@ -3,11 +3,13 @@ import { Client } from "@/shared/types/client";
 import type { DashboardStatsDto } from "@/shared/types/dashboard";
 import {
   CreateSaleRequest,
+  ProductDto,
   ProductTypeDto,
   SaleResponseDto,
+  SalesCountsDto,
   UpdateSaleRequest,
 } from "@/shared/types/sales";
-import { CLIENTS_API_URL, LOANS_API_URL, PRODUCT_TYPES_API_URL } from "@/shared/config/api";
+import { CLIENTS_API_URL, LOANS_API_URL, PRODUCTS_API_URL, PRODUCT_TYPES_API_URL, SALES_API_URL } from "@/shared/config/api";
 import { handleResponse } from "@/shared/utils/http";
 
 export interface Page<T> {
@@ -42,7 +44,7 @@ export interface Page<T> {
 export const salesService = {
   async getSellers(): Promise<Client[]> {
     const response = await authenticatedFetch(
-      `${CLIENTS_API_URL}/vendedores`,
+      `${CLIENTS_API_URL}/vendedores/activos`,
     );
     if (!response.ok) {
       throw new Error("Error al obtener los vendedores");
@@ -70,11 +72,144 @@ export const salesService = {
     return response.json();
   },
 
-  async getAllSales(
-    productType: string = "PRESTAMO",
-  ): Promise<SaleResponseDto[]> {
+  async createProductType(name: string): Promise<ProductTypeDto> {
+    const response = await authenticatedFetch(PRODUCT_TYPES_API_URL, {
+      method: "POST",
+      body: JSON.stringify(name),
+    });
+    if (!response.ok) {
+      throw new Error("Error al crear la categoría");
+    }
+    return response.json();
+  },
+
+  async updateProductType(id: number, name: string): Promise<void> {
+    const response = await authenticatedFetch(`${PRODUCT_TYPES_API_URL}/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(name),
+    });
+    if (!response.ok) {
+      try {
+        const apiResponse = await response.json();
+        if (apiResponse?.updated === false) {
+          throw new Error("No se pudo actualizar la categoría (verifica el nombre)");
+        }
+        throw new Error(apiResponse?.message || "Error al actualizar la categoría");
+      } catch (e) {
+        throw new Error(e instanceof Error ? e.message : "Ocurrió un error desconocido");
+      }
+    }
+  },
+
+  async deleteProductType(id: number): Promise<void> {
+    const response = await authenticatedFetch(`${PRODUCT_TYPES_API_URL}/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      try {
+        const apiResponse = await response.json();
+        if (apiResponse?.deleted === false) {
+          throw new Error("La categoría está en uso y no se puede eliminar");
+        }
+        throw new Error(apiResponse?.message || "Error al eliminar la categoría");
+      } catch (e) {
+        throw new Error(e instanceof Error ? e.message : "Ocurrió un error desconocido");
+      }
+    }
+  },
+
+  async getProducts(): Promise<ProductDto[]> {
+    const response = await authenticatedFetch(`${PRODUCTS_API_URL}/all`);
+    if (!response.ok) {
+      throw new Error("Error al obtener los productos");
+    }
+    return response.json();
+  },
+
+  async createProduct(payload: {
+    name: string;
+    price?: number | null;
+    stock?: number | null;
+    productTypeId?: number | null;
+  }): Promise<void> {
+    const response = await authenticatedFetch(PRODUCTS_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: payload.name,
+        price: payload.price ?? null,
+        stock: payload.stock ?? null,
+        productTypeId: payload.productTypeId ?? null,
+      }),
+    });
+    if (!response.ok) {
+      try {
+        const apiResponse = await response.json();
+        if (apiResponse?.created === false) {
+          throw new Error("No se pudo crear el producto (verifica el nombre, el precio, el stock y la categoría)");
+        }
+        throw new Error(apiResponse?.message || "Error al crear el producto");
+      } catch (e) {
+        if (e instanceof Error) throw e;
+        throw new Error("Ocurrió un error desconocido");
+      }
+    }
+  },
+
+  async updateProduct(
+    id: number,
+    payload: {
+      name: string;
+      price?: number | null;
+      stock?: number | null;
+      productTypeId?: number | null;
+    },
+  ): Promise<void> {
+    const response = await authenticatedFetch(`${PRODUCTS_API_URL}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: payload.name,
+        price: payload.price ?? null,
+        stock: payload.stock ?? null,
+        productTypeId: payload.productTypeId ?? null,
+      }),
+    });
+    if (!response.ok) {
+      try {
+        const apiResponse = await response.json();
+        if (apiResponse?.updated === false) {
+          throw new Error("No se pudo actualizar el producto (verifica el nombre, el precio, el stock y la categoría)");
+        }
+        throw new Error(apiResponse?.message || "Error al actualizar el producto");
+      } catch (e) {
+        if (e instanceof Error) throw e;
+        throw new Error("Ocurrió un error desconocido");
+      }
+    }
+  },
+
+  async deleteProduct(id: number): Promise<void> {
+    const response = await authenticatedFetch(`${PRODUCTS_API_URL}/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      try {
+        const apiResponse = await response.json();
+        if (apiResponse?.deleted === false) {
+          throw new Error("El producto está en uso y no se puede eliminar");
+        }
+        throw new Error(apiResponse?.message || "Error al eliminar el producto");
+      } catch (e) {
+        if (e instanceof Error) throw e;
+        throw new Error("Ocurrió un error desconocido");
+      }
+    }
+  },
+
+  async getAllSales(): Promise<SaleResponseDto[]> {
     const response = await authenticatedFetch(
-      `${LOANS_API_URL}?productType=${productType}`,
+      `${SALES_API_URL}?kind=VENTA`,
     );
     return handleResponse<SaleResponseDto[]>(response);
   },
@@ -88,9 +223,15 @@ export const salesService = {
     clientName?: string;
     descriptionProduct?: string;
     status?: string;
+    aCobrar?: boolean;
     productType?: string;
+    kind?: string;
+    typePayments?: string;
+    minAmount?: number;
+    maxAmount?: number;
+    sort?: string;
   }): Promise<Page<SaleResponseDto>> {
-    const url = new URL(LOANS_API_URL);
+    const url = new URL(SALES_API_URL);
     url.searchParams.append("page", params.page.toString());
     url.searchParams.append("size", params.size.toString());
     if (params.year) url.searchParams.append("year", params.year.toString());
@@ -101,16 +242,33 @@ export const salesService = {
     if (params.descriptionProduct)
       url.searchParams.append("descriptionProduct", params.descriptionProduct);
     if (params.status) url.searchParams.append("status", params.status);
+    if (params.aCobrar) url.searchParams.append("aCobrar", "true");
     if (params.productType)
       url.searchParams.append("productType", params.productType);
+    if (params.kind) url.searchParams.append("kind", params.kind);
+    if (params.typePayments)
+      url.searchParams.append("typePayments", params.typePayments);
+    if (params.minAmount !== undefined)
+      url.searchParams.append("minAmount", params.minAmount.toString());
+    if (params.maxAmount !== undefined)
+      url.searchParams.append("maxAmount", params.maxAmount.toString());
+    if (params.sort) url.searchParams.append("sort", params.sort);
 
     const response = await authenticatedFetch(url.toString());
     return handleResponse<Page<SaleResponseDto>>(response);
   },
 
+  async getSalesCounts(kind?: string): Promise<SalesCountsDto> {
+    const url = new URL(`${SALES_API_URL}/counts`);
+    if (kind) url.searchParams.append("kind", kind);
+
+    const response = await authenticatedFetch(url.toString());
+    return handleResponse<SalesCountsDto>(response);
+  },
+
   async getAllLoans(): Promise<SaleResponseDto[]> {
     const response = await authenticatedFetch(
-      `${LOANS_API_URL}?productType=VENTA`,
+      `${SALES_API_URL}?kind=PRESTAMO`,
     );
     return handleResponse<SaleResponseDto[]>(response);
   },
@@ -161,12 +319,31 @@ export const salesService = {
     }
   },
 
+  async cancelSale(id: number, refund: boolean = true): Promise<SaleResponseDto> {
+    const response = await authenticatedFetch(`${LOANS_API_URL}/cancel/${id}?refund=${refund}`, {
+      method: "PUT",
+    });
+
+    if (!response.ok) {
+      try {
+        const apiResponse = await response.json();
+        throw new Error(apiResponse.message);
+      } catch (e) {
+        throw new Error(e instanceof Error ? e.message : "Ocurrió un error desconocido");
+      }
+    }
+
+    const apiResponse = await response.json();
+    return apiResponse.data;
+  },
+
   async markFeeAsPaid(
     feeId: number,
     amount: number,
     date: string,
+    paymentMethod: string = 'EFECTIVO',
   ): Promise<void> {
-    const url = `${LOANS_API_URL}/collects-fee/${feeId}/pay?amount=${amount}&date=${date}`;
+    const url = `${LOANS_API_URL}/collects-fee/${feeId}/pay?amount=${amount}&date=${date}&paymentMethod=${paymentMethod}`;
     const response = await authenticatedFetch(url, { method: "POST" });
 
     if (!response.ok) {
@@ -199,6 +376,8 @@ export const salesService = {
 
     // ATENCIÓN: Se asume que si el monto es 0, no se quiere modificar en este contexto.
     // Solo agregamos 'amount' a la URL si es un número válido, no nulo y diferente de 0.
+    // Intencional: enviar amount=0 haría que el backend desmarque el pago (paid=false),
+    // y un 0 accidental al editar una cuota pagada desmarcaría el cobro por error.
     if (amount !== null && !isNaN(amount)) {
       params.append("amount", amount.toString());
     }
@@ -236,36 +415,15 @@ export const salesService = {
     }
   },
 
-  async getSalesStats(): Promise<{
-    totalSales: number;
-    totalLoans: number;
-    completedSales: number;
-    pendingSales: number;
-    totalRevenue: number;
-    totalOutstanding: number;
-  }> {
-    const response = await authenticatedFetch(`${LOANS_API_URL}/stats`);
-    // Se asume que este endpoint también sigue el nuevo formato
-    return handleResponse<{
-      totalSales: number;
-      totalLoans: number;
-      completedSales: number;
-      pendingSales: number;
-      totalRevenue: number;
-      totalOutstanding: number;
-    }>(response);
-  },
-
   async getDashboardStats(
     year: number,
     month: number,
   ): Promise<DashboardStatsDto> {
-    const url = new URL(`${LOANS_API_URL}/stats`);
+    const url = new URL(`${SALES_API_URL}/dashboard`);
     url.searchParams.append("year", year.toString());
     url.searchParams.append("month", month.toString());
 
-    const urlString = url.toString();
-    const response = await authenticatedFetch(urlString);
+    const response = await authenticatedFetch(url.toString());
     return handleResponse<DashboardStatsDto>(response);
   },
 };

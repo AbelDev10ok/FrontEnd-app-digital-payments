@@ -17,14 +17,13 @@ export const useClientsFilters = () => {
   ]);
 
   useEffect(() => {
-    // Obtener lista de vendedores desde el backend
+    // Obtener lista de vendedores activos desde el backend
     try {
-      clientService.getVendedoresConClientesAsignados().then((vendedoresList: Client[]) => {
+      clientService.getVendedoresActivos().then((vendedoresList: Client[]) => {
         // Crear array con opciones: Todos, vendedores únicos, Sin vendedor
-        // Crear array con opciones: Todos, vendedores únicos, Sin vendedor.
-        // NOTA: El backend debería devolver tanto vendedores activos como inactivos 
-        // que tengan clientes asignados para que el filtro funcione correctamente con históricos.
-        
+        // NOTA: Solo se listan vendedores habilitados; para deshabilitar uno debe
+        // quedar sin clientes asignados (validado en el backend).
+
         // Usamos un Map para deduplicar por ID de forma eficiente (O(N)) en lugar de por nombre
         const uniqueSellersMap = new Map();
         vendedoresList.forEach(v => {

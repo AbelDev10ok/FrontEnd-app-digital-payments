@@ -30,11 +30,11 @@ const AutocompleteClient: React.FC<Props> = ({ value, clients, onChange, placeho
             onChange={e => { setSearch(e.target.value); setOpen(true); }}
             onBlur={() => setTimeout(() => setOpen(false), 150)}
             placeholder={placeholder}
-            className={`w-full pl-10 pr-4 py-3 border ${error ? 'border-red-500' : 'border-gray-200'} rounded-xl`}
+            className={`w-full pl-10 pr-4 py-3 border ${error ? 'border-red-500' : 'border-gray-200'} rounded-input`}
           />
           <div className="absolute left-3 top-3 text-gray-400">👤</div>
           {open && filtered.length > 0 && (
-            <ul className="absolute z-10 bg-white border border-gray-200 rounded-xl mt-1 w-full max-h-40 overflow-y-auto">
+            <ul className="absolute z-10 bg-white border border-gray-200 rounded-xl shadow-card mt-1 w-full max-h-40 overflow-y-auto">
               {filtered.map(c => (
                 <li key={c.id} className="px-4 py-2 cursor-pointer hover:bg-brand-100" onMouseDown={() => { onChange(c.id); setSearch(c.name); setOpen(false); }}>
                   {c.name}

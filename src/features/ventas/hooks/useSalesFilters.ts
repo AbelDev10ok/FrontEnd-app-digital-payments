@@ -15,10 +15,19 @@ export const useSalesFilters = () => {
   const [selectedProductType, setSelectedProductType] = useState("");
   const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
   const [specificDate, setSpecificDate] = useState("");
-  const [showCalendar, setShowCalendar] = useState(false);
 
-  const year = persistedYear.toString();
-  const month = persistedMonth.toString().padStart(2, "0");
+  const year =
+    typeof persistedYear === "number" &&
+    persistedYear >= 2000 &&
+    persistedYear <= 2100
+      ? persistedYear.toString()
+      : "";
+  const month =
+    typeof persistedMonth === "number" &&
+    persistedMonth >= 1 &&
+    persistedMonth <= 12
+      ? persistedMonth.toString().padStart(2, "0")
+      : "";
 
   const setYear = useCallback((newYear: string) => {
     setPersistedFilter({ year: parseInt(newYear, 10) });
@@ -51,8 +60,6 @@ export const useSalesFilters = () => {
     setMonth,
     specificDate,
     setSpecificDate,
-    showCalendar,
-    setShowCalendar,
     date: getFinalDate(),
     setDate: setSpecificDate,
   };
