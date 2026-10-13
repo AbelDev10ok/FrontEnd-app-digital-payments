@@ -54,7 +54,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, searchTerm }) => {
                               </span>
                             </div>
                             <div className="ml-4">
-                              <div className={`text-sm font-medium ${neutral.primary}`}>{cliente.name}</div>
+                              <div className={`text-sm font-medium max-w-[12rem] truncate ${neutral.primary}`} title={cliente.name}>{cliente.name}</div>
                               <div className={`text-sm ${neutral.muted}`}>ID: {cliente.id}</div>
                             </div>
                           </div>

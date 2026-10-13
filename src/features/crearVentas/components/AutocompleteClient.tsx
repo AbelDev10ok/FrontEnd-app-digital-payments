@@ -1,5 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { User } from 'lucide-react';
 import { Client } from '@/shared/types/client';
+import useCombobox from '@/shared/hooks/useCombobox';
+
 interface Props {
   value?: number;
   clients: Client[];
@@ -10,7 +13,14 @@ interface Props {
 
 const AutocompleteClient: React.FC<Props> = ({ value, clients, onChange, placeholder = 'Buscar cliente', error }) => {
   const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
+  // Selección optimista: muestra el chip al elegir aunque el padre aún no haya
+  // propagado el nuevo value (y mientras se sincroniza, si el value no matchea)
+  const [picked, setPicked] = useState<Client | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const focusInputOnClear = useRef(false);
+  const labelId = useId();
+  const inputId = `${labelId}-input`;
+  const errorId = `${labelId}-error`;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -18,43 +28,124 @@ const AutocompleteClient: React.FC<Props> = ({ value, clients, onChange, placeho
     return clients.filter(c => c.name.toLowerCase().includes(q));
   }, [clients, search]);
 
-  const selected = clients.find(c => c.id === Number(value));
+  const selected = clients.find(c => c.id === Number(value)) ?? picked;
+
+  const applyPick = (c: Client) => {
+    onChange(c.id);
+    setPicked(c);
+    setSearch(c.name);
+  };
+
+  const { open, activeIndex, setActiveIndex, openList, closeList, handleKeyDown, listboxId, optionId, activeOptionId } = useCombobox({
+    optionCount: filtered.length,
+    onPick: (index) => {
+      const c = filtered[index];
+      if (c) applyPick(c);
+    },
+  });
+
+  const clearSelection = () => {
+    // El foco vuelve al campo de búsqueda para poder elegir otro cliente.
+    focusInputOnClear.current = true;
+    setPicked(null);
+    onChange(0);
+    setSearch('');
+  };
+
+  useEffect(() => {
+    if (!selected && focusInputOnClear.current) {
+      focusInputOnClear.current = false;
+      inputRef.current?.focus();
+    }
+  }, [selected]);
 
   return (
     <div>
-      <label className="text-sm font-medium text-gray-700 mb-2 block">Cliente *</label>
+      {selected ? (
+        <span id={labelId} className="text-sm font-medium text-gray-700 mb-2 block">
+          Cliente *
+        </span>
+      ) : (
+        <label id={labelId} htmlFor={inputId} className="text-sm font-medium text-gray-700 mb-2 block">
+          Cliente *
+        </label>
+      )}
+
       {!selected && (
         <div className="relative">
           <input
+            ref={inputRef}
+            id={inputId}
+            type="text"
+            role="combobox"
+            aria-expanded={open}
+            aria-controls={listboxId}
+            aria-autocomplete="list"
+            aria-activedescendant={activeOptionId}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
+            autoComplete="off"
             value={search}
-            onChange={e => { setSearch(e.target.value); setOpen(true); }}
-            onBlur={() => setTimeout(() => setOpen(false), 150)}
+            onChange={e => { setSearch(e.target.value); openList(); }}
+            onClick={openList}
+            onKeyDown={handleKeyDown}
+            onBlur={closeList}
             placeholder={placeholder}
             className={`w-full pl-10 pr-4 py-3 border ${error ? 'border-red-500' : 'border-gray-200'} rounded-input`}
           />
-          <div className="absolute left-3 top-3 text-gray-400">👤</div>
-          {open && filtered.length > 0 && (
-            <ul className="absolute z-10 bg-white border border-gray-200 rounded-xl shadow-card mt-1 w-full max-h-40 overflow-y-auto">
-              {filtered.map(c => (
-                <li key={c.id} className="px-4 py-2 cursor-pointer hover:bg-brand-100" onMouseDown={() => { onChange(c.id); setSearch(c.name); setOpen(false); }}>
-                  {c.name}
-                </li>
-              ))}
-            </ul>
+          <div aria-hidden="true" className="absolute left-3 top-3 text-gray-400">
+            <User className="w-4 h-4" />
+          </div>
+          <ul
+            id={listboxId}
+            role="listbox"
+            aria-label="Sugerencias de clientes"
+            hidden={!open || filtered.length === 0}
+            // Evita el blur del input al elegir con el mouse (incluida la barra de scroll).
+            onMouseDown={e => e.preventDefault()}
+            className="absolute z-10 bg-white border border-gray-200 rounded-xl shadow-card mt-1 w-full max-h-40 overflow-y-auto"
+          >
+            {filtered.map((c, index) => (
+              <li
+                key={c.id}
+                id={optionId(index)}
+                role="option"
+                aria-selected={c.id === Number(value)}
+                className={`px-4 py-2 cursor-pointer ${index === activeIndex ? 'bg-brand-100' : 'hover:bg-brand-100'}`}
+                onClick={() => { applyPick(c); closeList(); }}
+                onMouseEnter={() => setActiveIndex(index)}
+              >
+                {c.name}
+              </li>
+            ))}
+          </ul>
+          {open && filtered.length === 0 && (
+            <div role="status" className="absolute z-10 bg-white border border-gray-200 rounded-xl shadow-card mt-1 w-full px-4 py-2 text-sm text-gray-500">
+              Sin resultados
+            </div>
           )}
         </div>
       )}
 
       {selected && (
-        <div className="inline-flex items-center gap-2 mt-2 bg-brand-50 text-brand-800 px-3 py-1 rounded-full text-sm">
+        <div role="group" aria-labelledby={labelId} className="inline-flex items-center gap-2 mt-2 bg-brand-50 text-brand-800 px-3 py-1 rounded-full text-sm">
           <span>{selected.name}</span>
-          <button type="button" className="ml-2 text-brand-600 hover:text-brand-800" onClick={() => onChange(0)}>
+          <button
+            type="button"
+            className="ml-2 text-brand-600 hover:text-brand-800"
+            onClick={clearSelection}
+            aria-label={`Quitar cliente ${selected.name}`}
+          >
             ×
           </button>
         </div>
       )}
 
-      {error && <div className="text-xs text-red-600 mt-1">{error}</div>}
+      {error && (
+        <p id={errorId} tabIndex={-1} data-error-message className="text-sm text-red-600 mt-1">
+          {error}
+        </p>
+      )}
     </div>
   );
 };

@@ -102,14 +102,16 @@ describe('Sidebar', () => {
     const user = userEvent.setup();
     renderSidebar('/dashboard');
     await user.click(screen.getByRole('button', { name: /Ventas/i }));
-    expect(await screen.findByText('4')).toBeInTheDocument();
-    expect(screen.getByText('10')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Todas 10/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /A Cobrar 4/ })).toBeInTheDocument();
   });
 
   it('expande solo préstamos al navegar con kind=PRESTAMO (no abre ventas)', () => {
     renderSidebar('/dashboard/ventas/todas?kind=PRESTAMO&status=ACTIVE');
     expect(screen.getAllByText('Nuevo Préstamo').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByText('Nueva Venta')).toHaveLength(1);
+    // Los submenús colapsados siguen en el DOM (animación de colapso), así que
+    // se consulta por rol, que sí respeta lo oculto.
+    expect(screen.getAllByRole('link', { name: 'Nueva Venta' })).toHaveLength(1);
     expect(screen.getByRole('button', { name: /Activas/i })).toHaveClass(
       'bg-brand-50',
     );
@@ -122,7 +124,7 @@ describe('Sidebar', () => {
     await waitFor(() =>
       expect(screen.getAllByText('Nueva Venta').length).toBeGreaterThanOrEqual(2),
     );
-    expect(screen.getAllByText('Nuevo Préstamo')).toHaveLength(1);
+    expect(screen.getAllByRole('link', { name: 'Nuevo Préstamo' })).toHaveLength(1);
   });
 
   it('Nuevo Préstamo abre el menú de préstamos y cierra el de ventas', async () => {
@@ -132,7 +134,7 @@ describe('Sidebar', () => {
     await waitFor(() =>
       expect(screen.getAllByText('Nuevo Préstamo').length).toBeGreaterThanOrEqual(2),
     );
-    expect(screen.getAllByText('Nueva Venta')).toHaveLength(1);
+    expect(screen.getAllByRole('link', { name: 'Nueva Venta' })).toHaveLength(1);
   });
 
   it('llama onNavigate al navegar', async () => {

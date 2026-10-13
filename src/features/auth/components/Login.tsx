@@ -1,33 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
-import { useAuthStore } from '@features/auth/store/authStore';
-import useNoIndex from '@hooks/useNoIndex';
-import { Alert, Button, Field } from '@/shared/components/ui';
-
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { useAuthStore } from "@features/auth/store/authStore";
+import useNoIndex from "@hooks/useNoIndex";
+import { Alert, Button, Field, fieldErrorId } from "@/shared/components/ui";
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+  const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   useNoIndex();
 
   const { login, isLoading, isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = 'Iniciar Sesión · Gestión de Cobros y Ventas';
+    document.title = "Iniciar Sesión · Gestión de Cobros y Ventas";
   }, []);
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      if (user.role === 'ROLE_ADMIN') {
-        navigate('/admin');
-      } else if (user.role === 'ROLE_USER') {
-        navigate('/dashboard');
+      if (user.role === "ROLE_ADMIN") {
+        navigate("/admin");
+      } else if (user.role === "ROLE_USER") {
+        navigate("/dashboard");
       }
     }
   }, [isAuthenticated, user, navigate]);
@@ -35,33 +34,33 @@ const Login: React.FC = () => {
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
-      setEmailError('El email es requerido');
+      setEmailError("El email es requerido");
       return false;
     }
     if (!emailRegex.test(email)) {
-      setEmailError('Ingresa un email válido');
+      setEmailError("Ingresa un email válido");
       return false;
     }
-    setEmailError('');
+    setEmailError("");
     return true;
   };
 
   const validatePassword = (password: string) => {
     if (!password) {
-      setPasswordError('La contraseña es requerida');
+      setPasswordError("La contraseña es requerida");
       return false;
     }
     if (password.length < 6) {
-      setPasswordError('La contraseña debe tener al menos 6 caracteres');
+      setPasswordError("La contraseña debe tener al menos 6 caracteres");
       return false;
     }
-    setPasswordError('');
+    setPasswordError("");
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
@@ -73,7 +72,16 @@ const Login: React.FC = () => {
     try {
       await login(email, password);
     } catch (err) {
-      setError('Credenciales inválidas. Por favor, verifica tu email y contraseña. ' + err);
+      if (err instanceof TypeError) {
+        // fetch() falla sin respuesta: problema de red, no de credenciales.
+        setError(
+          'No se pudo conectar con el servidor. Revisá tu conexión e intentá nuevamente.',
+        );
+      } else if (err instanceof Error && err.message) {
+        setError(err.message);
+      } else {
+        setError('No se pudo iniciar sesión. Intentá nuevamente.');
+      }
     }
   };
 
@@ -84,13 +92,19 @@ const Login: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-2xl mb-4 shadow-lg">
             <Lock className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-display font-bold tracking-tight text-brand-950 mb-2">Bienvenido</h1>
+          <h1 className="text-3xl font-display font-bold tracking-tight text-brand-950 mb-2">
+            Bienvenido
+          </h1>
           <p className="text-gray-600">Inicia sesión en tu cuenta</p>
         </div>
 
         <div className="bg-white rounded-card shadow-xl p-8 border border-gray-100">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <Field htmlFor="email" label="Email" error={emailError || undefined}>
+            <Field
+              htmlFor="email"
+              label="Email"
+              error={emailError || undefined}
+            >
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -102,56 +116,77 @@ const Login: React.FC = () => {
                     if (emailError) validateEmail(e.target.value);
                   }}
                   onBlur={() => validateEmail(email)}
+                  aria-invalid={emailError ? true : undefined}
+                  aria-describedby={emailError ? fieldErrorId('email') : undefined}
                   className={`w-full pl-12 pr-4 py-3 border rounded-input focus:outline-none focus:ring-2 transition-all duration-200 ${
                     emailError
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-200 focus:ring-brand-500 focus:border-brand-500'
+                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                      : "border-gray-200 focus:ring-brand-500 focus:border-brand-500"
                   }`}
                   placeholder="tu@email.com"
                 />
               </div>
             </Field>
 
-            <Field htmlFor="password" label="Contraseña" error={passwordError || undefined}>
+            <Field
+              htmlFor="password"
+              label="Contraseña"
+              error={passwordError || undefined}
+            >
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
                     if (passwordError) validatePassword(e.target.value);
                   }}
                   onBlur={() => validatePassword(password)}
+                  aria-invalid={passwordError ? true : undefined}
+                  aria-describedby={passwordError ? fieldErrorId('password') : undefined}
                   className={`w-full pl-12 pr-12 py-3 border rounded-input focus:outline-none focus:ring-2 transition-all duration-200 ${
                     passwordError
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-200 focus:ring-brand-500 focus:border-brand-500'
+                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                      : "border-gray-200 focus:ring-brand-500 focus:border-brand-500"
                   }`}
                   placeholder="Tu contraseña"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </Field>
 
             {error && <Alert tone="danger">{error}</Alert>}
 
-            <Button type="submit" isLoading={isLoading} size="lg" className="w-full">
-              {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+            <Button
+              type="submit"
+              isLoading={isLoading}
+              size="lg"
+              className="w-full"
+            >
+              {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
             </Button>
           </form>
         </div>
 
         <div className="text-center mt-8 text-sm text-gray-500">
-          ¿Problemas para iniciar sesión?{' '}
-          <a href="#" className="text-brand-600 hover:text-brand-500 font-medium">
+          ¿Problemas para iniciar sesión?{" "}
+          <a
+            href="#"
+            className="text-brand-600 hover:text-brand-500 font-medium"
+          >
             Contacta soporte
           </a>
         </div>

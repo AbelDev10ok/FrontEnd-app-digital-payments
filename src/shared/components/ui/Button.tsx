@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react';
 
 export type ButtonVariant =
   | 'primary'
@@ -15,10 +16,22 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ButtonSize;
   isLoading?: boolean;
   leftIcon?: ReactNode;
+  /** Desactiva el scale-on-press donde el movimiento distraería. */
+  static?: boolean;
+}
+
+/** Enlace de navegación con la apariencia de un botón (mismo estilo y press feedback). */
+export interface ButtonLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  to: string;
 }
 
 const base =
-  'inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60 disabled:cursor-not-allowed';
+  'inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-[color,background-color,border-color,box-shadow,transform] duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60 disabled:cursor-not-allowed';
+
+// Feedback táctil al presionar: siempre 0.96 (nunca por debajo de 0.95).
+const tapScale = 'active:scale-[0.96]';
 
 const variants: Record<ButtonVariant, string> = {
   primary:
@@ -49,17 +62,38 @@ export default function Button({
   disabled,
   className = '',
   type = 'button',
+  static: isStatic = false,
   ...rest
 }: ButtonProps) {
   return (
     <button
       type={type}
-      className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`${base} ${isStatic ? '' : tapScale} ${variants[variant]} ${sizes[size]} ${className}`}
       disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
       {...rest}
     >
       {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : leftIcon}
       {children}
     </button>
+  );
+}
+
+export function ButtonLink({
+  variant = 'secondary',
+  size = 'md',
+  to,
+  children,
+  className = '',
+  ...rest
+}: ButtonLinkProps) {
+  return (
+    <Link
+      to={to}
+      className={`${base} ${tapScale} ${variants[variant]} ${sizes[size]} ${className}`}
+      {...rest}
+    >
+      {children}
+    </Link>
   );
 }

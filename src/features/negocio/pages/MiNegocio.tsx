@@ -26,6 +26,19 @@ const FRECUENCIAS = [
 
 type Feedback = { tipo: 'ok' | 'error'; mensaje: string } | null;
 
+// Aviso inline de envío: los errores se anuncian al instante (role="alert"),
+// los éxitos de forma cortés (role="status").
+const FeedbackMsg = ({ feedback }: { feedback: NonNullable<Feedback> }) => (
+  <p
+    className={`mt-4 text-sm font-medium ${
+      feedback.tipo === 'ok' ? 'text-emerald-700' : 'text-red-600'
+    }`}
+    role={feedback.tipo === 'ok' ? 'status' : 'alert'}
+  >
+    {feedback.mensaje}
+  </p>
+);
+
 const TituloCard = ({ children }: { children: React.ReactNode }) => (
   <h2 className="font-display text-base font-bold tracking-tight text-brand-950 mb-4">{children}</h2>
 );
@@ -37,8 +50,12 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
   const [tasa, setTasa] = useState('');
   const [frecuencia, setFrecuencia] = useState('');
   const [cargando, setCargando] = useState(true);
-  const [guardandoDatos, setGuardandoDatos] = useState(false);
+  // Estado de envío por formulario: cada tarjeta muestra su propio spinner y su
+  // propio feedback (antes ambos botones cargaban juntos y el aviso de "Guardar
+  // defaults" aparecía en la tarjeta equivocada).
+  const [guardando, setGuardando] = useState<'datos' | 'defaults' | null>(null);
   const [feedbackDatos, setFeedbackDatos] = useState<Feedback>(null);
+  const [feedbackDefaults, setFeedbackDefaults] = useState<Feedback>(null);
 
   const [claveActual, setClaveActual] = useState('');
   const [claveNueva, setClaveNueva] = useState('');
@@ -66,8 +83,18 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
 
   const guardarDatos = async (e: React.FormEvent) => {
     e.preventDefault();
-    setGuardandoDatos(true);
-    setFeedbackDatos(null);
+    await guardar('datos');
+  };
+
+  const guardarDefaults = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await guardar('defaults');
+  };
+
+  const guardar = async (destino: 'datos' | 'defaults') => {
+    const setFeedback = destino === 'datos' ? setFeedbackDatos : setFeedbackDefaults;
+    setGuardando(destino);
+    setFeedback(null);
     try {
       const actualizado = await businessService.updateMyBusiness({
         name: nombre.trim(),
@@ -77,14 +104,14 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
       });
       setNegocio(actualizado);
       applyCurrency(actualizado.currency);
-      setFeedbackDatos({ tipo: 'ok', mensaje: 'Cambios guardados correctamente.' });
+      setFeedback({ tipo: 'ok', mensaje: 'Cambios guardados correctamente.' });
     } catch (err) {
-      setFeedbackDatos({
+      setFeedback({
         tipo: 'error',
         mensaje: err instanceof Error ? err.message : 'Error al guardar los cambios',
       });
     } finally {
-      setGuardandoDatos(false);
+      setGuardando(null);
     }
   };
 
@@ -150,25 +177,16 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
                     />
                   </Field>
                 </div>
-                {feedbackDatos && (
-                  <p
-                    className={`mt-4 text-sm font-medium ${
-                      feedbackDatos.tipo === 'ok' ? 'text-emerald-700' : 'text-red-600'
-                    }`}
-                    role="status"
-                  >
-                    {feedbackDatos.mensaje}
-                  </p>
-                )}
+                {feedbackDatos && <FeedbackMsg feedback={feedbackDatos} />}
                 <div className="mt-5 flex justify-end">
-                  <Button type="submit" isLoading={guardandoDatos} leftIcon={<Save className="w-4 h-4" />}>
+                  <Button type="submit" isLoading={guardando === 'datos'} leftIcon={<Save className="w-4 h-4" />}>
                     Guardar cambios
                   </Button>
                 </div>
               </Card>
             </form>
 
-            <form onSubmit={guardarDatos}>
+            <form onSubmit={guardarDefaults}>
               <Card className="p-6">
                 <TituloCard>Valores por defecto de préstamos</TituloCard>
                 <p className="-mt-3 mb-4 text-sm text-gray-500">
@@ -205,8 +223,9 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
                     </Select>
                   </Field>
                 </div>
+                {feedbackDefaults && <FeedbackMsg feedback={feedbackDefaults} />}
                 <div className="mt-5 flex justify-end">
-                  <Button type="submit" variant="secondary" isLoading={guardandoDatos}>
+                  <Button type="submit" variant="secondary" isLoading={guardando === 'defaults'}>
                     Guardar defaults
                   </Button>
                 </div>
@@ -243,16 +262,7 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
                   />
                 </Field>
               </div>
-              {feedbackClave && (
-                <p
-                  className={`mt-4 text-sm font-medium ${
-                    feedbackClave.tipo === 'ok' ? 'text-emerald-700' : 'text-red-600'
-                  }`}
-                  role="status"
-                >
-                  {feedbackClave.mensaje}
-                </p>
-              )}
+              {feedbackClave && <FeedbackMsg feedback={feedbackClave} />}
               <div className="mt-5 flex justify-end">
                 <Button type="submit" variant="brandSoft" isLoading={guardandoClave} leftIcon={<KeyRound className="w-4 h-4" />}>
                   Actualizar contraseña

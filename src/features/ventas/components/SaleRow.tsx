@@ -27,7 +27,7 @@ const SaleRow: React.FC<Props> = ({ sale, selectedStatus }) => {
             <span className="text-white font-mono font-medium text-sm">#{sale.id}</span>
           </div>
           <div className="ml-4">
-            <div className="text-sm font-medium text-gray-900">
+            <div className="text-sm font-medium text-gray-900 max-w-[14rem] truncate" title={sale.descriptionProduct}>
               {sale.descriptionProduct}
             </div>
             <div className="text-sm text-gray-500">
@@ -37,7 +37,7 @@ const SaleRow: React.FC<Props> = ({ sale, selectedStatus }) => {
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm font-medium text-gray-900">
+        <div className="text-sm font-medium text-gray-900 max-w-[10rem] truncate" title={sale.client.name}>
           {sale.client.name}
         </div>
         <div className="text-sm text-gray-500">{sale.client.telefono}</div>

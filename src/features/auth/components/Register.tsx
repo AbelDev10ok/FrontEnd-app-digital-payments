@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Mail, Eye, EyeOff, Store, CheckCircle2 } from 'lucide-react';
 import useNoIndex from '@hooks/useNoIndex';
 import { register } from '@features/auth/services/authServices';
-import { Alert, Button, Field } from '@/shared/components/ui';
+import { Alert, Button, Field, fieldErrorId } from '@/shared/components/ui';
 
 const Register: React.FC = () => {
   const [nombreNegocio, setNombreNegocio] = useState('');
@@ -133,6 +133,8 @@ const Register: React.FC = () => {
                     if (emailError) validateEmail(e.target.value);
                   }}
                   onBlur={() => validateEmail(email)}
+                  aria-invalid={emailError ? true : undefined}
+                  aria-describedby={emailError ? fieldErrorId('email') : undefined}
                   className={`w-full pl-12 pr-4 py-3 border rounded-input focus:outline-none focus:ring-2 transition-all duration-200 ${
                     emailError
                       ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
@@ -155,6 +157,8 @@ const Register: React.FC = () => {
                     if (passwordError) validatePassword(e.target.value);
                   }}
                   onBlur={() => validatePassword(password)}
+                  aria-invalid={passwordError ? true : undefined}
+                  aria-describedby={passwordError ? fieldErrorId('password') : undefined}
                   className={`w-full pl-12 pr-12 py-3 border rounded-input focus:outline-none focus:ring-2 transition-all duration-200 ${
                     passwordError
                       ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
@@ -165,6 +169,7 @@ const Register: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}

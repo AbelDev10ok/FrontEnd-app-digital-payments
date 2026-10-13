@@ -1,6 +1,6 @@
 // Tipos del negocio (tenant) y de la agenda de cobros / cuotas globales.
 
-export type PlanStatus = "TRIAL" | "ACTIVE";
+export type PlanStatus = "TRIAL" | "ACTIVE" | "PAUSED" | "CANCELLED" | "BLOCKED";
 
 export interface BusinessMe {
   id: number;

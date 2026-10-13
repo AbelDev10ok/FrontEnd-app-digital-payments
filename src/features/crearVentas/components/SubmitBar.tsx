@@ -1,16 +1,17 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
-import { Button } from '@/shared/components/ui';
+import { Button, ButtonLink } from '@/shared/components/ui';
 
 interface Props {
   cancelTo?: string;
   isDisabled?: boolean;
+  /** Estado de envío: muestra el spinner y bloquea el doble clic. */
+  isLoading?: boolean;
   submitLabel?: string;
   onDelete?: () => void;
 }
 
-const SubmitBar: React.FC<Props> = ({ cancelTo = '/dashboard/ventas', isDisabled = false, submitLabel = 'Crear Transacción', onDelete }) => {
+const SubmitBar: React.FC<Props> = ({ cancelTo = '/dashboard/ventas', isDisabled = false, isLoading = false, submitLabel = 'Crear Transacción', onDelete }) => {
   return (
     <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
       {onDelete && (
@@ -25,20 +26,18 @@ const SubmitBar: React.FC<Props> = ({ cancelTo = '/dashboard/ventas', isDisabled
           <span className="hidden sm:inline">Eliminar</span>
         </Button>
       )}
-      <Link
-        to={cancelTo}
-        className="inline-flex items-center px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors duration-200"
-      >
+      <ButtonLink to={cancelTo} variant="secondary" size="lg">
         Cancelar
-      </Link>
+      </ButtonLink>
       <Button
         type="submit"
         variant="primary"
         size="lg"
         disabled={isDisabled}
         aria-disabled={isDisabled}
+        isLoading={isLoading}
       >
-        {submitLabel}
+        {isLoading ? 'Guardando...' : submitLabel}
       </Button>
     </div>
   );

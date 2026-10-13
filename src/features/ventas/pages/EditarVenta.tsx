@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import Load from '@/shared/components/feedback/Load';
 import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
+import { Alert } from '@/shared/components/ui';
 import { salesService } from '@/features/ventas/services/salesServices';
 import { ProductTypeDto, SaleResponseDto, UpdateSaleRequest } from '@/shared/types/sales';
 import SaleForm, { SaleFormData } from '@/features/ventas/components/SaleForm';
@@ -21,7 +22,11 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
   const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
 
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  // Error de carga → pantalla de error completa; error de guardado → aviso inline
+  // que conserva el formulario y lo que el usuario escribió.
   const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,7 +54,7 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
   }, [id]);
 
   const handleFormSubmit = async (data: SaleFormData) => {
-    if (!id || !sale) return;
+    if (!id || !sale || saving) return;
 
     const updatePayload: UpdateSaleRequest = {
       productType: data.productTypeId,
@@ -60,10 +65,14 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
     };
 
     try {
+      setSaving(true);
+      setSaveError(null);
       await salesService.updateSale(parseInt(id), updatePayload);
       navigate(`/dashboard/ventas/${id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al actualizar la venta.');
+      setSaveError(err instanceof Error ? err.message : 'Error al actualizar la venta.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -95,10 +104,12 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
           <h1 className="text-2xl font-display font-bold tracking-tight text-brand-950 ml-2">{isLoan ? "Editar Préstamo" : "Editar Venta"}</h1>
         </div>
 
+        {saveError && <div className="mb-4"><Alert tone="danger">{saveError}</Alert></div>}
+
         <SaleForm
           initialValues={sale}
           productTypes={productTypes}
-          loading={loading}
+          loading={saving}
           submitLabel="Guardar Cambios"
           cancelTo={`/dashboard/ventas/${id}`}
           onSubmit={handleFormSubmit}

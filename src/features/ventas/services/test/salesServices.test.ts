@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { salesService } from '../salesServices';
 import { authenticatedFetch } from '@/features/auth/services/authServices';
-import { SALES_API_URL, LOANS_API_URL } from '@/shared/config/api';
+import { API_BASE_URL, SALES_API_URL, LOANS_API_URL } from '@/shared/config/api';
 
 vi.mock('@/features/auth/services/authServices', () => ({
   authenticatedFetch: vi.fn(),
@@ -186,7 +186,8 @@ describe('salesService.createProductType', () => {
     vi.mocked(authenticatedFetch).mockResolvedValue(okEnvelope({ id: 3, name: 'ROPA' }));
     await salesService.createProductType('ROPA');
     const [url, init] = vi.mocked(authenticatedFetch).mock.calls[0];
-    expect(url).toBe('http://localhost:8080/api/product-types');
+    // Solo se valida el path: el host depende del entorno (VITE_API_URL o tunnel)
+    expect(url).toBe(`${API_BASE_URL}/api/product-types`);
     expect(init?.method).toBe('POST');
     expect(init?.body).toBe(JSON.stringify('ROPA'));
   });

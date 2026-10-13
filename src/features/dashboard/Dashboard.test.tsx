@@ -96,8 +96,10 @@ describe('Dashboard', () => {
 
   it('renderiza el desglose de estados de venta', () => {
     renderDashboard();
+    // Los labels también existen en los filtros del sidebar (visible para AT
+    // solo cuando está expandido), así que se consulta con AllByText.
     ['Completadas', 'Pendientes'].forEach((label) =>
-      expect(screen.getByText(label)).toBeInTheDocument(),
+      expect(screen.getAllByText(label).length).toBeGreaterThan(0),
     );
   });
 

@@ -342,3 +342,91 @@ Cada negocio administra su propio catálogo de productos (respeta la tenancy). L
 - Suite frontend completa **341/341** (56 archivos). Nuevos tests de cambio VENTA/PRESTAMO, primera cuota visible/desmarcada por defecto y stock discreto sin alertas. `npx tsc -p tsconfig.app.json`, `npm run lint` y `npm run build` pasan.
 - Gotchas encontrados: los `<option>` del selector de producto duplican textos de categoría en el DOM → usar `findAllByText` en los tests (no `findByText`); el formatter es-AR usa espacio no separable (`$ 500`) → aserciones de texto con regex; y el input recién creado conserva su `value` → `findByText('ROPA')` matchea también el campo → usar `findAllByText`.
 - **`App.test.tsx` ya no es flaky**: el fallo intermitente lo causaba `businessService.getMyBusiness` sin mock (`DashboardLayout`/`initCurrency`): con el backend levantado el token falso disparaba 401 → refresh fail → logout → redirige a `/login` y la ruta nunca renderizaba. Se mockeó `businessService` (igual que `salesService`/`clientService`) y la suite queda libre de red y estable.
+
+## Gestión de suscripción: cancelar / pausar / reactivar ✅
+
+Ciclo de vida completo de la suscripción (Fase 12) desde la app, sin ir al panel de MP.
+
+### Backend (repo App-cobros)
+- `MercadoPagoService.updatePreapprovalStatus(id, status)` → `PUT /preapproval/{id}` con `{"status": "cancelled" | "paused" | "authorized"}`.
+- `SubscriptionService.cancelSubscription() / pauseSubscription() / resumeSubscription()`: transiciones validadas (cancelar desde `PENDING/ACTIVE/PAUSED`, pausar solo desde `ACTIVE`, reactivar solo desde `PAUSED`), errores de MP con mensaje en español y evento de auditoría `SubscriptionEvent` (`manual:cancel|pause|resume`).
+- Endpoints `POST /api/billing/subscription/cancel|pause|resume` (`BillingController`, ROLE_USER).
+- **Política de acceso SaaS**: `hasActiveAccess`, el webhook y la reconciliación quedan unificados en `aplicarEstadoDelNegocio` — `ACTIVE` da acceso inmediato; `PAUSED`/`CANCELLED`/`BLOCKED` conservan el acceso hasta `subscriptionUntil` (lo mueven solo los cobros aprobados; antes un cancel cortaba el acceso de inmediato y forzaba `planStatus=TRIAL`). `Business.planStatus` ahora admite `TRIAL | ACTIVE | PAUSED | CANCELLED | BLOCKED` (columna `String(20)`, sin cambio de esquema).
+- 9 tests nuevos en `SubscriptionServiceTest` (24 de suscripción en total).
+
+### Frontend
+- `billingService.cancel() / pause() / resume()`; tipo `PlanStatus` ampliado.
+- `Suscripcion.tsx`: el botón muerto "Gestionar en MercadoPago" se reemplaza por **Pausar** y **Cancelar** con confirmación ("Seguirás teniendo acceso hasta el {fecha}. No se realizarán más cobros."), estado `PAUSED` con botón **Reactivar suscripcion** y estado `CANCELLED` con "Acceso hasta" + **Activar suscripcion** (flujo existente, crea un preapproval nuevo).
+- 3 tests nuevos: cancelar con confirmación, pausar + reactivar, estado cancelado.
+- **Aviso de nuevo cobro**: la confirmación de cancelar y la tarjeta de activación post-cancelación advierten que volver a suscribirse genera un cobro inmediato y pierde los días ya pagados (en MP el primer mes se cobra al suscribirse y `cancelled` es definitivo).
+
+### Webhook de MP: firma obligatoria ✅
+- Si hay `app.mercadopago.webhook-secret` configurado, los webhooks sin `x-signature` (o con firma inválida) se ignoran; `app.mercadopago.webhook-require-signature=false` lo desactiva solo para desarrollo. El body del webhook ahora es opcional (`@RequestBody(required = false)`). Tests: sin firma → ignora · firma inválida → ignora · firma válida → procesa.
+
+### Renovación de cobro rechazada ✅
+- `Subscription.lastPaymentFailedAt` (columna nueva creada por Hibernate): el webhook de pago/factura `rejected` lo marca, un cobro aprobado o una acción manual (`cancel/pause/resume`) lo limpia. No toca el periodo: el acceso sigue hasta el fin del pagado.
+- `SubscriptionStatusDto.lastPaymentFailedAt` expuesto al frontend.
+- `Suscripcion.tsx`: banner "Cobro de renovacion rechazado" con link a la página de suscripciones de MP (sin cortar el acceso), y texto diferenciado en la card de activación cuando MP canceló sola tras los rechazos.
+- 3 tests backend (marcar sin extender periodo, limpiar con cobro aprobado, limpiar con cancelación manual) + 2 tests frontend (banner con link, auto-cancelación explicada).
+
+### Tests ✅
+- Backend **173/173** (1 skip: el de Testcontainers, requiere Docker). Frontend **347/347** (56 archivos). `npx tsc -p tsconfig.app.json` y `npm run lint` limpios.
+
+## Harden: feedback de envío y estados de carga en formularios ✅
+
+Endurecimiento transversal del feedback al guardar y de los estados de carga/error en todos los formularios de la app.
+
+### Primitivas compartidas
+- `Alert`: región viva (`role="alert"` en danger/warning, `role="status"` en info/success) para que los avisos de envío se anuncien a lectores de pantalla.
+- `Load` (`role="status"` + `aria-live`), `ErrorMessage` (`role="alert"`) y `Button` (`aria-busy` mientras `isLoading`).
+- Avisos inline de `MiNegocio`, `PayFeeModal`, `PosponedFeeModal` y catálogo ahora usan `role="alert"` en errores y `role="status"` en cargas.
+
+### Crear venta / préstamo (el gap mayor)
+- `useSaleForm` expone `submitError` (antes el error de `createSale` moría en `console.error` sin feedback), guarda el formulario para corregir y reintentar, y bloquea el doble envío.
+- `SubmitBar` acepta `isLoading`: spinner + "Guardando..." y botón deshabilitado durante la petición (antes el botón quedaba habilitado y se podían crear ventas duplicadas). `CreateSaleForm` muestra el error con `Alert tone="danger"` sobre la barra.
+
+### Edición de venta y cliente
+- `EditarVenta`: un error al guardar ya no reemplaza el formulario por una pantalla de error (se perdía todo lo escrito). Ahora hay `saveError` inline con el form intacto, estado `saving` con spinner real en el botón y guard anti doble envío en `SaleForm`/`ClientForm`.
+- `EditarCliente`: error de carga separado del de guardado (`ErrorMessage` en vez de un formulario vacío).
+
+### Login
+- El mensaje ya no concatena el error crudo ("Credenciales inválidas... Error: Failed to fetch"): distingue error de red (`TypeError` → "No se pudo conectar con el servidor…") del mensaje del backend y de un fallback genérico. Test nuevo de error de conexión.
+
+### Catálogo (Productos / Categorías)
+- Error de carga separado del estado vacío (antes un fallo de red mostraba "No hay productos registrados." además del error). Envío con nombre vacío ahora informa "Ingresá un nombre…" en vez de fallar en silencio. Guard anti doble envío y anti borrados concurrentes.
+
+### Mi Negocio
+- Feedback y spinner por tarjeta: "Guardar defaults" mostraba su aviso en la tarjeta equivocada y ambos botones cargaban juntos. Ahora cada formulario tiene su estado (`datos` / `defaults` / `clave`).
+
+### Tests ✅
+- Suite frontend **354/354** (57 archivos). `npx tsc -p tsconfig.app.json`, `npm run lint` y `npm run build` limpios.
+
+## Harden 2: fechas locales, NaN y moneda en formularios ✅
+- `src/shared/utils/formatDate.ts` (`getLocalDateString`, `toInputDate`): los `new Date().toISOString()` fechaban ventas/cobros **un día después** pasadas las ~20:00 en UTC-3/4. Reemplazado en `SaleForm`, `CreateSaleForm`, `PayFeeModal`, `Suscripcion`, `useSaleForm` y `PosponedFeeModal`. Test: `formatDate.test.ts`.
+- `PosponedFeeModal`/`PayFeeModal`: guard NaN (monto vacío enviaba `NaN` al backend), `min="0"` y guard anti doble envío con Enter.
+- `formatCurrency` en textos que interpolaban `$` crudos (`SaleForm`, `PosponedFeeModal`).
+- Límites de `maxLength` en `ClientForm` alineados a su validación; `truncate`+`title` en `SaleRow`/`ClientTable` para nombres largos. Label "Email *" → "Email" (la validación siempre lo trató como opcional).
+
+## Accesibilidad de formularios: combobox con teclado + errores visibles + copy del costo ✅
+- **Combobox accesible** (patrón WAI-ARIA): hook compartido `useCombobox` (`src/shared/hooks/`) + `AutocompleteClient`/`AutocompleteSeller` — `role="combobox"` con `listbox`/`option`, navegación con flechas, selección con Enter (sin enviar el formulario), Escape, `aria-expanded`/`aria-activedescendant`, selección optimista (el chip aparece al elegir aunque el padre tarde en propagar `value`). Antes, **elegir cliente o vendedor con teclado era imposible**.
+- Labels con `htmlFor`, error asociado por `aria-describedby` + `aria-invalid` vía el contexto `fieldA11y` de `Field`/`Input`/`Select`, botón "quitar" con nombre accesible que devuelve el foco al input, icono lucide en lugar del emoji `👤`, y mensajes "No hay clientes/vendedores registrados" vs "Sin resultados".
+- **Foco al primer error y anuncio aria-live tras un envío fallido**: hook `useFormErrorA11y` (`src/shared/hooks/`) + `ErrorAnnouncer` (`src/shared/components/feedback/`) — al fallar la validación de `ClientForm` o `CreateSaleForm` el foco pasa al primer campo inválido (o al mensaje de error si el campo ya no tiene control, p. ej. el chip de selección) y una región viva anuncia "Hay N errores en el formulario: …"; si el error viene del servidor, el foco va al `Alert` de `submitError`. Los inputs crudos de `Login`/`Register` (que no usan `Input`) llevan `aria-invalid`/`aria-describedby` manual con los mismos ids, y los botones de mostrar/ocultar contraseña tienen nombre accesible.
+- **Errores que bloqueaban el botón en silencio, ahora visibles**: en modo venta, `errors.cost` se pintaba solo en el campo "Monto entregado" del préstamo — el "Costo del producto" es de solo lectura y no mostraba nada → el botón quedaba deshabilitado sin explicación. Ahora `errors.cost` aparece bajo el costo (junto a "Total a cobrar") y `errors.productId`/`errors.productTypeId`/`errors.cantidad` en la sección del producto.
+- Sin doble error: el del costo solo aplica cuando el valor de cuota ya tiene un monto real (si está vacío, manda el error del propio campo), y el de categoría solo cuando hay producto sin categoría ("El producto seleccionado no tiene categoría asignada", antes "Selecciona una categoría", inactionable porque ese campo no existe en el form).
+- Copy invertido corregido: "El costo no puede ser menor o igual al monto total de la venta" → **"El total a cobrar debe ser mayor al costo del producto"** (la regla `>` se mantiene a propósito: no se permite vender exactamente al precio de catálogo en cuotas).
+- **Foco al primer error + anuncio aria-live** (`useFormErrorA11y` + `ErrorAnnouncer`) aplicado en los tres formularios con validación: `ClientForm`, `CreateSaleForm` y `SaleForm` (editar venta).
+- Tests: `AutocompleteClient.test.tsx` (8, incluye selección optimista), `AutocompleteSeller.test.tsx` (4), `ClientForm.test.tsx` (aria + foco al primer error), `CreateSaleForm.test.tsx` (errores visibles en venta), `SaleForm.test.tsx` (2). Suite frontend **376/376** (61 archivos); `tsc`, `eslint`, `npm run build` e `impeccable detect` limpios.
+
+## Pulido de UI — aside y formulario (better-ui) ✅
+
+- **Sidebar**: `transition-all` → `transition-transform` (solo cambia `translate-x`); **colapso real e interrumpible de los submenús** (antes llevaban clases de transición muertas sobre un nodo que se desmontaba): `grid-rows` `0fr→1fr` + opacidad + `visibility` (fuera del tab order cuando cierra), `duration-200 ease-[cubic-bezier(0.2,0,0,1)]`; **cross-fade de chevrons** (ambos iconos en el DOM, `scale 0.25→1`, `opacity 0→1`, `blur 4px→0`, misma curva); estado activo de la navegación con `ring-1 ring-brand-200` (mismo lenguaje que los chips activos, sin sombra de elevación falsa); hover en `duration-150`; iconos con `strokeWidth={1.5}` (al lado de texto regular).
+- **Radios según DESIGN.md** ("tarjetas 16px, campos y botones 12px, navegación 8px, chips totalmente redondeados"): chips de filtro → `rounded-full` (antes `rounded-md` 6px, fuera de escala); la navegación conserva 8px (el plan inicial proponía 12px — corregido contra el design system). Sublinks `text-[13px]` → `text-sm` (fuera de la rampa tipográfica).
+- **Formulario (`CreateSaleForm`)**: icono `Plus` movido del label a la ranura `icon` como el resto de campos; adornos unificados (`text-brand-600`, stroke 1.5); eyebrows de sección vía token `eyebrow.table` (antes `text-sm` hardcodeado, fuera de la rampa "Label 11–12px"); `GananciaEstimada` a `rounded-input` + borde (empata con la caja de costo encima); errores de `AutocompleteClient`/`AutocompleteSeller` unificados a `text-sm` (mismo que `Field`).
+- **Botones**: `active:scale-[0.96]` (feedback táctil, siempre 0.96) + prop `static` para desactivarlo, transición con propiedades nombradas `duration-150`; nuevo **`ButtonLink`** (enlace con apariencia de botón) — el "Cancelar" del `SubmitBar` deja de replicar las clases del primitivo a mano.
+- **Tests ajustados por el renderizado persistente de los submenús** (colapsados quedan ocultos pero en el DOM): `Sidebar.test` pasa 4 aserciones de texto a consultas por rol (que sí respetan lo oculto) y `Dashboard.test` acepta los labels repetidos del sidebar con `getAllByText` (patrón ya usado en el propio archivo). Suite **376/376** (61 archivos); `tsc`, `eslint` e `impeccable detect` limpios. Verificación visual en navegador: pendiente (requiere backend + login).
+
+### Pendiente de la crítica de UX (formularios)
+- Validación tóxica (errores rojos al cargar, botón deshabilitado sin motivo, errores huérfanos `productTypeId`/`cantidad` que bloquean el submit sin verse).
+- "Cancelar" del alta va a `/dashboard/ventas` (ruta inexistente) → cae en la landing pública.
+- Preview del cronograma de cuotas antes de confirmar ("Vas a crear 6 cuotas de …").
+- Copy: "Crear Transacción" → "Crear venta / Registrar préstamo"; "Tipo de pago" → "Frecuencia de cobro"; unificar voseo.

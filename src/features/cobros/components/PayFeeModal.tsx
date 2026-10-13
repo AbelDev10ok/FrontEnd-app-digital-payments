@@ -7,6 +7,7 @@ import Field from '@/shared/components/ui/Field';
 import { Banknote, Building2 } from 'lucide-react';
 import { salesService } from '@/features/ventas/services/salesServices';
 import { formatCurrency, getCurrencySymbol } from '@/shared/utils/formatCurrency';
+import { getLocalDateString } from '@/shared/utils/formatDate';
 import type { CuotaItem } from '@/shared/types/business';
 
 interface PayFeeModalProps {
@@ -19,7 +20,7 @@ interface PayFeeModalProps {
   fechaMinima?: string;
 }
 
-const hoyISO = () => new Date().toISOString().slice(0, 10);
+const hoyISO = () => getLocalDateString();
 
 /** Modal simple para registrar el cobro de una cuota desde la agenda, el listado global o el cronograma. */
 export default function PayFeeModal({ cuota, onClose, onPaid, deudaRestante, fechaMinima }: PayFeeModalProps) {
@@ -41,6 +42,8 @@ export default function PayFeeModal({ cuota, onClose, onPaid, deudaRestante, fec
   if (!cuota) return null;
 
   const handleSubmit = async () => {
+    // Evita doble envío (Enter repetido) mientras se guarda.
+    if (saving) return;
     const montoNumero = Number(monto);
     if (!Number.isFinite(montoNumero) || montoNumero <= 0) {
       setError('Ingresá un monto válido');
@@ -139,7 +142,7 @@ export default function PayFeeModal({ cuota, onClose, onPaid, deudaRestante, fec
             </Select>
           </div>
         </Field>
-        {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+        {error && <p role="alert" className="text-sm font-medium text-red-600">{error}</p>}
         <div className="flex justify-end gap-2 pt-1">
           <Button variant="secondary" onClick={onClose} disabled={saving}>
             Cancelar

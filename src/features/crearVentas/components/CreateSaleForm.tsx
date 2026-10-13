@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import InputWithIcon from '@/features/crearVentas/components/InputWithIcon';
 import SelectWithIcon from '@/features/crearVentas/components/SelectWithIcon';
 import AutocompleteSeller from '@/shared/components/AutocompleteSeller';
@@ -7,9 +7,13 @@ import SubmitBar from '@/features/crearVentas/components/SubmitBar';
 import AutocompleteClient from '@/features/crearVentas/components/AutocompleteClient';
 import PrimerCuota from '@/features/crearVentas/components/PrimerCuota';
 import { Calendar, Plus, DollarSign, Percent, Package } from 'lucide-react';
-import { Button } from '@/shared/components/ui';
+import { Button, Alert } from '@/shared/components/ui';
+import ErrorAnnouncer from '@/shared/components/feedback/ErrorAnnouncer';
+import useFormErrorA11y from '@/shared/hooks/useFormErrorA11y';
 import { calculateLoanTotals } from '@/features/crearVentas/hooks/useSaleForm';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
+import { getLocalDateString } from '@/shared/utils/formatDate';
+import { eyebrow } from '@/shared/theme';
 
 interface LoanSummaryProps {
   formData: any;
@@ -62,7 +66,7 @@ const GananciaEstimada: React.FC<GananciaEstimadaProps> = ({ formData, costoTota
   const totalCobrar = Number(formData.amountFee) * Number(formData.quantityFees);
   const ganancia = totalCobrar - costoTotal;
   return (
-    <div className="mt-2 rounded-lg bg-brand-50/30 p-2">
+    <div className="mt-2 rounded-input border border-brand-100 bg-brand-50/30 p-2">
       <div className="flex justify-between text-xs">
         <span className="text-gray-500">Total a cobrar</span>
         <span className="font-semibold text-gray-700 font-mono tabular-nums">{formatCurrency(totalCobrar)}</span>
@@ -90,9 +94,15 @@ interface Props {
   displayedClients: any[];
   onSubmit: (e: React.FormEvent) => void;
   onBackToProductPicker?: () => void;
+  /** Estado de envío: muestra el spinner en el botón y bloquea el doble clic. */
+  isSubmitting?: boolean;
+  /** Error del último envío; se conserva el formulario para corregir y reintentar. */
+  submitError?: string | null;
 }
 
-const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputChange, errors, isSubmittingDisabled, products, sellers, displayedClients, onSubmit, onBackToProductPicker }) => {
+const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputChange, errors, isSubmittingDisabled, products, sellers, displayedClients, onSubmit, onBackToProductPicker, isSubmitting = false, submitError = null }) => {
+  const { formRef, errorAnnouncement, reportErrors } = useFormErrorA11y();
+  const submitErrorRef = useRef<HTMLDivElement>(null);
   const isPrestamo = formData.tipo === 'PRESTAMO';
   const selectedProduct = !isPrestamo ? products.find((p) => p.id === Number(formData.productId)) : undefined;
   const cantidad = Number(formData.cantidad) || 1;
@@ -100,7 +110,7 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
     ? selectedProduct.price * cantidad
     : null;
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
   const paymentOptions = isPrestamo
     ? [
         { value: 'SEMANAL', label: 'Semanal' },
@@ -114,15 +124,28 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
         { value: 'CONTADO', label: 'Contado' },
       ];
 
+  // Tras un envío fallido: foco al primer error y resumen anunciado en la
+  // región viva; si el error vino del servidor, el foco va a ese aviso.
+  const handleFormSubmit = (e: React.FormEvent) => {
+    onSubmit(e);
+    if (Object.keys(errors).length > 0) {
+      reportErrors(errors);
+    }
+  };
+
+  useEffect(() => {
+    if (submitError) submitErrorRef.current?.focus();
+  }, [submitError]);
+
   return (
     <div className="bg-white rounded-card shadow-card border border-gray-100">
-      <form onSubmit={onSubmit} className="p-6 space-y-8">
+      <form ref={formRef} onSubmit={handleFormSubmit} className="p-6 space-y-8">
         {/* Sección: Producto o Préstamo */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">{isPrestamo ? 'Datos del préstamo' : 'Producto'}</h3>
+          <h3 className={`${eyebrow.table} mb-4`}>{isPrestamo ? 'Datos del préstamo' : 'Producto'}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <InputWithIcon id="fecha" name="fecha" label="Fecha *" type="date" value={formData.fecha} onChange={handleInputChange} icon={<Calendar className="w-4 h-4 text-brand-600" />} error={errors.fecha} max={today} />
+              <InputWithIcon id="fecha" name="fecha" label="Fecha *" type="date" value={formData.fecha} onChange={handleInputChange} icon={<Calendar strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={errors.fecha} max={today} />
             </div>
 
             {isPrestamo ? (
@@ -167,6 +190,14 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
                     )}
                   </div>
                 )}
+                {/* Errores del producto que bloquean el envío: visibles, no silenciosos */}
+                {(errors.productId || errors.productTypeId || errors.cantidad) && (
+                  <div role="alert" className="md:col-span-2 space-y-1">
+                    {errors.productId && <p className="text-sm text-red-600">{errors.productId}</p>}
+                    {errors.productTypeId && <p className="text-sm text-red-600">{errors.productTypeId}</p>}
+                    {errors.cantidad && <p className="text-sm text-red-600">{errors.cantidad}</p>}
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -174,7 +205,7 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
 
         {/* Sección: Cliente y vendedor */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Cliente y vendedor</h3>
+          <h3 className={`${eyebrow.table} mb-4`}>Cliente y vendedor</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <AutocompleteSeller
@@ -197,7 +228,7 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
 
         {/* Sección: Condiciones de pago */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Condiciones de pago</h3>
+          <h3 className={`${eyebrow.table} mb-4`}>Condiciones de pago</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {!isPrestamo && (
               <div>
@@ -221,33 +252,38 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
 
             {formData.payments !== 'CONTADO' && (
               <div>
-                <InputWithIcon id="quantityFees" name="quantityFees" label={<><Plus className="inline w-4 h-4 text-brand-600 mr-2" /> Cantidad de cuotas *</>} type="number" value={formData.quantityFees} onChange={handleInputChange} error={errors.quantityFees} />
+                <InputWithIcon id="quantityFees" name="quantityFees" label="Cantidad de cuotas *" type="number" value={formData.quantityFees} onChange={handleInputChange} icon={<Plus strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={errors.quantityFees} />
               </div>
             )}
 
             {isPrestamo && (
               <div>
-                <InputWithIcon id="interestRate" name="interestRate" label="Porcentaje de interés (%) *" type="number" value={formData.interestRate} onChange={handleInputChange} icon={<Percent className="w-4 h-4" />} error={errors.interestRate} />
+                <InputWithIcon id="interestRate" name="interestRate" label="Porcentaje de interés (%) *" type="number" value={formData.interestRate} onChange={handleInputChange} icon={<Percent strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={errors.interestRate} />
               </div>
             )}
 
             {!isPrestamo && !(formData.payments === 'CONTADO' && formData.payFirstFee) && (
               <div>
-                <InputWithIcon id="amountFee" name="amountFee" label="Valor de la cuota *" type="number" value={formData.amountFee} onChange={handleInputChange} icon={<DollarSign className="w-4 h-4" />} error={errors.amountFee} />
+                <InputWithIcon id="amountFee" name="amountFee" label="Valor de la cuota *" type="number" value={formData.amountFee} onChange={handleInputChange} icon={<DollarSign strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={errors.amountFee} />
               </div>
             )}
 
             <div>
               {isPrestamo ? (
-                <InputWithIcon id="cost" name="cost" label="Monto entregado *" type="number" value={formData.cost} onChange={handleInputChange} icon={<DollarSign className="w-4 h-4" />} error={errors.cost} />
+                <InputWithIcon id="cost" name="cost" label="Monto entregado *" type="number" value={formData.cost} onChange={handleInputChange} icon={<DollarSign strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={errors.cost} />
               ) : (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <p className="block text-sm font-medium text-gray-700 mb-2">
                     Costo del producto
-                  </label>
+                  </p>
                   <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-input text-gray-700 font-medium">
                     {costoTotal != null ? formatCurrency(costoTotal) : '—'}
                   </div>
+                  {/* Este campo es de solo lectura: sin este aviso, la regla
+                      "total a cobrar > costo" bloqueaba el botón en silencio */}
+                  {errors.cost && (
+                    <p role="alert" className="mt-1 text-sm text-red-600">{errors.cost}</p>
+                  )}
                   <GananciaEstimada formData={formData} costoTotal={costoTotal} formatCurrency={formatCurrency} />
                 </div>
               )}
@@ -257,7 +293,7 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
 
         {/* Primera cuota */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Primera cuota</h3>
+          <h3 className={`${eyebrow.table} mb-4`}>Primera cuota</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <PrimerCuota
               firstFeeDate={formData.firstFeeDate}
@@ -274,7 +310,15 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
           <LoanSummary formData={formData} />
         )}
 
-        <SubmitBar isDisabled={isSubmittingDisabled} />
+        <ErrorAnnouncer message={errorAnnouncement} />
+
+        {submitError && (
+          <div ref={submitErrorRef} tabIndex={-1}>
+            <Alert tone="danger">{submitError}</Alert>
+          </div>
+        )}
+
+        <SubmitBar isDisabled={isSubmittingDisabled} isLoading={isSubmitting} />
       </form>
     </div>
   );

@@ -7,6 +7,7 @@ import { useClients } from '@features/clients/hooks/useClients';
 import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import ClientForm, { ClientFormData } from '@features/clients/components/ClientForm';
 import Load from '@/shared/components/feedback/Load';
+import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
 import { Alert, PageHeader } from '@/shared/components/ui';
 
 interface PageProps {
@@ -19,6 +20,9 @@ const EditarCliente: React.FC<PageProps> = ({ user, onLogout }) => {
   const { updateClient } = useClients();
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  // Error de carga → pantalla de error; error de guardado → aviso inline que
+  // conserva el formulario y lo que el usuario escribió.
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const { id } = useParams<{ id: string }>(); // Access the client ID from the URL
@@ -40,7 +44,7 @@ const EditarCliente: React.FC<PageProps> = ({ user, onLogout }) => {
             sellerId: client.sellerId || '',
           });
         } catch (err) {
-          setError(err instanceof Error ? err.message : 'Error al cargar el cliente');
+          setLoadError(err instanceof Error ? err.message : 'Error al cargar el cliente');
         } finally {
           setInitialLoading(false);
         }
@@ -104,6 +108,8 @@ const EditarCliente: React.FC<PageProps> = ({ user, onLogout }) => {
 
         {initialLoading ? (
           <Load />
+        ) : loadError ? (
+          <ErrorMessage message={loadError} />
         ) : (
           <ClientForm
             initialValues={initialValues}

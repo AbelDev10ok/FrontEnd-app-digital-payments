@@ -3,14 +3,7 @@ import { Client } from '@/shared/types/client';
 import {salesService } from '@/features/ventas/services/salesServices';
 import { clientService } from '@/features/clients/services/clientServices';
 import { CreateSaleRequest, ProductDto, ProductTypeDto, SaleFormData, SaleType } from '@/shared/types/sales';
-
-
-const getLocalDateString = (date: Date) => {
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
+import { getLocalDateString } from '@/shared/utils/formatDate';
 
 const getInterestRateNumber = (formData: SaleFormData): number => {
   const rate = Number(formData.interestRate);
@@ -22,7 +15,9 @@ const validateForm = (formData: SaleFormData, displayedClients: Client[]): Recor
 
   if (!formData.cliente || Number(formData.cliente) === 0) newErrors.cliente = formData.sellerId ? 'Selecciona un cliente del vendedor seleccionado' : 'Selecciona un cliente';
   if (formData.tipo === 'VENTA') {
-    if (!formData.productTypeId) newErrors.productTypeId = 'Selecciona una categoría';
+    // La categoría se autocompleta desde el producto: si hay producto sin
+    // categoría, el problema está en el catálogo, no en este formulario
+    if (formData.productId && !formData.productTypeId) newErrors.productTypeId = 'El producto seleccionado no tiene categoría asignada';
     if (!formData.productId) newErrors.productId = 'Selecciona un producto';
     const cantidad = Number(formData.cantidad);
     if (!formData.cantidad || !Number.isInteger(cantidad) || cantidad < 1) {
@@ -51,9 +46,12 @@ const validateForm = (formData: SaleFormData, displayedClients: Client[]): Recor
     if (isNaN(rate)) newErrors.interestRate = 'Ingresa un porcentaje de interés';
     else if (rate < 0) newErrors.interestRate = 'El interés no puede ser negativo';
   } else {
+    // La regla "el total a cobrar debe superar al costo" solo aplica cuando el
+    // valor de cuota ya tiene un monto real: si está vacío, el error pertinente
+    // es el del propio campo (amountFee), no este
     const total = Number(formData.amountFee) * Number(formData.quantityFees);
-    if (Number(formData.cost) >= total) {
-      newErrors.cost = 'El costo no puede ser menor o igual al monto total de la venta';
+    if (formData.amountFee && Number(formData.amountFee) > 0 && Number(formData.cost) >= total) {
+      newErrors.cost = 'El total a cobrar debe ser mayor al costo del producto';
     }
   }
 
@@ -103,6 +101,7 @@ export default function useSaleForm(initialType: SaleType) {
   }, [initialType]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const errors = useMemo(
     () => validateForm(formData, displayedClients),
@@ -124,6 +123,10 @@ export default function useSaleForm(initialType: SaleType) {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    // evita doble envío mientras hay una petición en curso
+    if (isSubmitting) {
+      return false;
+    }
     // si hay errores, no se envía (validación derivada en render)
     if (Object.keys(errors).length > 0) {
       return false;
@@ -157,11 +160,17 @@ export default function useSaleForm(initialType: SaleType) {
 
     try {
       setIsSubmitting(true);
+      setSubmitError(null);
       const response = await salesService.createSale(saleRequest);
       setIsSubmitting(false);
       return response;
     } catch (err) {
       setIsSubmitting(false);
+      setSubmitError(
+        err instanceof Error && err.message
+          ? err.message
+          : 'No se pudo guardar la transacción. Intentá nuevamente.',
+      );
       console.error(err);
       return false;
     }
@@ -289,6 +298,7 @@ export default function useSaleForm(initialType: SaleType) {
     errors,
     isSubmittingDisabled,
     isSubmitting,
+    submitError,
     productTypes,
     products,
     sellers,

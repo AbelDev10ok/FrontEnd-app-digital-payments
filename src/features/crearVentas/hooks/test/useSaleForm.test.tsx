@@ -80,10 +80,12 @@ describe('useSaleForm', () => {
     const { result } = renderHook(() => useSaleForm('VENTA'));
     expect(result.current.isSubmittingDisabled).toBe(true);
     expect(result.current.errors.cliente).toBe('Selecciona un cliente');
-    expect(result.current.errors.productTypeId).toBe('Selecciona una categoría');
+    // sin producto seleccionado, el error de categoría no aplica
+    expect(result.current.errors.productTypeId).toBeUndefined();
     expect(result.current.errors.productId).toBe('Selecciona un producto');
     expect(result.current.errors.amountFee).toBe('Ingresa un valor de cuota válido');
-    expect(result.current.errors.cost).toBe('El costo no puede ser menor o igual al monto total de la venta');
+    // con el costo vacío, el error pertinente es el del propio campo
+    expect(result.current.errors.cost).toBe('Ingresa un costo válido');
   });
 
   it('handleInputChange actualiza el campo indicado', async () => {
@@ -336,7 +338,7 @@ describe('useSaleForm', () => {
     });
 
     expect(result.current.errors.cost).toBe(
-      'El costo no puede ser menor o igual al monto total de la venta',
+      'El total a cobrar debe ser mayor al costo del producto',
     );
     expect(result.current.isSubmittingDisabled).toBe(true);
   });

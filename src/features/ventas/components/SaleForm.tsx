@@ -4,8 +4,12 @@ import React, { useState, useEffect } from 'react';
 import InputWithIcon from '@/features/crearVentas/components/InputWithIcon';
 import SubmitBar from '@/features/crearVentas/components/SubmitBar';
 import { SaleResponseDto, ProductTypeDto } from '@/shared/types/sales';
+import { formatCurrency } from '@/shared/utils/formatCurrency';
+import { getLocalDateString, toInputDate } from '@/shared/utils/formatDate';
 import SelectWithIcon from '@/features/crearVentas/components/SelectWithIcon';
 import { Select } from '@/shared/components/ui';
+import ErrorAnnouncer from '@/shared/components/feedback/ErrorAnnouncer';
+import useFormErrorA11y from '@/shared/hooks/useFormErrorA11y';
 import { Tv, DollarSign } from 'lucide-react';
 
 export interface SaleFormData {
@@ -58,7 +62,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
   const [formData, setFormData] = useState<SaleFormState>({
     descriptionProduct: '',
     amountFee: '',
-    dateSale: new Date().toISOString().split('T')[0],
+    dateSale: getLocalDateString(),
     quantityFees: '',
     payments: 'MENSUAL',
     cost: '',
@@ -66,6 +70,8 @@ const SaleForm: React.FC<SaleFormProps> = ({
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // Enfoca el primer campo inválido y anuncia los errores tras un envío fallido
+  const { formRef, errorAnnouncement, reportErrors } = useFormErrorA11y();
 
   // Determinar si la transacción es un préstamo por su kind (no por categoría)
   const isPrestamo = initialValues?.kind === 'PRESTAMO';
@@ -76,7 +82,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
         descriptionProduct: initialValues.descriptionProduct || '',
         amountFee: initialValues.amountFee,
         // Aseguramos formato YYYY-MM-DD para el input date
-        dateSale: initialValues.dateSale ? new Date(initialValues.dateSale).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        dateSale: initialValues.dateSale ? toInputDate(initialValues.dateSale) : getLocalDateString(),
         clientId: initialValues.client?.id,
         quantityFees: initialValues.quantityFees || 1,
         payments: initialValues.typePayments,
@@ -110,7 +116,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
     }
   };
 
-  const validateForm = () => {
+  const validateForm = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
     const amountFee = Number(formData.amountFee);
     const quantityFees = Number(formData.quantityFees);
@@ -138,7 +144,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
         const totalAmount = initialValues.amountFee
         const amountPaid = totalAmount - initialValues.remainingAmount;
         if (amountFee < amountPaid) {
-          newErrors.amountFee = `El monto no puede ser menor a lo ya pagado ($${amountPaid})`;
+          newErrors.amountFee = `El monto no puede ser menor a lo ya pagado (${formatCurrency(amountPaid)})`;
         }
       }
 
@@ -152,12 +158,15 @@ const SaleForm: React.FC<SaleFormProps> = ({
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
+    // evita doble envío mientras hay una petición en curso
+    if (loading) return;
+    const newErrors = validateForm();
+    if (Object.keys(newErrors).length === 0) {
       // Convertir a números antes de enviar para cumplir con la interfaz SaleFormData
       const submitData: SaleFormData = {
         ...formData,
@@ -167,15 +176,19 @@ const SaleForm: React.FC<SaleFormProps> = ({
         clientId: formData.clientId
       };
       await onSubmit(submitData);
+    } else {
+      // enfoca el primer campo inválido y anuncia los errores (aria-live)
+      reportErrors(newErrors);
     }
   };
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
 
 
   return (
     <div className="bg-white rounded-card shadow-card">
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      <form ref={formRef} onSubmit={handleSubmit} className="p-6 space-y-6">
+        <ErrorAnnouncer message={errorAnnouncement} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Descripción */}
           <div className="md:col-span-2">
@@ -206,7 +219,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
               />
               {initialValues && (
                 <p className="text-xs text-gray-500 mt-1">
-                  Deuda actual: ${initialValues.remainingAmount} (Pagado: ${(initialValues.amountFee - initialValues.remainingAmount)})
+                  Deuda actual: {formatCurrency(initialValues.remainingAmount)} (Pagado: {formatCurrency(initialValues.amountFee - initialValues.remainingAmount)})
                 </p>
               )}
             </div>

@@ -1,4 +1,5 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL ?? "http://localhost:8080"; // Cambia esto a la URL de tu API en producción
 
 export const AUTH_API_URL = `${API_BASE_URL}/auth`;
 export const CLIENTS_API_URL = `${API_BASE_URL}/api/clients`;

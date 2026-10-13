@@ -12,6 +12,9 @@ const GestionProductos: React.FC = () => {
   const [productPrice, setProductPrice] = useState('');
   const [productStock, setProductStock] = useState('');
   const [productTypeId, setProductTypeId] = useState('');
+  // Errores separados: el de carga no debe confundirse con el estado vacío,
+  // y el de envío/acción se muestra junto al formulario.
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [productError, setProductError] = useState<string | null>(null);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [creatingProduct, setCreatingProduct] = useState(false);
@@ -20,11 +23,11 @@ const GestionProductos: React.FC = () => {
 
   const loadProducts = async () => {
     setLoadingProducts(true);
-    setProductError(null);
+    setLoadError(null);
     try {
       setProducts(await salesService.getProducts());
     } catch (err) {
-      setProductError(err instanceof Error ? err.message : 'Error al cargar los productos');
+      setLoadError(err instanceof Error ? err.message : 'Error al cargar los productos');
     } finally {
       setLoadingProducts(false);
     }
@@ -42,8 +45,12 @@ const GestionProductos: React.FC = () => {
 
   const handleSubmitProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (creatingProduct) return;
     const name = productName.trim();
-    if (!name) return;
+    if (!name) {
+      setProductError('Ingresá un nombre para el producto');
+      return;
+    }
     if (!productTypeId) {
       setProductError('Selecciona una categoría para el producto');
       return;
@@ -101,6 +108,7 @@ const GestionProductos: React.FC = () => {
   };
 
   const handleDeleteProduct = async (id: number) => {
+    if (deletingProductId != null) return;
     setDeletingProductId(id);
     setProductError(null);
     try {
@@ -192,10 +200,14 @@ const GestionProductos: React.FC = () => {
         </div>
       </form>
 
-      {productError && <p className="text-sm text-red-600 mb-3">{productError}</p>}
+      {productError && (
+        <p role="alert" className="text-sm text-red-600 mb-3">{productError}</p>
+      )}
 
       {loadingProducts ? (
-        <p className="text-sm text-gray-500">Cargando productos...</p>
+        <p role="status" className="text-sm text-gray-500">Cargando productos...</p>
+      ) : loadError ? (
+        <p role="alert" className="text-sm text-red-600">{loadError}</p>
       ) : products.length === 0 ? (
         <p className="text-sm text-gray-500">No hay productos registrados.</p>
       ) : (

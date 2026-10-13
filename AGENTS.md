@@ -49,10 +49,9 @@ SPA de cobros/ventas en React 18 + TypeScript + Vite. Consume un backend Spring 
 ## Conventions
 
 - **Spanish** for all user-facing text, error messages, comments, and git commit messages.
-- Envelope statuses from the backend: `COMPLETED`, `ACTIVE`, `CANCELED`. The UI hardcodes display of `A_COBRAR` (see `src/ERRORES.md`) because the backend never returns it.
+- Envelope statuses from the backend: `COMPLETED`, `ACTIVE`, `CANCELED`. The UI hardcodes display of `A_COBRAR` because the backend never returns it.
 - eslint `react-refresh/only-export-components` warns when a component file exports non-components — export the component and hooks separately.
 
 ## Reference docs (Spanish)
 
 - `MEJORAS.md` — backlog de mejoras pendientes y plan de tests; mark items as done there.
-- `src/ERRORES.md` — current open issues; keep it updated when fixing.

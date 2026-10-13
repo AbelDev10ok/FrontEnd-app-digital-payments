@@ -65,14 +65,26 @@ describe("Login", () => {
     ).toBeInTheDocument();
   });
 
-  it("muestra error general si el login falla", async () => {
+  it("muestra el mensaje del backend si el login falla", async () => {
     const user = userEvent.setup();
-    loginMock.mockRejectedValue(new Error("boom"));
+    loginMock.mockRejectedValue(new Error("Credenciales inválidas"));
     renderLogin();
     await user.type(screen.getByLabelText("Email"), "a@b.com");
     await user.type(screen.getByLabelText("Contraseña"), "123456");
     await user.click(screen.getByRole("button", { name: "Iniciar Sesión" }));
     expect(screen.getByText(/Credenciales inválidas/)).toBeInTheDocument();
+  });
+
+  it("muestra un error de conexión si la red falla", async () => {
+    const user = userEvent.setup();
+    loginMock.mockRejectedValue(new TypeError("Failed to fetch"));
+    renderLogin();
+    await user.type(screen.getByLabelText("Email"), "a@b.com");
+    await user.type(screen.getByLabelText("Contraseña"), "123456");
+    await user.click(screen.getByRole("button", { name: "Iniciar Sesión" }));
+    expect(
+      screen.getByText(/No se pudo conectar con el servidor/),
+    ).toBeInTheDocument();
   });
 
   it("envía email y contraseña al login si la validación pasa", async () => {

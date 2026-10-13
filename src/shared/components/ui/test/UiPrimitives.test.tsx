@@ -90,6 +90,42 @@ describe('Field', () => {
     expect(screen.getByText('Ayuda')).toBeInTheDocument();
     expect(screen.getByText('*')).toBeInTheDocument();
   });
+
+  it('asocia el error con el control mediante aria-describedby y aria-invalid', () => {
+    render(
+      <Field label="Nombre" htmlFor="nombre" error="Requerido">
+        <Input id="nombre" />
+      </Field>,
+    );
+    const input = screen.getByLabelText('Nombre');
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    expect(input.getAttribute('aria-describedby')).toBe(screen.getByText('Requerido').id);
+    expect(input.className).toContain('border-red-500');
+  });
+
+  it('asocia el hint con el control cuando no hay error', () => {
+    render(
+      <Field label="Nombre" htmlFor="nombre" hint="Ayuda">
+        <Input id="nombre" />
+      </Field>,
+    );
+    const input = screen.getByLabelText('Nombre');
+    expect(input).not.toHaveAttribute('aria-invalid');
+    expect(input.getAttribute('aria-describedby')).toBe(screen.getByText('Ayuda').id);
+  });
+
+  it('asocia el error con un Select igual que con un Input', () => {
+    render(
+      <Field label="Estado" htmlFor="estado" error="Elegí una opción">
+        <Select id="estado">
+          <option>A</option>
+        </Select>
+      </Field>,
+    );
+    const select = screen.getByLabelText('Estado');
+    expect(select).toHaveAttribute('aria-invalid', 'true');
+    expect(select.getAttribute('aria-describedby')).toBe(screen.getByText('Elegí una opción').id);
+  });
 });
 
 describe('Alert', () => {

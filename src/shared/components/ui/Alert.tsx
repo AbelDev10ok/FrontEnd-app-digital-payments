@@ -35,8 +35,11 @@ export interface AlertProps {
 
 export default function Alert({ tone = 'info', title, children }: AlertProps) {
   const t = toneConfig[tone];
+  // Región viva: los errores y avisos se anuncian al instante; los mensajes
+  // informativos y de éxito se anuncian de forma cortés sin interrumpir.
+  const role = tone === 'danger' || tone === 'warning' ? 'alert' : 'status';
   return (
-    <div className={`p-4 border ${radius.md} flex items-start gap-3 ${t.wrapper}`}>
+    <div role={role} className={`p-4 border ${radius.md} flex items-start gap-3 ${t.wrapper}`}>
       <span className={`flex-shrink-0 ${t.iconColor}`}>{t.icon}</span>
       <div>
         {title && <p className={`font-semibold mb-1 ${neutral.primary}`}>{title}</p>}

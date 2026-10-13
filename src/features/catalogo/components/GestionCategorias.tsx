@@ -7,6 +7,9 @@ import type { ProductTypeDto } from '@/shared/types/sales';
 const GestionCategorias: React.FC = () => {
   const [categories, setCategories] = useState<ProductTypeDto[]>([]);
   const [categoryName, setCategoryName] = useState('');
+  // Errores separados: el de carga no debe confundirse con el estado vacío,
+  // y el de envío/acción se muestra junto al formulario.
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [creatingCategory, setCreatingCategory] = useState(false);
@@ -15,11 +18,11 @@ const GestionCategorias: React.FC = () => {
 
   const loadCategories = async () => {
     setLoadingCategories(true);
-    setCategoryError(null);
+    setLoadError(null);
     try {
       setCategories(await salesService.getProductTypes());
     } catch (err) {
-      setCategoryError(err instanceof Error ? err.message : 'Error al cargar las categorías');
+      setLoadError(err instanceof Error ? err.message : 'Error al cargar las categorías');
     } finally {
       setLoadingCategories(false);
     }
@@ -31,8 +34,12 @@ const GestionCategorias: React.FC = () => {
 
   const handleSubmitCategory = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (creatingCategory) return;
     const name = categoryName.trim();
-    if (!name) return;
+    if (!name) {
+      setCategoryError('Ingresá un nombre para la categoría');
+      return;
+    }
     setCreatingCategory(true);
     setCategoryError(null);
     try {
@@ -63,6 +70,7 @@ const GestionCategorias: React.FC = () => {
   };
 
   const handleDeleteCategory = async (id: number) => {
+    if (deletingCategoryId != null) return;
     setDeletingCategoryId(id);
     setCategoryError(null);
     try {
@@ -118,10 +126,14 @@ const GestionCategorias: React.FC = () => {
         </div>
       </form>
 
-      {categoryError && <p className="text-sm text-red-600 mb-3">{categoryError}</p>}
+      {categoryError && (
+        <p role="alert" className="text-sm text-red-600 mb-3">{categoryError}</p>
+      )}
 
       {loadingCategories ? (
-        <p className="text-sm text-gray-500">Cargando categorías...</p>
+        <p role="status" className="text-sm text-gray-500">Cargando categorías...</p>
+      ) : loadError ? (
+        <p role="alert" className="text-sm text-red-600">{loadError}</p>
       ) : categories.length === 0 ? (
         <p className="text-sm text-gray-500">No hay categorías registradas.</p>
       ) : (

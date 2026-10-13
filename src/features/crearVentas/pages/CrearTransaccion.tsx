@@ -26,6 +26,8 @@ const CrearTransaccionInner = ({ type, user, onLogout }: CrearTransaccionProps) 
     handleSubmit,
     errors,
     isSubmittingDisabled,
+    isSubmitting,
+    submitError,
     productTypes,
     products,
     sellers,
@@ -67,6 +69,8 @@ const CrearTransaccionInner = ({ type, user, onLogout }: CrearTransaccionProps) 
             handleInputChange={handleInputChange}
             errors={errors}
             isSubmittingDisabled={isSubmittingDisabled}
+            isSubmitting={isSubmitting}
+            submitError={submitError}
             products={products}
             sellers={sellers}
             displayedClients={displayedClients}

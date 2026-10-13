@@ -4,6 +4,8 @@ import InputWithIcon from '@/features/crearVentas/components/InputWithIcon';
 import AutocompleteSeller from '@/shared/components/AutocompleteSeller';
 import SubmitBar from '@/features/crearVentas/components/SubmitBar';
 import { clientService } from '@features/clients/services/clientServices';
+import useFormErrorA11y from '@/shared/hooks/useFormErrorA11y';
+import ErrorAnnouncer from '@/shared/components/feedback/ErrorAnnouncer';
 
 // Definimos la estructura de los datos del formulario
 export interface ClientFormData {
@@ -44,6 +46,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sellers, setSellers] = useState<Client[]>([]);
   const [sellersLoading, setSellersLoading] = useState(true);
+  const { formRef, errorAnnouncement, reportErrors } = useFormErrorA11y();
 
   // Cargar vendedores al montar el componente
   useEffect(() => {
@@ -83,7 +86,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
     }
   };
 
-  const validateForm = () => {
+  const validateForm = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
@@ -111,19 +114,26 @@ const ClientForm: React.FC<ClientFormProps> = ({
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
+    // evita doble envío mientras hay una petición en curso
+    if (loading) return;
+    const newErrors = validateForm();
+    if (Object.keys(newErrors).length === 0) {
       onSubmit(formData);
+    } else {
+      // Envío fallido: foco al primer campo inválido y resumen anunciado.
+      reportErrors(newErrors);
     }
   };
 
   return (
     <div className="bg-white rounded-card shadow-card border border-gray-100">
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      <form ref={formRef} onSubmit={handleSubmit} className="p-6 space-y-6">
+        <ErrorAnnouncer message={errorAnnouncement} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Nombre */}
           <div>
@@ -135,6 +145,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
               onChange={handleInputChange} 
               placeholder="Ingresa el nombre completo" 
               error={errors.name} 
+              maxLength={15}
             />
           </div>
 
@@ -148,6 +159,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
               onChange={handleInputChange} 
               placeholder="Ingresa el DNI" 
               error={errors.dni} 
+              maxLength={8}
             />
           </div>
 
@@ -156,12 +168,13 @@ const ClientForm: React.FC<ClientFormProps> = ({
             <InputWithIcon 
               id="email" 
               name="email" 
-              label="Email *" 
+              label="Email" 
               type="email" 
               value={formData.email} 
               onChange={handleInputChange} 
               placeholder="cliente@email.com" 
               error={errors.email} 
+              maxLength={100}
             />
           </div>
 
@@ -175,6 +188,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
               onChange={handleInputChange} 
               placeholder="1234567890" 
               error={errors.telefono} 
+              maxLength={15}
             />
           </div>
         </div>
@@ -189,6 +203,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
             onChange={handleInputChange} 
             placeholder="Dirección completa" 
             error={errors.direccion} 
+            maxLength={20}
           />
         </div>
 

@@ -19,6 +19,8 @@ export interface SubscriptionStatus {
   mpPreapprovalId?: string;
   mpInitPoint?: string;
   createdAt?: string;
+  /** Ultimo cobro de renovacion rechazado (null si el ultimo cobro fue aprobado). */
+  lastPaymentFailedAt?: string | null;
   trialEndsAt?: string | null;
   businessPlanStatus?: string;
 }
@@ -56,4 +58,36 @@ export const billingService = {
     }
     throw new Error(body?.message ?? "Error al iniciar la suscripcion");
   },
+
+  /** Cancela la suscripcion: sin mas cobros; el acceso dura hasta fin del periodo pagado. */
+  async cancel(): Promise<SubscriptionStatus> {
+    return gestionar("cancel", "Error al cancelar la suscripcion");
+  },
+
+  /** Pausa la suscripcion: MP no cobra mientras este pausada. */
+  async pause(): Promise<SubscriptionStatus> {
+    return gestionar("pause", "Error al pausar la suscripcion");
+  },
+
+  /** Reactiva una suscripcion pausada. */
+  async resume(): Promise<SubscriptionStatus> {
+    return gestionar("resume", "Error al reactivar la suscripcion");
+  },
 };
+
+async function gestionar(
+  accion: "cancel" | "pause" | "resume",
+  mensajeError: string,
+): Promise<SubscriptionStatus> {
+  const response = await authenticatedFetch(`${BILLING_API_URL}/subscription/${accion}`, {
+    method: "POST",
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(body?.message ?? mensajeError);
+  }
+  if (body?.status === "OK" && body?.data) {
+    return body.data as SubscriptionStatus;
+  }
+  throw new Error(body?.message ?? mensajeError);
+}

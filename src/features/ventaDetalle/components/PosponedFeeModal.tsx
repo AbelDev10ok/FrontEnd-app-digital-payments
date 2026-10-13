@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { X, Calendar, DollarSign, Trash2 } from "lucide-react";
 import { salesService } from "@/features/ventas/services/salesServices";
 import { Button, Input } from "@/shared/components/ui";
+import { formatCurrency } from "@/shared/utils/formatCurrency";
+import { toInputDate } from "@/shared/utils/formatDate";
 
 interface PostponeFeeModalProps {
   isOpen: boolean;
@@ -32,23 +34,24 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
 }) => {
   const [newDate, setNewDate] = useState(currentDate);
   const [newPaymentDate, setNewPaymentDate] = useState(
-    currentPaymentDate
-      ? new Date(currentPaymentDate).toISOString().split("T")[0]
-      : "",
+    currentPaymentDate ? toInputDate(currentPaymentDate) : "",
   );
   const [newAmount, setNewAmount] = useState(currentAmount?.toString() ?? "");
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Evita doble envío (Enter repetido) mientras se guarda o se elimina.
+    if (loading || deleting) return;
     setLoading(true);
     setError("");
 
     const amountVal = parseFloat(newAmount);
-    if (amountVal < 0) {
+    if (!Number.isFinite(amountVal) || amountVal < 0) {
       setError("El monto debe ser positivo y válido");
       setLoading(false);
       return;
@@ -82,10 +85,11 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
   };
 
   const handleDelete = async () => {
+    if (loading || deleting) return;
     if (!window.confirm("¿Estás seguro de que deseas eliminar esta cuota?"))
       return;
 
-    setLoading(true);
+    setDeleting(true);
     setError("");
 
     try {
@@ -96,7 +100,8 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
       setError(
         err instanceof Error ? err.message : "Error al eliminar la cuota",
       );
-      setLoading(false);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -129,11 +134,7 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                   type="date"
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
-                  min={
-                    saleDate
-                      ? new Date(saleDate).toISOString().split("T")[0]
-                      : undefined
-                  }
+                  min={saleDate ? toInputDate(saleDate) : undefined}
                   className="pl-10 transition-all"
                   required
                 />
@@ -176,18 +177,19 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                     value={newAmount}
                     onChange={(e) => setNewAmount(e.target.value)}
                     step="0.01"
+                    min="0"
                     className="pl-10 transition-all"
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  El monto no puede superar la deuda actual: ${maxAmount}
+                  El monto no puede superar la deuda actual: {formatCurrency(maxAmount)}
                 </p>
               </div>
             </>
           )}
 
           {error && (
-            <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">
+            <div role="alert" className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">
               {error}
             </div>
           )}
@@ -196,24 +198,26 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
             <Button
               variant="dangerOutline"
               onClick={handleDelete}
-              disabled={loading}
+              disabled={loading || deleting}
               title="Eliminar cuota"
               leftIcon={<Trash2 className="w-4 h-4" />}
             >
-              <span className="hidden sm:inline">Eliminar</span>
+              <span className="hidden sm:inline">
+                {deleting ? "Eliminando..." : "Eliminar"}
+              </span>
             </Button>
             <div className="flex gap-3">
               <Button
                 variant="secondary"
                 onClick={onClose}
-                disabled={loading}
+                disabled={loading || deleting}
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 variant="primary"
-                disabled={loading}
+                disabled={loading || deleting}
               >
                 {loading ? "Guardando..." : "Confirmar Cambio"}
               </Button>

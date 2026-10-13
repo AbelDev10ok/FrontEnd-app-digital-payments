@@ -19,6 +19,8 @@ import {
 import { salesService } from "@/features/ventas/services/salesServices";
 import { ProductTypeDto, SalesCountsDto } from "@/shared/types/sales";
 import { SALE_STATUS_DOT } from "@shared/utils/statusUi";
+import { eyebrow, radius } from "@/shared/theme";
+import type { LucideIcon } from "lucide-react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -39,29 +41,31 @@ const STATUS_OPTIONS: {
   { label: "Completadas", value: "COMPLETED", color: SALE_STATUS_DOT.COMPLETED, countKey: "completed" },
 ];
 
-const navBase = "p-3 rounded-lg text-sm transition-colors duration-200";
+// DESIGN.md: "navegación de 8px"; el hover va en ≤150ms (interacción de alta frecuencia)
+const navBase = "p-3 rounded-lg text-sm transition-colors duration-150";
 const navIdle = "text-gray-600 hover:bg-gray-50 hover:text-gray-900";
-const navActive = "bg-brand-50 text-brand-700 shadow-sm";
+// El estado activo usa el mismo lenguaje que los chips (ring, no sombra)
+const navActive = "bg-brand-50 text-brand-700 ring-1 ring-brand-200";
 
 const navLinkClass = (isActive: boolean) =>
   `flex items-center space-x-3 ${navBase} ${isActive ? navActive : navIdle}`;
 
 const subLinkClass = (isActive: boolean) =>
-  `flex items-center space-x-2.5 px-3 py-2 rounded-lg text-[13px] transition-colors duration-150 ${
+  `flex items-center space-x-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-150 ${
     isActive
       ? "bg-brand-50/60 text-brand-700 font-medium"
       : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
   }`;
 
 const filterChipClass = (isActive: boolean) =>
-  `w-full flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs transition-colors duration-150 ${
+  `w-full flex items-center space-x-2 px-3 py-1.5 ${radius.pill} text-xs transition-colors duration-150 ${
     isActive
       ? "bg-brand-50 text-brand-700 ring-1 ring-brand-200 font-medium"
       : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
   }`;
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <div className="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-widest text-brand-600">
+  <div className={`px-3 pt-4 pb-1 ${eyebrow.hero}`}>
     {children}
   </div>
 );
@@ -210,7 +214,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
   );
 
   const renderSubmenuLink = (
-    subItem: { title: string; icon: React.FC<{ className?: string }>; path: string },
+    subItem: { title: string; icon: LucideIcon; path: string },
   ) => {
     const isKindSensitive = subItem.path.startsWith("/dashboard/ventas/todas");
     const expectsKind = subItem.path.includes("kind=PRESTAMO");
@@ -229,7 +233,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
           )
         }
       >
-        <subItem.icon className="w-3.5 h-3.5 flex-shrink-0" />
+        <subItem.icon strokeWidth={1.5} className="w-3.5 h-3.5 flex-shrink-0" />
         <span>{subItem.title}</span>
       </NavLink>
     );
@@ -305,7 +309,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
   return (
     <aside
       className={`
-      fixed left-0 top-0 h-full bg-white border-r border-gray-100 transition-all duration-300 z-50
+      fixed left-0 top-0 h-full bg-white border-r border-gray-100 transition-transform duration-300 z-50
       lg:w-64 lg:translate-x-0
       ${isOpen ? "translate-x-0 w-64" : "-translate-x-full w-64"}
     `}
@@ -315,7 +319,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
         <div className="p-4 border-b border-dashed border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-9 h-9 bg-brand-600 rounded-xl flex items-center justify-center shadow-sm">
-              <HandCoins className="w-5 h-5 text-white" />
+              <HandCoins strokeWidth={1.5} className="w-5 h-5 text-white" />
             </div>
             <div className="leading-tight">
               <span className="block font-display font-extrabold tracking-tight text-brand-950">
@@ -335,7 +339,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
             onClick={onNavigate}
             className={({ isActive }) => navLinkClass(isActive)}
           >
-            <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
+            <LayoutDashboard strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
             <span>Dashboard</span>
           </NavLink>
 
@@ -351,27 +355,43 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
                     className={`w-full flex items-center justify-between ${navBase} ${navIdle}`}
                   >
                     <div className="flex items-center space-x-3">
-                      <item.icon className="w-4 h-4 flex-shrink-0" />
+                      <item.icon strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
                       <span className="font-medium">{item.title}</span>
                     </div>
-                    {item.expanded ? (
-                      <ChevronDown className="w-4 h-4" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4" />
-                    )}
+                    {/* Cross-fade entre chevrons: ambos en el DOM, uno superpuesto. */}
+                    <span aria-hidden="true" className="relative h-4 w-4 flex-shrink-0">
+                      <ChevronDown
+                        strokeWidth={1.5}
+                        className={`h-4 w-4 transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+                          item.expanded
+                            ? "scale-100 opacity-100 blur-0"
+                            : "scale-[0.25] opacity-0 blur-[4px]"
+                        }`}
+                      />
+                      <ChevronRight
+                        strokeWidth={1.5}
+                        className={`absolute inset-0 h-4 w-4 transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+                          item.expanded
+                            ? "scale-[0.25] opacity-0 blur-[4px]"
+                            : "scale-100 opacity-100 blur-0"
+                        }`}
+                      />
+                    </span>
                   </button>
 
-                  {item.expanded && item.submenu && (
+                  {item.submenu && (
                         <div
                           id={`submenu-${index}`}
                           role="menu"
                           aria-hidden={!item.expanded}
-                          className={`
-                            ml-6 space-y-0.5 border-l-2 border-gray-100 pl-4 overflow-hidden
-                            transition-all duration-200 ease-in-out
-                            ${item.expanded ? "mt-2 opacity-100" : "mt-0 opacity-0"}
-                          `}
+                          className={`grid transition-[grid-template-rows,opacity,visibility] duration-200 ease-[cubic-bezier(0.2,0,0,1)] ${
+                            item.expanded
+                              ? "grid-rows-[1fr] opacity-100 visible"
+                              : "grid-rows-[0fr] opacity-0 invisible"
+                          }`}
                         >
+                          <div className="min-h-0 overflow-hidden">
+                            <div className="mt-2 ml-6 space-y-0.5 border-l-2 border-gray-100 pl-4">
                           {item.submenu.map((subItem) =>
                             renderSubmenuLink(subItem),
                           )}
@@ -386,14 +406,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
                                   aria-expanded={productTypesExpanded}
                                   className={`${filterChipClass(false)} group`}
                                 >
-                                  <Package className="w-3.5 h-3.5 flex-shrink-0 text-gray-400 group-hover:text-brand-500 transition-colors" />
+                                  <Package strokeWidth={1.5} className="w-3.5 h-3.5 flex-shrink-0 text-gray-400 group-hover:text-brand-500 transition-colors" />
                                   <span className="font-medium">Categoría</span>
-                                  <span className="ml-auto">
-                                    {productTypesExpanded ? (
-                                      <ChevronDown className="w-3 h-3" />
-                                    ) : (
-                                      <ChevronRight className="w-3 h-3" />
-                                    )}
+                                  <span aria-hidden="true" className="relative ml-auto block h-3 w-3">
+                                    <ChevronDown
+                                      strokeWidth={1.5}
+                                      className={`h-3 w-3 transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+                                        productTypesExpanded
+                                          ? "scale-100 opacity-100 blur-0"
+                                          : "scale-[0.25] opacity-0 blur-[4px]"
+                                      }`}
+                                    />
+                                    <ChevronRight
+                                      strokeWidth={1.5}
+                                      className={`absolute inset-0 h-3 w-3 transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+                                        productTypesExpanded
+                                          ? "scale-[0.25] opacity-0 blur-[4px]"
+                                          : "scale-100 opacity-100 blur-0"
+                                      }`}
+                                    />
                                   </span>
                                 </button>
                                 {productTypesExpanded &&
@@ -406,6 +437,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
                               {renderStatusFilter("PRESTAMO")}
                             </div>
                           )}
+                            </div>
+                          </div>
                         </div>
                       )}
                 </div>
@@ -419,7 +452,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
             onClick={onNavigate}
             className={({ isActive }) => navLinkClass(isActive)}
           >
-            <Package className="w-4 h-4 flex-shrink-0" />
+            <Package strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
             <span>Productos</span>
           </NavLink>
 
@@ -429,7 +462,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
             onClick={onNavigate}
             className={({ isActive }) => navLinkClass(isActive)}
           >
-            <CalendarClock className="w-4 h-4 flex-shrink-0" />
+            <CalendarClock strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
             <span>Cobros de hoy</span>
           </NavLink>
           <NavLink
@@ -437,7 +470,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
             onClick={onNavigate}
             className={({ isActive }) => navLinkClass(isActive)}
           >
-            <ListChecks className="w-4 h-4 flex-shrink-0" />
+            <ListChecks strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
             <span>Cuotas</span>
           </NavLink>
 
@@ -447,7 +480,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
             onClick={onNavigate}
             className={({ isActive }) => navLinkClass(isActive)}
           >
-            <Plus className="w-4 h-4 flex-shrink-0" />
+            <Plus strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
             <span>Nueva Venta</span>
           </NavLink>
           <NavLink
@@ -455,7 +488,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
             onClick={onNavigate}
             className={({ isActive }) => navLinkClass(isActive)}
           >
-            <Plus className="w-4 h-4 flex-shrink-0" />
+            <Plus strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
             <span>Nuevo Préstamo</span>
           </NavLink>
 
@@ -465,7 +498,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
             onClick={onNavigate}
             className={({ isActive }) => navLinkClass(isActive)}
           >
-            <Building2 className="w-4 h-4 flex-shrink-0" />
+            <Building2 strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
             <span>Mi Negocio</span>
           </NavLink>
           <NavLink
@@ -473,7 +506,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
             onClick={onNavigate}
             className={({ isActive }) => navLinkClass(isActive)}
           >
-            <BadgeCheck className="w-4 h-4 flex-shrink-0" />
+            <BadgeCheck strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
             <span>Suscripción</span>
           </NavLink>
         </nav>
