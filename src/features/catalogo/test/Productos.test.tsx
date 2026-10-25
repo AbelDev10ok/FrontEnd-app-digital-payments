@@ -602,6 +602,38 @@ describe('Productos (Catálogo)', () => {
     expect(await screen.findByText('Producto actualizado')).toBeInTheDocument();
   });
 
+  it('al activar el producto conserva activa la variante y la envía activa', async () => {
+    const user = userEvent.setup();
+    // Producto inactivo con la variante activa: la fila no es vendible, pero la
+    // variante no debe guardarse inactiva al activar el producto.
+    vi.mocked(salesService.getProducts).mockResolvedValue([
+      productoSimple({ active: false, productActive: false, variantActive: true }),
+    ]);
+    vi.mocked(salesService.updateProduct).mockResolvedValue(undefined);
+    renderPagina();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Editar producto HELADERA SAMSUNG 320L' }),
+    );
+    const dialog = screen.getByRole('dialog');
+
+    // El estado de la variante se refleja desde variantActive, no desde el combinado
+    expect(within(dialog).getByRole('checkbox', { name: 'Variante activa' })).toBeChecked();
+
+    await user.selectOptions(within(dialog).getByLabelText('Estado'), 'activo');
+    await user.click(within(dialog).getByRole('button', { name: 'Guardar cambios' }));
+
+    await waitFor(() =>
+      expect(salesService.updateProduct).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          active: true,
+          variants: [expect.objectContaining({ id: 11, active: true })],
+        }),
+      ),
+    );
+  });
+
   it('no crea un producto sin categoría y muestra un error', async () => {
     const user = userEvent.setup();
     renderPagina();

@@ -128,7 +128,10 @@ export interface ProductDto {
   stock?: number | null;
   barcode?: string | null;
   active?: boolean | null;
+  /** Estado del producto base (independiente del de cada variante). */
   productActive?: boolean | null;
+  /** Estado propio de la variante, sin combinar con el producto. */
+  variantActive?: boolean | null;
   productTypeId?: number | null;
   productTypeName?: string | null;
   /** Moneda ISO 4217 del precio, congelada al crear el producto (snapshot) */

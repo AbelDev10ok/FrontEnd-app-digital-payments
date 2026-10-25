@@ -186,7 +186,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
           price: fila.price != null ? String(fila.price) : '',
           stock: fila.stock != null ? String(fila.stock) : '0',
           barcode: fila.barcode ?? '',
-          active: fila.active !== false,
+          // Estado propio de la variante: usar el combinado (active) haría que
+          // activar solo el producto guarde la variante como inactiva.
+          active: fila.variantActive !== false,
           valores: Object.fromEntries(
             (fila.attributes ?? []).map((a) => [String(a.attributeId), String(a.attributeValueId)]),
           ),

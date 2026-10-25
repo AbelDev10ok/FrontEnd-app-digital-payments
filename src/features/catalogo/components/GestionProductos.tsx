@@ -313,7 +313,7 @@ const GestionProductos: React.FC<GestionProductosProps> = ({
                               <span className="truncate">
                                 {specs.length > 0 ? `${specs.join(' · ')} · ` : ''}
                                 {v.sku ?? 'Sin SKU'}
-                                {v.active === false ? ' · inactiva' : ''}
+                                {v.variantActive === false ? ' · inactiva' : ''}
                               </span>
                             </span>
                             <span className="shrink-0 text-gray-500 font-mono tabular-nums">
