@@ -4,13 +4,13 @@ import React, { useState, useEffect } from 'react';
 import InputWithIcon from '@/features/crearVentas/components/InputWithIcon';
 import SubmitBar from '@/features/crearVentas/components/SubmitBar';
 import { SaleResponseDto, ProductTypeDto } from '@/shared/types/sales';
-import { formatCurrency } from '@/shared/utils/formatCurrency';
+import { formatCurrency, getCurrencySymbol } from '@/shared/utils/formatCurrency';
 import { getLocalDateString, toInputDate } from '@/shared/utils/formatDate';
 import SelectWithIcon from '@/features/crearVentas/components/SelectWithIcon';
 import { Select } from '@/shared/components/ui';
 import ErrorAnnouncer from '@/shared/components/feedback/ErrorAnnouncer';
 import useFormErrorA11y from '@/shared/hooks/useFormErrorA11y';
-import { Tv, DollarSign } from 'lucide-react';
+import { Tv } from 'lucide-react';
 
 export interface SaleFormData {
   descriptionProduct: string;
@@ -75,6 +75,8 @@ const SaleForm: React.FC<SaleFormProps> = ({
 
   // Determinar si la transacción es un préstamo por su kind (no por categoría)
   const isPrestamo = initialValues?.kind === 'PRESTAMO';
+  // Los importes ya guardados conservan su moneda: el símbolo del campo la sigue.
+  const simbolo = getCurrencySymbol(initialValues?.currency ?? undefined);
 
   useEffect(() => {
     if (initialValues) {
@@ -144,7 +146,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
         const totalAmount = initialValues.amountFee
         const amountPaid = totalAmount - initialValues.remainingAmount;
         if (amountFee < amountPaid) {
-          newErrors.amountFee = `El monto no puede ser menor a lo ya pagado (${formatCurrency(amountPaid)})`;
+          newErrors.amountFee = `El monto no puede ser menor a lo ya pagado (${formatCurrency(amountPaid, initialValues?.currency ?? undefined)})`;
         }
       }
 
@@ -215,11 +217,12 @@ const SaleForm: React.FC<SaleFormProps> = ({
                 value={formData.amountFee}
                 onChange={handleInputChange}
                 placeholder="0.00"
+                symbol={simbolo}
                 error={errors.amountFee}
               />
               {initialValues && (
                 <p className="text-xs text-gray-500 mt-1">
-                  Deuda actual: {formatCurrency(initialValues.remainingAmount)} (Pagado: {formatCurrency(initialValues.amountFee - initialValues.remainingAmount)})
+                  Deuda actual: {formatCurrency(initialValues.remainingAmount, initialValues.currency ?? undefined)} (Pagado: {formatCurrency(initialValues.amountFee - initialValues.remainingAmount, initialValues.currency ?? undefined)})
                 </p>
               )}
             </div>
@@ -253,7 +256,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
                 value={formData.cost}
                 onChange={handleInputChange}
                 placeholder="0.00"
-                icon={<DollarSign className="w-4 h-4" />}
+                symbol={simbolo}
                 error={errors.cost}
               />
             </div>

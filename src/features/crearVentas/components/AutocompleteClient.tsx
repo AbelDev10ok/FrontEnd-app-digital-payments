@@ -83,6 +83,7 @@ const AutocompleteClient: React.FC<Props> = ({ value, clients, onChange, placeho
             aria-autocomplete="list"
             aria-activedescendant={activeOptionId}
             aria-invalid={error ? true : undefined}
+            aria-required="true"
             aria-describedby={error ? errorId : undefined}
             autoComplete="off"
             value={search}
@@ -91,7 +92,7 @@ const AutocompleteClient: React.FC<Props> = ({ value, clients, onChange, placeho
             onKeyDown={handleKeyDown}
             onBlur={closeList}
             placeholder={placeholder}
-            className={`w-full pl-10 pr-4 py-3 border ${error ? 'border-red-500' : 'border-gray-200'} rounded-input`}
+            className={`w-full pl-10 pr-4 py-3 border ${error ? 'border-red-500' : 'border-gray-200'} rounded-input placeholder:text-gray-500`}
           />
           <div aria-hidden="true" className="absolute left-3 top-3 text-gray-400">
             <User className="w-4 h-4" />
@@ -132,7 +133,8 @@ const AutocompleteClient: React.FC<Props> = ({ value, clients, onChange, placeho
           <span>{selected.name}</span>
           <button
             type="button"
-            className="ml-2 text-brand-600 hover:text-brand-800"
+            // 24×24 de área de toque (WCAG 2.5.8); el glifo sigue chico
+            className="-mr-1 ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-base leading-none text-brand-600 hover:bg-brand-100 hover:text-brand-800"
             onClick={clearSelection}
             aria-label={`Quitar cliente ${selected.name}`}
           >

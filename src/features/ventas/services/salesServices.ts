@@ -2,14 +2,18 @@ import { authenticatedFetch } from "@/features/auth/services/authServices";
 import { Client } from "@/shared/types/client";
 import type { DashboardStatsDto } from "@/shared/types/dashboard";
 import {
+  AttributeDto,
   CreateSaleRequest,
+  PaymentDto,
   ProductDto,
+  ProductPayload,
   ProductTypeDto,
+  SaleDocumentDto,
   SaleResponseDto,
   SalesCountsDto,
   UpdateSaleRequest,
 } from "@/shared/types/sales";
-import { CLIENTS_API_URL, LOANS_API_URL, PRODUCTS_API_URL, PRODUCT_TYPES_API_URL, SALES_API_URL } from "@/shared/config/api";
+import { ATTRIBUTES_API_URL, CLIENTS_API_URL, LOANS_API_URL, PRODUCTS_API_URL, PRODUCT_TYPES_API_URL, SALES_API_URL } from "@/shared/config/api";
 import { handleResponse } from "@/shared/utils/http";
 
 export interface Page<T> {
@@ -72,10 +76,20 @@ export const salesService = {
     return response.json();
   },
 
-  async createProductType(name: string): Promise<ProductTypeDto> {
+  async createProductType(payload: {
+    name: string;
+    parentId?: number | null;
+    /** Slug explícito; si se omite se genera desde el nombre */
+    slug?: string | null;
+  }): Promise<ProductTypeDto> {
     const response = await authenticatedFetch(PRODUCT_TYPES_API_URL, {
       method: "POST",
-      body: JSON.stringify(name),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: payload.name,
+        parentId: payload.parentId ?? null,
+        slug: payload.slug ?? null,
+      }),
     });
     if (!response.ok) {
       throw new Error("Error al crear la categoría");
@@ -83,16 +97,28 @@ export const salesService = {
     return response.json();
   },
 
-  async updateProductType(id: number, name: string): Promise<void> {
+  async updateProductType(
+    id: number,
+    payload: {
+      name: string;
+      parentId?: number | null;
+      slug?: string | null;
+    },
+  ): Promise<void> {
     const response = await authenticatedFetch(`${PRODUCT_TYPES_API_URL}/${id}`, {
       method: "PUT",
-      body: JSON.stringify(name),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: payload.name,
+        parentId: payload.parentId ?? null,
+        slug: payload.slug ?? null,
+      }),
     });
     if (!response.ok) {
       try {
         const apiResponse = await response.json();
         if (apiResponse?.updated === false) {
-          throw new Error("No se pudo actualizar la categoría (verifica el nombre)");
+          throw new Error("No se pudo actualizar la categoría (verifica el nombre y el slug)");
         }
         throw new Error(apiResponse?.message || "Error al actualizar la categoría");
       } catch (e) {
@@ -126,27 +152,17 @@ export const salesService = {
     return response.json();
   },
 
-  async createProduct(payload: {
-    name: string;
-    price?: number | null;
-    stock?: number | null;
-    productTypeId?: number | null;
-  }): Promise<void> {
+  async createProduct(payload: ProductPayload): Promise<void> {
     const response = await authenticatedFetch(PRODUCTS_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: payload.name,
-        price: payload.price ?? null,
-        stock: payload.stock ?? null,
-        productTypeId: payload.productTypeId ?? null,
-      }),
+      body: JSON.stringify(payload),
     });
     if (!response.ok) {
       try {
         const apiResponse = await response.json();
         if (apiResponse?.created === false) {
-          throw new Error("No se pudo crear el producto (verifica el nombre, el precio, el stock y la categoría)");
+          throw new Error("No se pudo crear el producto (verifica el nombre, la categoría y las variantes)");
         }
         throw new Error(apiResponse?.message || "Error al crear el producto");
       } catch (e) {
@@ -156,30 +172,17 @@ export const salesService = {
     }
   },
 
-  async updateProduct(
-    id: number,
-    payload: {
-      name: string;
-      price?: number | null;
-      stock?: number | null;
-      productTypeId?: number | null;
-    },
-  ): Promise<void> {
+  async updateProduct(id: number, payload: ProductPayload): Promise<void> {
     const response = await authenticatedFetch(`${PRODUCTS_API_URL}/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: payload.name,
-        price: payload.price ?? null,
-        stock: payload.stock ?? null,
-        productTypeId: payload.productTypeId ?? null,
-      }),
+      body: JSON.stringify(payload),
     });
     if (!response.ok) {
       try {
         const apiResponse = await response.json();
         if (apiResponse?.updated === false) {
-          throw new Error("No se pudo actualizar el producto (verifica el nombre, el precio, el stock y la categoría)");
+          throw new Error("No se pudo actualizar el producto (verifica el nombre, la categoría y las variantes)");
         }
         throw new Error(apiResponse?.message || "Error al actualizar el producto");
       } catch (e) {
@@ -200,6 +203,71 @@ export const salesService = {
           throw new Error("El producto está en uso y no se puede eliminar");
         }
         throw new Error(apiResponse?.message || "Error al eliminar el producto");
+      } catch (e) {
+        if (e instanceof Error) throw e;
+        throw new Error("Ocurrió un error desconocido");
+      }
+    }
+  },
+
+  async getAttributes(): Promise<AttributeDto[]> {
+    const response = await authenticatedFetch(`${ATTRIBUTES_API_URL}/all`);
+    if (!response.ok) {
+      throw new Error("Error al obtener los atributos");
+    }
+    return response.json();
+  },
+
+  async createAttribute(payload: { name: string; values: string[] }): Promise<AttributeDto> {
+    const response = await authenticatedFetch(ATTRIBUTES_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: payload.name,
+        values: payload.values.map((value) => ({ value })),
+      }),
+    });
+    if (!response.ok) {
+      try {
+        const apiResponse = await response.json();
+        throw new Error(apiResponse?.message || "Error al crear el atributo");
+      } catch (e) {
+        if (e instanceof Error) throw e;
+        throw new Error("Error al crear el atributo");
+      }
+    }
+    return response.json();
+  },
+
+  async addAttributeValue(attributeId: number, value: string): Promise<AttributeDto> {
+    const response = await authenticatedFetch(`${ATTRIBUTES_API_URL}/${attributeId}/values`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value }),
+    });
+    if (!response.ok) {
+      try {
+        const apiResponse = await response.json();
+        throw new Error(apiResponse?.message || "Error al agregar el valor");
+      } catch (e) {
+        if (e instanceof Error) throw e;
+        throw new Error("Error al agregar el valor");
+      }
+    }
+    return response.json();
+  },
+
+  async deleteAttribute(id: number): Promise<void> {
+    const response = await authenticatedFetch(`${ATTRIBUTES_API_URL}/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      try {
+        const apiResponse = await response.json();
+        if (apiResponse?.deleted === false) {
+          throw new Error("El atributo está en uso y no se puede eliminar");
+        }
+        throw new Error(apiResponse?.message || "Error al eliminar el atributo");
       } catch (e) {
         if (e instanceof Error) throw e;
         throw new Error("Ocurrió un error desconocido");
@@ -304,6 +372,23 @@ export const salesService = {
     }
   },
 
+  /** Remito emitido de una venta, o null si todavía no se emitió. */
+  async getRemito(saleId: number): Promise<SaleDocumentDto | null> {
+    const response = await authenticatedFetch(`${SALES_API_URL}/${saleId}/remito`);
+    if (response.status === 404) return null;
+    return handleResponse<SaleDocumentDto>(response);
+  },
+
+  /** Emite el remito (idempotente) y devuelve el snapshot guardado. */
+  async emitirRemito(saleId: number, notes?: string): Promise<SaleDocumentDto> {
+    const response = await authenticatedFetch(`${SALES_API_URL}/${saleId}/remito`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes: notes?.trim() ? notes.trim() : null }),
+    });
+    return handleResponse<SaleDocumentDto>(response);
+  },
+
   async deleteSale(id: number): Promise<void> {
     const response = await authenticatedFetch(`${LOANS_API_URL}/deleted/${id}`, {
       method: "DELETE",
@@ -357,6 +442,15 @@ export const salesService = {
       }
     }
     // Si la respuesta es ok, no se necesita procesar el cuerpo si se espera que esté vacío
+  },
+
+  /** Historial de cobros de una cuota (con fecha y hora de cada pago). */
+  async getFeePayments(feeId: number): Promise<PaymentDto[]> {
+    const response = await authenticatedFetch(`${LOANS_API_URL}/fee/${feeId}/payments`);
+    if (!response.ok) {
+      throw new Error("Error al cargar el historial de cobros de la cuota");
+    }
+    return response.json();
   },
 
   async postponeFee(
@@ -418,10 +512,15 @@ export const salesService = {
   async getDashboardStats(
     year: number,
     month: number,
+    currency?: string | null,
   ): Promise<DashboardStatsDto> {
     const url = new URL(`${SALES_API_URL}/dashboard`);
     url.searchParams.append("year", year.toString());
     url.searchParams.append("month", month.toString());
+    // "TODAS" (o ausente) = todas las monedas; un código ISO acota montos y conteos
+    if (currency && currency !== "TODAS") {
+      url.searchParams.append("currency", currency);
+    }
 
     const response = await authenticatedFetch(url.toString());
     return handleResponse<DashboardStatsDto>(response);

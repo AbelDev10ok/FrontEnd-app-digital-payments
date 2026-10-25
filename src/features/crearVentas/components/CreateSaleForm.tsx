@@ -6,20 +6,22 @@ import AutocompleteSeller from '@/shared/components/AutocompleteSeller';
 import SubmitBar from '@/features/crearVentas/components/SubmitBar';
 import AutocompleteClient from '@/features/crearVentas/components/AutocompleteClient';
 import PrimerCuota from '@/features/crearVentas/components/PrimerCuota';
-import { Calendar, Plus, DollarSign, Percent, Package } from 'lucide-react';
+import { Calendar, Plus, Coins, Percent, Package } from 'lucide-react';
 import { Button, Alert } from '@/shared/components/ui';
 import ErrorAnnouncer from '@/shared/components/feedback/ErrorAnnouncer';
 import useFormErrorA11y from '@/shared/hooks/useFormErrorA11y';
-import { calculateLoanTotals } from '@/features/crearVentas/hooks/useSaleForm';
-import { formatCurrency } from '@/shared/utils/formatCurrency';
+import { calculateLoanTotals, monedaDeLaOperacion } from '@/features/crearVentas/hooks/useSaleForm';
+import { formatCurrency, getCurrency, getCurrencySymbol } from '@/shared/utils/formatCurrency';
+import { etiquetaMoneda, opcionesMonedaNegocio } from '@/shared/utils/currencies';
 import { getLocalDateString } from '@/shared/utils/formatDate';
 import { eyebrow } from '@/shared/theme';
 
 interface LoanSummaryProps {
   formData: any;
+  formatCurrency: (n: number) => string;
 }
 
-const LoanSummary: React.FC<LoanSummaryProps> = ({ formData }) => {
+const LoanSummary: React.FC<LoanSummaryProps> = ({ formData, formatCurrency }) => {
   const totals = calculateLoanTotals(formData);
 
   return (
@@ -37,9 +39,9 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({ formData }) => {
               {formatCurrency(Math.max(0, totals.totalToPay - (Number(formData.cost) || 0)))}
             </span>
           </p>
-          <p className="flex justify-between border-t border-brand-200 pt-2">
-            <span className="font-medium">Total a devolver</span>
-            <span className="font-semibold text-brand-700">{formatCurrency(totals.totalToPay)}</span>
+          <p className="flex items-baseline justify-between border-t border-brand-200 pt-2">
+            <span className="font-medium text-gray-800">Total a devolver</span>
+            <span className="text-base font-semibold text-brand-700 font-mono tabular-nums">{formatCurrency(totals.totalToPay)}</span>
           </p>
           <p className="flex justify-between">
             <span>Valor de cada cuota</span>
@@ -55,28 +57,53 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({ formData }) => {
   );
 };
 
-interface GananciaEstimadaProps {
-  formData: any;
+interface CostoYGananciaProps {
+  /** Costo del negocio de la venta completa (unitario × cantidad) */
   costoTotal: number | null;
+  /** Total a cobrar de la operación (al contado sale del precio de lista) */
+  totalCobrar: number | null;
   formatCurrency: (n: number) => string;
 }
 
-const GananciaEstimada: React.FC<GananciaEstimadaProps> = ({ formData, costoTotal, formatCurrency }) => {
-  if (!costoTotal || Number(formData.amountFee) <= 0 || !Number(formData.quantityFees)) return null;
-  const totalCobrar = Number(formData.amountFee) * Number(formData.quantityFees);
-  const ganancia = totalCobrar - costoTotal;
+/** Badge con el costo y la ganancia de la venta que se está armando. */
+const CostoYGanancia: React.FC<CostoYGananciaProps> = ({ costoTotal, totalCobrar, formatCurrency }) => {
+  if (costoTotal == null) {
+    return (
+      <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-input text-gray-700 font-medium">—</div>
+    );
+  }
+  const ganancia = totalCobrar != null ? totalCobrar - costoTotal : null;
   return (
-    <div className="mt-2 rounded-input border border-brand-100 bg-brand-50/30 p-2">
-      <div className="flex justify-between text-xs">
-        <span className="text-gray-500">Total a cobrar</span>
-        <span className="font-semibold text-gray-700 font-mono tabular-nums">{formatCurrency(totalCobrar)}</span>
-      </div>
-      {ganancia > 0 && (
-        <div className="flex justify-between text-xs mt-0.5">
-          <span className="text-gray-500">Ganancia estimada</span>
-          <span className="font-semibold text-emerald-600 font-mono tabular-nums">{formatCurrency(ganancia)}</span>
-        </div>
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
+        Costo {formatCurrency(costoTotal)}
+      </span>
+      {ganancia != null && (
+        <span
+          className={`rounded-full px-3 py-1 text-sm font-medium ${
+            ganancia >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+          }`}
+        >
+          Ganancia {formatCurrency(ganancia)}
+        </span>
       )}
+    </div>
+  );
+};
+
+interface TotalACobrarProps {
+  totalCobrar: number | null;
+  formatCurrency: (n: number) => string;
+}
+
+const TotalACobrar: React.FC<TotalACobrarProps> = ({ totalCobrar, formatCurrency }) => {
+  if (totalCobrar == null || totalCobrar <= 0) return null;
+  return (
+    <div className="mt-2 rounded-input border border-brand-100 bg-brand-50/30 p-3">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-sm text-gray-600">Total a cobrar</span>
+        <span className="text-base font-semibold text-gray-800 font-mono tabular-nums">{formatCurrency(totalCobrar)}</span>
+      </div>
     </div>
   );
 };
@@ -87,12 +114,17 @@ interface Props {
   formData: any;
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   handleInputChange: (e: any) => void;
+  /** Conjunto completo de errores de validación: alimenta el anuncio del envío. */
   errors: any;
+  /** Errores que se pintan en los campos (vacío hasta el primer intento de envío). */
+  visibleErrors: Record<string, string>;
   isSubmittingDisabled: boolean;
   products: any[];
   sellers: any[];
   displayedClients: any[];
   onSubmit: (e: React.FormEvent) => void;
+  /** Destino de "Cancelar": la lista de operaciones, no la landing. */
+  cancelTo?: string;
   onBackToProductPicker?: () => void;
   /** Estado de envío: muestra el spinner en el botón y bloquea el doble clic. */
   isSubmitting?: boolean;
@@ -100,15 +132,32 @@ interface Props {
   submitError?: string | null;
 }
 
-const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputChange, errors, isSubmittingDisabled, products, sellers, displayedClients, onSubmit, onBackToProductPicker, isSubmitting = false, submitError = null }) => {
+const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputChange, errors, visibleErrors, isSubmittingDisabled, products, sellers, displayedClients, onSubmit, cancelTo, onBackToProductPicker, isSubmitting = false, submitError = null }) => {
   const { formRef, errorAnnouncement, reportErrors } = useFormErrorA11y();
   const submitErrorRef = useRef<HTMLDivElement>(null);
   const isPrestamo = formData.tipo === 'PRESTAMO';
-  const selectedProduct = !isPrestamo ? products.find((p) => p.id === Number(formData.productId)) : undefined;
+  const selectedProduct = !isPrestamo
+    ? products.find((p) => Number(p.variantId ?? p.id) === Number(formData.productId))
+    : undefined;
+  // Moneda de la operación: manda el producto en una venta y la elección del
+  // usuario en un préstamo. Todos los montos del formulario se muestran en ella.
+  const moneda = monedaDeLaOperacion(isPrestamo ? 'PRESTAMO' : 'VENTA', formData.currency, selectedProduct);
+  const money = (n: number) => formatCurrency(n, moneda);
+  // Mismo símbolo que el texto formateado: '$' en ARS, 'US$' en USD.
+  const simbolo = getCurrencySymbol(moneda);
   const cantidad = Number(formData.cantidad) || 1;
-  const costoTotal = selectedProduct?.price != null && Number(formData.cantidad) > 0
-    ? selectedProduct.price * cantidad
+  // Costo del negocio: costo unitario de la variante × cantidad
+  const costoTotal = selectedProduct?.cost != null && cantidad > 0
+    ? selectedProduct.cost * cantidad
     : null;
+  // Al contado el total sale del precio de venta del catálogo, no de un monto editable
+  const esContado = !isPrestamo && formData.payments === 'CONTADO';
+  const precioUnitario = selectedProduct?.price ?? (formData.precioUnitario !== '' ? Number(formData.precioUnitario) : null);
+  const totalContado = precioUnitario != null ? precioUnitario * cantidad : null;
+  const totalEnCuotas = Number(formData.amountFee) > 0 && Number(formData.quantityFees) > 0
+    ? Number(formData.amountFee) * Number(formData.quantityFees)
+    : null;
+  const totalCobrar = esContado ? totalContado : totalEnCuotas;
 
   const today = getLocalDateString();
   const paymentOptions = isPrestamo
@@ -142,10 +191,10 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
       <form ref={formRef} onSubmit={handleFormSubmit} className="p-6 space-y-8">
         {/* Sección: Producto o Préstamo */}
         <div>
-          <h3 className={`${eyebrow.table} mb-4`}>{isPrestamo ? 'Datos del préstamo' : 'Producto'}</h3>
+          <h2 className={`${eyebrow.table} mb-4`}>{isPrestamo ? 'Datos del préstamo' : 'Producto'}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <InputWithIcon id="fecha" name="fecha" label="Fecha *" type="date" value={formData.fecha} onChange={handleInputChange} icon={<Calendar strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={errors.fecha} max={today} />
+              <InputWithIcon id="fecha" name="fecha" label="Fecha" required type="date" value={formData.fecha} onChange={handleInputChange} icon={<Calendar strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={visibleErrors.fecha} max={today} />
             </div>
 
             {isPrestamo ? (
@@ -153,7 +202,8 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
                 <SelectWithIcon
                   id="payments"
                   name="payments"
-                  label="Tipo de pago *"
+                  label="Tipo de pago"
+                  required
                   value={formData.payments}
                   onChange={e => {
                     const { name, value } = e.target;
@@ -177,7 +227,7 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
                         <div>
                           <p className="font-semibold text-gray-900">{formData.descripcion || 'Producto seleccionado'}</p>
                           <p className="text-xs text-gray-500">
-                            Costo total: {costoTotal != null ? formatCurrency(costoTotal) : formatCurrency(Number(formData.cost)) || '—'}
+                            Costo total: {costoTotal != null ? money(costoTotal) : money(Number(formData.cost)) || '—'}
                           </p>
                         </div>
                       </div>
@@ -191,11 +241,11 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
                   </div>
                 )}
                 {/* Errores del producto que bloquean el envío: visibles, no silenciosos */}
-                {(errors.productId || errors.productTypeId || errors.cantidad) && (
+                {(visibleErrors.productId || visibleErrors.productTypeId || visibleErrors.cantidad) && (
                   <div role="alert" className="md:col-span-2 space-y-1">
-                    {errors.productId && <p className="text-sm text-red-600">{errors.productId}</p>}
-                    {errors.productTypeId && <p className="text-sm text-red-600">{errors.productTypeId}</p>}
-                    {errors.cantidad && <p className="text-sm text-red-600">{errors.cantidad}</p>}
+                    {visibleErrors.productId && <p className="text-sm text-red-600">{visibleErrors.productId}</p>}
+                    {visibleErrors.productTypeId && <p className="text-sm text-red-600">{visibleErrors.productTypeId}</p>}
+                    {visibleErrors.cantidad && <p className="text-sm text-red-600">{visibleErrors.cantidad}</p>}
                   </div>
                 )}
               </>
@@ -205,14 +255,14 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
 
         {/* Sección: Cliente y vendedor */}
         <div>
-          <h3 className={`${eyebrow.table} mb-4`}>Cliente y vendedor</h3>
+          <h2 className={`${eyebrow.table} mb-4`}>Cliente y vendedor</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <AutocompleteSeller
                 value={formData.sellerId}
                 sellers={sellers}
                 onChange={(id: string | number) => setFormData((prev: any) => ({ ...prev, sellerId: Number(id), cliente: 0 }))}
-                error={errors.sellerId}
+                error={visibleErrors.sellerId}
               />
             </div>
             <div>
@@ -220,7 +270,7 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
                 value={Number(formData.cliente)}
                 clients={displayedClients}
                 onChange={(id: number) => setFormData((prev: any) => ({ ...prev, cliente: id }))}
-                error={errors.cliente}
+                error={visibleErrors.cliente}
               />
             </div>
           </div>
@@ -228,14 +278,15 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
 
         {/* Sección: Condiciones de pago */}
         <div>
-          <h3 className={`${eyebrow.table} mb-4`}>Condiciones de pago</h3>
+          <h2 className={`${eyebrow.table} mb-4`}>Condiciones de pago</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {!isPrestamo && (
               <div>
                 <SelectWithIcon
                   id="payments"
                   name="payments"
-                  label="Tipo de pago *"
+                  label="Tipo de pago"
+                  required
                   value={formData.payments}
                   onChange={e => {
                     const { name, value } = e.target;
@@ -252,62 +303,102 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
 
             {formData.payments !== 'CONTADO' && (
               <div>
-                <InputWithIcon id="quantityFees" name="quantityFees" label="Cantidad de cuotas *" type="number" value={formData.quantityFees} onChange={handleInputChange} icon={<Plus strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={errors.quantityFees} />
+                <InputWithIcon id="quantityFees" name="quantityFees" label="Cantidad de cuotas" required type="number" value={formData.quantityFees} onChange={handleInputChange} icon={<Plus strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={visibleErrors.quantityFees} />
               </div>
             )}
 
             {isPrestamo && (
               <div>
-                <InputWithIcon id="interestRate" name="interestRate" label="Porcentaje de interés (%) *" type="number" value={formData.interestRate} onChange={handleInputChange} icon={<Percent strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={errors.interestRate} />
+                <InputWithIcon id="interestRate" name="interestRate" label="Porcentaje de interés (%)" required type="number" value={formData.interestRate} onChange={handleInputChange} icon={<Percent strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={visibleErrors.interestRate} />
               </div>
             )}
 
-            {!isPrestamo && !(formData.payments === 'CONTADO' && formData.payFirstFee) && (
+            {/* Un préstamo no tiene producto del que heredar la moneda: se elige
+                acá y los montos de esta sección se interpretan en ella. */}
+            {isPrestamo && (
               <div>
-                <InputWithIcon id="amountFee" name="amountFee" label="Valor de la cuota *" type="number" value={formData.amountFee} onChange={handleInputChange} icon={<DollarSign strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={errors.amountFee} />
+                <SelectWithIcon
+                  id="currency"
+                  name="currency"
+                  label="Moneda"
+                  value={formData.currency || getCurrency()}
+                  onChange={handleInputChange}
+                  icon={<Coins strokeWidth={1.5} className="w-4 h-4 text-brand-600" />}
+                  options={opcionesMonedaNegocio(formData.currency).map((m) => ({ value: m, label: etiquetaMoneda(m) }))}
+                />
+              </div>
+            )}
+
+            {!isPrestamo && !esContado && (
+              <div>
+                <InputWithIcon id="amountFee" name="amountFee" label="Valor de la cuota" required type="number" value={formData.amountFee} onChange={handleInputChange} symbol={simbolo} error={visibleErrors.amountFee} />
+              </div>
+            )}
+
+            {/* Al contado el total sale del precio de venta del catálogo: se
+                muestra calculado, no como campo editable. */}
+            {esContado && (
+              <div>
+                <p className="block text-sm font-medium text-gray-700 mb-2">
+                  Total de la venta (contado)
+                </p>
+                <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-input text-gray-700 font-medium font-mono tabular-nums">
+                  {totalContado != null ? money(totalContado) : '—'}
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  {cantidad} × {precioUnitario != null ? money(precioUnitario) : '—'} (precio de venta del catálogo)
+                </p>
               </div>
             )}
 
             <div>
               {isPrestamo ? (
-                <InputWithIcon id="cost" name="cost" label="Monto entregado *" type="number" value={formData.cost} onChange={handleInputChange} icon={<DollarSign strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={errors.cost} />
+                <InputWithIcon id="cost" name="cost" label="Monto entregado" required type="number" value={formData.cost} onChange={handleInputChange} symbol={simbolo} error={visibleErrors.cost} />
               ) : (
                 <div>
                   <p className="block text-sm font-medium text-gray-700 mb-2">
                     Costo del producto
                   </p>
-                  <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-input text-gray-700 font-medium">
-                    {costoTotal != null ? formatCurrency(costoTotal) : '—'}
-                  </div>
-                  {/* Este campo es de solo lectura: sin este aviso, la regla
-                      "total a cobrar > costo" bloqueaba el botón en silencio */}
-                  {errors.cost && (
-                    <p role="alert" className="mt-1 text-sm text-red-600">{errors.cost}</p>
-                  )}
-                  <GananciaEstimada formData={formData} costoTotal={costoTotal} formatCurrency={formatCurrency} />
+                  <CostoYGanancia costoTotal={costoTotal} totalCobrar={totalCobrar} formatCurrency={money} />
+                  <TotalACobrar totalCobrar={totalCobrar} formatCurrency={money} />
                 </div>
               )}
             </div>
+
+            {/* La regla "el total a cobrar supera al costo" no se arregla en el
+                costo (en la venta es de sólo lectura): el aviso va junto a los
+                campos que sí se pueden editar. */}
+            {!isPrestamo && visibleErrors.cost && (
+              <p
+                role="alert"
+                tabIndex={-1}
+                data-error-message
+                className="mt-4 rounded-input border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+              >
+                {visibleErrors.cost}
+              </p>
+            )}
           </div>
         </div>
 
         {/* Primera cuota */}
         <div>
-          <h3 className={`${eyebrow.table} mb-4`}>Primera cuota</h3>
+          <h2 className={`${eyebrow.table} mb-4`}>Primera cuota</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <PrimerCuota
               firstFeeDate={formData.firstFeeDate}
               fecha={formData.fecha}
               payFirstFee={formData.payFirstFee}
               firstFeeAmount={formData.firstFeeAmount}
+              currency={moneda}
               onChange={handleInputChange}
-              errors={{ firstFeeDate: errors.firstFeeDate, firstFeeAmount: errors.firstFeeAmount }}
+              errors={{ firstFeeDate: visibleErrors.firstFeeDate, firstFeeAmount: visibleErrors.firstFeeAmount }}
             />
           </div>
         </div>
 
         {isPrestamo && (
-          <LoanSummary formData={formData} />
+          <LoanSummary formData={formData} formatCurrency={money} />
         )}
 
         <ErrorAnnouncer message={errorAnnouncement} />
@@ -318,7 +409,7 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
           </div>
         )}
 
-        <SubmitBar isDisabled={isSubmittingDisabled} isLoading={isSubmitting} />
+        <SubmitBar cancelTo={cancelTo} isDisabled={isSubmittingDisabled} isLoading={isSubmitting} stickyOnMobile />
       </form>
     </div>
   );

@@ -182,14 +182,14 @@ describe('salesService.createProductType', () => {
     vi.mocked(authenticatedFetch).mockReset();
   });
 
-  it('hace POST a /api/product-types con el nombre como cuerpo', async () => {
+  it('hace POST a /api/product-types con el nombre en el cuerpo', async () => {
     vi.mocked(authenticatedFetch).mockResolvedValue(okEnvelope({ id: 3, name: 'ROPA' }));
-    await salesService.createProductType('ROPA');
+    await salesService.createProductType({ name: 'ROPA', parentId: 2, slug: 'ropa' });
     const [url, init] = vi.mocked(authenticatedFetch).mock.calls[0];
     // Solo se valida el path: el host depende del entorno (VITE_API_URL o tunnel)
     expect(url).toBe(`${API_BASE_URL}/api/product-types`);
     expect(init?.method).toBe('POST');
-    expect(init?.body).toBe(JSON.stringify('ROPA'));
+    expect(init?.body).toBe(JSON.stringify({ name: 'ROPA', parentId: 2, slug: 'ropa' }));
   });
 });
 

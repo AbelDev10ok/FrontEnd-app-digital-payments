@@ -25,6 +25,7 @@ const CrearTransaccionInner = ({ type, user, onLogout }: CrearTransaccionProps) 
     handleInputChange,
     handleSubmit,
     errors,
+    visibleErrors,
     isSubmittingDisabled,
     isSubmitting,
     submitError,
@@ -37,7 +38,8 @@ const CrearTransaccionInner = ({ type, user, onLogout }: CrearTransaccionProps) 
   const handleProductSelected = (product: ProductDto, cantidad: number) => {
     setFormData((prev) => ({
       ...prev,
-      productId: String(product.id),
+      // La venta guarda la variante/SKU elegida, no el producto base
+      productId: String(product.variantId ?? product.id),
       cantidad: String(cantidad),
     }));
     setStep("detalle");
@@ -51,6 +53,9 @@ const CrearTransaccionInner = ({ type, user, onLogout }: CrearTransaccionProps) 
   };
 
   const pageTitle = type === "PRESTAMO" ? "Nuevo Préstamo" : "Nueva Venta";
+  // "Cancelar" vuelve a la lista de operaciones (el destino del envío exitoso);
+  // antes apuntaba a una ruta inexistente y el catch-all dejaba la landing abierta.
+  const cancelTo = type === "PRESTAMO" ? "/dashboard/ventas/todas?kind=PRESTAMO" : "/dashboard/ventas/todas";
 
   return (
     <DashboardLayout title={pageTitle} user={user} onLogout={onLogout}>
@@ -68,9 +73,11 @@ const CrearTransaccionInner = ({ type, user, onLogout }: CrearTransaccionProps) 
             setFormData={setFormData}
             handleInputChange={handleInputChange}
             errors={errors}
+            visibleErrors={visibleErrors}
             isSubmittingDisabled={isSubmittingDisabled}
             isSubmitting={isSubmitting}
             submitError={submitError}
+            cancelTo={cancelTo}
             products={products}
             sellers={sellers}
             displayedClients={displayedClients}

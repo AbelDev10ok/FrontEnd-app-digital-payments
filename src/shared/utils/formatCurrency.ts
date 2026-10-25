@@ -1,4 +1,5 @@
 import { businessService } from "@/features/negocio/services/businessService";
+import type { MontosPorMoneda } from "@/shared/types/money";
 
 let currentCurrency = "ARS";
 let loadPromise: Promise<void> | null = null;
@@ -57,6 +58,36 @@ export function formatCurrency(amount: number, currency: string = currentCurrenc
     // Fallback
     return `${amount.toFixed(2)} ${currency}`;
   }
+}
+
+/**
+ * Formatea montos agregados por moneda como "ARS 150.000 · USD 320".
+ * Nunca suma monedas distintas: cada monto se muestra con su propia moneda.
+ */
+export function formatMoneyByCurrency(montos?: MontosPorMoneda | null): string {
+  if (!montos) return "";
+  return Object.entries(montos)
+    .filter(([, monto]) => monto != null)
+    .map(([moneda, monto]) => formatCurrency(monto, moneda))
+    .join(" · ");
+}
+
+/** ¿Hay algún monto cargado en el agregado por moneda? */
+export function hasMoney(montos?: MontosPorMoneda | null): boolean {
+  return !!montos && Object.keys(montos).length > 0;
+}
+
+/** Suma por moneda de varios agregados (solo acumula dentro de cada moneda). */
+export function mergeMoney(...conjuntos: Array<MontosPorMoneda | null | undefined>): MontosPorMoneda {
+  const total: MontosPorMoneda = {};
+  for (const conjunto of conjuntos) {
+    if (!conjunto) continue;
+    for (const [moneda, monto] of Object.entries(conjunto)) {
+      if (monto == null) continue;
+      total[moneda] = (total[moneda] ?? 0) + monto;
+    }
+  }
+  return total;
 }
 
 export default formatCurrency;

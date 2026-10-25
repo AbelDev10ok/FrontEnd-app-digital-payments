@@ -1,12 +1,15 @@
 import React from 'react';
-import { Calendar, CheckCircle, DollarSign, } from 'lucide-react';
+import { Calendar, CheckCircle } from 'lucide-react';
 import InputWithIcon from './InputWithIcon';
+import { getCurrencySymbol } from '@/shared/utils/formatCurrency';
 
 interface PrimerCuotaProps {
   firstFeeDate: string;
   fecha: string;
   payFirstFee: boolean | string | number;
   firstFeeAmount: number | string;
+  /** Moneda de la operación: el símbolo del monto la sigue. */
+  currency: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   errors?: {
     firstFeeDate?: string;
@@ -14,7 +17,7 @@ interface PrimerCuotaProps {
   };
 }
 
-const PrimerCuota: React.FC<PrimerCuotaProps> = ({ firstFeeDate, fecha, payFirstFee, firstFeeAmount, onChange, errors }) => {
+const PrimerCuota: React.FC<PrimerCuotaProps> = ({ firstFeeDate, fecha, payFirstFee, firstFeeAmount, currency, onChange, errors }) => {
   const disabled = firstFeeDate !== fecha;
 
   return (
@@ -65,7 +68,7 @@ const PrimerCuota: React.FC<PrimerCuotaProps> = ({ firstFeeDate, fecha, payFirst
             type="number"
             value={firstFeeAmount}
             onChange={onChange}
-            icon={<DollarSign className="w-4 h-4" />}
+            symbol={getCurrencySymbol(currency)}
             error={errors?.firstFeeAmount}
           />
         </div>

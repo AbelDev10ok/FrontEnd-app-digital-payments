@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import CrearTransaccion from '../CrearTransaccion';
@@ -14,6 +14,7 @@ vi.mock('@features/crearVentas/hooks/useSaleForm', () => ({
     handleInputChange: vi.fn(),
     handleSubmit: vi.fn(),
     errors: {},
+    visibleErrors: {},
     isSubmittingDisabled: false,
     productTypes: [],
     products: [],
@@ -27,12 +28,19 @@ vi.mock('@features/crearVentas/components/TransactionHeader', () => ({
 }));
 
 vi.mock('@features/crearVentas/components/ProductPicker', () => ({
-  default: () => <div>Elegir producto</div>,
+  default: ({ onSelect }: { onSelect: (product: { id: number }, cantidad: number) => void }) => (
+    <button type="button" onClick={() => onSelect({ id: 1 }, 1)}>
+      Elegir producto
+    </button>
+  ),
 }));
 
 vi.mock('@features/crearVentas/components/CreateSaleForm', () => ({
-  default: ({ formData }: { formData: { tipo: string } }) => (
-    <div>{formData.tipo === 'PRESTAMO' ? 'Formulario de préstamo' : 'Formulario de venta'}</div>
+  default: ({ formData, cancelTo }: { formData: { tipo: string }; cancelTo?: string }) => (
+    <div>
+      <span>{formData.tipo === 'PRESTAMO' ? 'Formulario de préstamo' : 'Formulario de venta'}</span>
+      <span data-testid="cancel-to">{cancelTo}</span>
+    </div>
   ),
 }));
 
@@ -67,5 +75,27 @@ describe('CrearTransaccion', () => {
     );
 
     expect(screen.getByText('Elegir producto')).toBeInTheDocument();
+  });
+
+  it('en un préstamo, "Cancelar" vuelve a la lista filtrada por préstamos', () => {
+    render(
+      <MemoryRouter>
+        <CrearTransaccion type="PRESTAMO" {...props} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId('cancel-to').textContent).toBe('/dashboard/ventas/todas?kind=PRESTAMO');
+  });
+
+  it('en una venta, "Cancelar" vuelve a la lista de ventas (no a la landing)', () => {
+    render(
+      <MemoryRouter>
+        <CrearTransaccion type="VENTA" {...props} />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByText('Elegir producto'));
+
+    expect(screen.getByTestId('cancel-to').textContent).toBe('/dashboard/ventas/todas');
   });
 });

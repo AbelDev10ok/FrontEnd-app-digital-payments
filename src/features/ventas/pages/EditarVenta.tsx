@@ -58,8 +58,8 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
 
     const updatePayload: UpdateSaleRequest = {
       productType: data.productTypeId,
-      // El form de edición no gestiona producto: se conserva el actual (solo VENTA)
-      product: sale.kind === 'VENTA' ? (sale.product?.id ?? null) : null,
+      // El form de edición no gestiona la variante: se conserva la actual (solo VENTA)
+      variant: sale.kind === 'VENTA' ? (sale.product?.variantId ?? null) : null,
       descriptionProduct: data.descriptionProduct,
       kind: sale.kind,
     };
