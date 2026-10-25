@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
 import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
@@ -12,7 +13,8 @@ import CronogramaFees from '../components/CronogramaFees';
 import HeaderDetalleTransaction from '../components/HeaderDetalleTransaction';
 import ClientInfoDetalle from '../components/ClientInfoDetalle';
 import InfoTransactionDetalle from '../components/InfoTransactionDetalle';
-import { SaleResponseDto } from '@/shared/types/sales';
+import RemitoEmitModal from '@/features/ventas/components/RemitoEmitModal';
+import { SaleDocumentDto, SaleResponseDto } from '@/shared/types/sales';
 import Modal from '@/shared/components/ui/Modal';
 import Select from '@/shared/components/ui/Select';
 
@@ -29,6 +31,7 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
   const [error, setError] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isRemitoModalOpen, setIsRemitoModalOpen] = useState(false);
   const [refundOnCancel, setRefundOnCancel] = useState(true);
   const [actionError, setActionError] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -65,6 +68,47 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
   const handleOpenCancel = () => {
     setRefundOnCancel(true);
     setIsCancelModalOpen(true);
+  };
+
+  const handleOpenRemito = () => {
+    if (!transaction) return;
+    if (transaction.remito) {
+      window.open(
+        `/dashboard/ventas/${transaction.id}/remito`,
+        '_blank',
+        'noopener',
+      );
+      return;
+    }
+    setIsRemitoModalOpen(true);
+  };
+
+  const handleRemitoEmitted = (
+    document: SaleDocumentDto,
+    printWindow: Window | null,
+  ) => {
+    setTransaction((prev) =>
+      prev
+        ? {
+            ...prev,
+            remito: {
+              id: document.id,
+              number: document.number,
+              numberLabel: document.numberLabel,
+              issuedAt: document.issuedAt,
+            },
+          }
+        : prev,
+    );
+    setIsRemitoModalOpen(false);
+
+    const url = `/dashboard/ventas/${document.saleId}/remito`;
+    if (printWindow) {
+      printWindow.location.href = url;
+    } else {
+      // Si el navegador bloqueó la pestaña, la abrimos en la misma ventana.
+      window.location.assign(url);
+    }
   };
 
   const handleConfirmCancel = async () => {
@@ -135,23 +179,26 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onCancel={handleOpenCancel}
+          onPrintRemito={handleOpenRemito}
           canDelete={!hasPaidFees}
         />
         
         {/* Transaction state */}
         <StateDetalleTransaction
           transaction={transaction}
-          formatCurrency={formatCurrency}
+          formatCurrency={(amount) => formatCurrency(amount, transaction.currency ?? undefined)}
+          showDetails={showDetails}
         />
 
         {/* Botón para mostrar/ocultar detalles */}
-        <div className="my-4">
+        <div className="my-3 flex justify-end">
           <Button
-            variant="secondary"
-            className="w-full"
+            variant="ghost"
+            size="sm"
+            leftIcon={showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             onClick={() => setShowDetails((prev) => !prev)}
           >
-            {showDetails ? 'Ocultar Detalles' : 'Ver Detalles'}
+            {showDetails ? 'Ocultar detalles' : 'Ver detalles'}
           </Button>
         </div>
 
@@ -172,7 +219,7 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
         <CronogramaFees
           transaction={transaction}
           formatDate={formatDate}
-          formatCurrency={formatCurrency}
+          formatCurrency={(amount) => formatCurrency(amount, transaction.currency ?? undefined)}
           refreshTransaction={refreshTransaction}
         />
         </div>
@@ -191,7 +238,7 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
           {collectedAmount > 0 && (
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700">
-                Monto ya cobrado: {formatCurrency(collectedAmount)}
+                Monto ya cobrado: {formatCurrency(collectedAmount, transaction.currency ?? undefined)}
               </label>
               <Select
                 value={refundOnCancel ? 'refund' : 'retain'}
@@ -203,6 +250,12 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
                 <option value="retain">Conservar el monto cobrado</option>
               </Select>
             </div>
+          )}
+
+          {transaction.remito && (
+            <p className="mt-2 text-sm text-gray-500">
+              El remito N° {transaction.remito.numberLabel} ya emitido se conserva.
+            </p>
           )}
 
           {actionError && <p className="mt-2 text-sm text-red-600">{actionError}</p>}
@@ -232,6 +285,11 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
           <p className="text-sm text-gray-600">
             ¿Estás seguro de que quieres eliminar {isLoan ? 'este préstamo' : 'esta venta'}? Esta acción no se puede deshacer.
           </p>
+          {transaction.remito && (
+            <p className="mt-3 text-sm font-medium text-red-700">
+              También se eliminará el remito N° {transaction.remito.numberLabel}.
+            </p>
+          )}
           {actionError && <p className="mt-2 text-sm text-red-600">{actionError}</p>}
           <div className="mt-6 flex justify-end space-x-3">
             <Button
@@ -249,6 +307,13 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
           </div>
         </div>
       </Modal>
+
+      <RemitoEmitModal
+        isOpen={isRemitoModalOpen}
+        sale={transaction}
+        onClose={() => setIsRemitoModalOpen(false)}
+        onEmitted={handleRemitoEmitted}
+      />
 
       </DashboardLayout>
   );

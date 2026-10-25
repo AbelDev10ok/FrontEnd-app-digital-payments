@@ -7,10 +7,11 @@ import { useSalesFilters } from "@/features/ventas/hooks/useSalesFilters";
 import HeaderTransaction from "@/features/ventas/components/HeaderTransaction";
 import DashboardLayout from "@/shared/components/layout/DashboardLayout";
 import Paginación from "@/shared/components/ui/Paginacion";
-import { FetchParamsSales, SaleKind } from "@/shared/types/sales";
+import { FetchParamsSales, SaleDocumentDto, SaleKind, SaleResponseDto } from "@/shared/types/sales";
 import { salesService } from "@features/ventas/services/salesServices";
 import SalesFilters from "@features/ventas/components/SalesFilters";
 import SaleTable from "@features/ventas/components/SaleTable";
+import RemitoEmitModal from "@features/ventas/components/RemitoEmitModal";
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -37,6 +38,7 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
   } = useSalesFilters();
 
   const [selectedKind, setSelectedKind] = useState<SaleKind | "">("");
+  const [remitoSale, setRemitoSale] = useState<SaleResponseDto | null>(null);
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -108,6 +110,7 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     setPage,
     totalPages,
     totalElements,
+    refresh,
   } = usePaginatedSales(fetcher, [
     searchDescription,
     searchClientName,
@@ -118,6 +121,14 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     month,
     specificDate,
   ]);
+
+  // El filtro de fecha arranca en el mes actual: si no hay resultados, el
+  // mensaje nombra el período para que no parezca que la venta desapareció.
+  const mesNombre = month
+    ? new Date(Number(year) || new Date().getFullYear(), Number(month) - 1, 1)
+        .toLocaleDateString("es-AR", { month: "long" })
+    : "";
+  const periodo = mesNombre ? ` en ${mesNombre}${year ? ` de ${year}` : ""}` : "";
 
   const resetFilters = () => {
     setSearchDescription("");
@@ -141,6 +152,32 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
   );
 
   const pageTtitle = selectedKind === "PRESTAMO" ? "Todos los Préstamos" : "Todas las Ventas";
+
+  const handleRemito = (sale: SaleResponseDto) => {
+    if (sale.remito) {
+      window.open(
+        `/dashboard/ventas/${sale.id}/remito`,
+        "_blank",
+        "noopener",
+      );
+      return;
+    }
+    setRemitoSale(sale);
+  };
+
+  const handleRemitoEmitted = (
+    document: SaleDocumentDto,
+    printWindow: Window | null,
+  ) => {
+    setRemitoSale(null);
+    refresh();
+    const url = `/dashboard/ventas/${document.saleId}/remito`;
+    if (printWindow) {
+      printWindow.location.href = url;
+    } else {
+      window.location.assign(url);
+    }
+  };
 
   return (
     <DashboardLayout title={pageTtitle} user={user} onLogout={onLogout}>
@@ -176,10 +213,11 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
               sales={sales}
               emptyMessage={
                 anyFilterActive
-                  ? "No se encontraron ventas que coincidan con los filtros"
+                  ? `No se encontraron ventas${periodo}`
                   : "No hay ventas registradas"
               }
               selectedStatus={selectedStatus}
+              onRemito={handleRemito}
             />
           </>
         )}
@@ -189,6 +227,13 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
           <Paginación page={page} setPage={setPage} totalPages={totalPages} />
         )}
       </div>
+
+      <RemitoEmitModal
+        isOpen={Boolean(remitoSale)}
+        sale={remitoSale}
+        onClose={() => setRemitoSale(null)}
+        onEmitted={handleRemitoEmitted}
+      />
     </DashboardLayout>
   );
 };

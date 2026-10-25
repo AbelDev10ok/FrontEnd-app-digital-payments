@@ -1,5 +1,5 @@
 import { SaleResponseDto } from "@/shared/types/sales";
-import { Ban, ArrowLeft, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Ban, ArrowLeft, MoreVertical, Pencil, Printer, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
@@ -8,6 +8,8 @@ interface HeaderDetalleTransactionProps {
     onEdit: () => void;
     onDelete: () => void;
     onCancel?: () => void;
+    /** Emite el remito o abre el ya emitido (solo ventas). */
+    onPrintRemito?: () => void;
     canDelete?: boolean;
 }
 
@@ -16,6 +18,7 @@ export default function HeaderDetalleTransaction({
     onEdit,
     onDelete,
     onCancel,
+    onPrintRemito,
     canDelete = true,
 }: HeaderDetalleTransactionProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,18 +27,24 @@ export default function HeaderDetalleTransaction({
     const closeMenu = () => setIsMenuOpen(false);
 
     return (
-        <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+        <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center space-x-3">
                 <Link
                     to="/dashboard/ventas/todas"
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+                    className="shrink-0 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
                 >
                     <ArrowLeft className="w-5 h-5 text-gray-600" />
                 </Link>
-                <p className="text-sm text-gray-500">{transaction.descriptionProduct}</p>
+                {/* Quién y qué: en una app de cobros el nombre del cliente orienta
+                    antes que el producto, y antes sólo aparecía dentro de los
+                    detalles (plegados por defecto). */}
+                <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-gray-900">{transaction.client.name}</p>
+                    <p className="truncate text-sm text-gray-500">{transaction.descriptionProduct}</p>
+                </div>
             </div>
 
-            <div className="relative">
+            <div className="relative shrink-0">
                 <button
                     onClick={() => setIsMenuOpen((prev) => !prev)}
                     onBlur={() => setTimeout(() => setIsMenuOpen(false), 200)}
@@ -46,7 +55,7 @@ export default function HeaderDetalleTransaction({
                 </button>
 
                 {isMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-card shadow-card z-10 border border-gray-100">
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-card shadow-card z-10 border border-gray-100">
                         <ul className="py-1">
                             <li>
                                 <button
@@ -57,6 +66,21 @@ export default function HeaderDetalleTransaction({
                                     Editar
                                 </button>
                             </li>
+                            {transaction.kind === 'VENTA'
+                                && onPrintRemito
+                                && (!isCanceled || transaction.remito) && (
+                                <li>
+                                    <button
+                                        onClick={() => { closeMenu(); onPrintRemito(); }}
+                                        className="w-full text-left flex items-center px-4 py-2 text-sm text-brand-700 hover:bg-gray-50"
+                                    >
+                                        <Printer className="w-4 h-4 mr-2" />
+                                        {transaction.remito
+                                            ? `Ver remito N° ${transaction.remito.numberLabel}`
+                                            : 'Emitir remito'}
+                                    </button>
+                                </li>
+                            )}
                             {!isCanceled && onCancel && (
                                 <li>
                                     <button

@@ -7,12 +7,15 @@ type Props = {
   sales: SaleResponseDto[];
   selectedStatus: string;
   emptyMessage?: string;
+  /** Emite el remito o abre el ya emitido. */
+  onRemito: (sale: SaleResponseDto) => void;
 };
 
 const SaleTable: React.FC<Props> = ({
   sales,
   emptyMessage,
   selectedStatus,
+  onRemito,
 }) => {
   return (
     <div className="bg-white rounded-card shadow-card">
@@ -40,7 +43,7 @@ const SaleTable: React.FC<Props> = ({
           <tbody className="divide-y divide-gray-100">
             {sales.length === 0 ? (
               <tr>
-                <td colSpan={6} className={`px-6 py-8 text-center ${neutral.muted}`}>
+                <td colSpan={5} className={`px-6 py-8 text-center ${neutral.muted}`}>
                   {emptyMessage ?? "No hay ventas registradas"}
                 </td>
               </tr>
@@ -50,6 +53,7 @@ const SaleTable: React.FC<Props> = ({
                   key={sale.id}
                   sale={sale}
                   selectedStatus={selectedStatus}
+                  onRemito={onRemito}
                 />
               ))
             )}

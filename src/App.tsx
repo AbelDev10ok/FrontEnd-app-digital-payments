@@ -27,6 +27,9 @@ const TodasVentas = lazy(() => import("@/features/ventas/pages/TodasVentas"));
 const VentaDetalle = lazy(
   () => import("@/features/ventaDetalle/pages/VentaDetalle"),
 );
+const RemitoVenta = lazy(
+  () => import("@/features/ventaDetalle/pages/RemitoVenta"),
+);
 const EditarVenta = lazy(() => import("@/features/ventas/pages/EditarVenta"));
 const EditarCliente = lazy(
   () => import("@/features/clients/pages/EditarCliente"),
@@ -192,6 +195,17 @@ function App() {
                 <ProtectedRoute
                   requiredRole="ROLE_USER"
                   component={EditarVenta}
+                />
+              }
+            />
+
+            {/* Vista imprimible del remito: fuera del layout del dashboard. */}
+            <Route
+              path="/dashboard/ventas/:id/remito"
+              element={
+                <ProtectedRoute
+                  requiredRole="ROLE_USER"
+                  component={RemitoVenta}
                 />
               }
             />

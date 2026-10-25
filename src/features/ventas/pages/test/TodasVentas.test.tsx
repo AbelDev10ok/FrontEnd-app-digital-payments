@@ -1,15 +1,17 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import TodasVentas from '../TodasVentas';
 import { salesService } from '@/features/ventas/services/salesServices';
+import type { SaleDocumentDto, SaleResponseDto } from '@/shared/types/sales';
 
 vi.mock('@/features/ventas/services/salesServices', () => ({
   salesService: {
     getProductTypes: vi.fn(),
     getSalesCounts: vi.fn(),
     getAllSalesPaginated: vi.fn(),
+    emitirRemito: vi.fn(),
   },
 }));
 
@@ -25,6 +27,55 @@ const pageMock = {
   numberOfElements: 0,
   first: true,
   empty: true,
+};
+
+const venta: SaleResponseDto = {
+  id: 10,
+  client: { id: 5, name: 'Juana Pérez', telefono: '', email: '', direccion: '', seller: false },
+  descriptionProduct: 'Televisor 32 pulgadas',
+  priceTotal: 100000,
+  dateSale: '2026-06-01',
+  finalPaymentDate: '2026-12-01',
+  realFinalPayment: '',
+  typePayments: 'CONTADO',
+  quantityFees: 0,
+  amountFee: 0,
+  fees: [],
+  cost: 80000,
+  interestRate: null,
+  productType: null,
+  paidFeesCount: 0,
+  remainingAmount: 0,
+  totalFees: 0,
+  status: 'ACTIVE',
+  kind: 'VENTA',
+};
+
+const documento: SaleDocumentDto = {
+  id: 33,
+  type: 'REMITO',
+  number: 1,
+  numberLabel: '000001',
+  issuedAt: '2026-06-02T10:30:00',
+  saleId: 10,
+  saleDate: '2026-06-01',
+  businessName: 'Cobros del Sur',
+  businessAddress: null,
+  businessTaxId: null,
+  businessPhone: null,
+  clientName: 'Juana Pérez',
+  clientDoc: null,
+  clientAddress: null,
+  clientPhone: null,
+  productName: 'Televisor 32 pulgadas',
+  variantLabel: null,
+  sku: null,
+  quantity: 1,
+  unitPrice: 100000,
+  subtotal: 100000,
+  total: 100000,
+  currency: 'ARS',
+  notes: null,
 };
 
 const renderPage = (path = '/dashboard/ventas/todas') =>
@@ -52,6 +103,11 @@ describe('TodasVentas', () => {
     });
     vi.mocked(salesService.getAllSalesPaginated).mockReset();
     vi.mocked(salesService.getAllSalesPaginated).mockResolvedValue(pageMock);
+    vi.mocked(salesService.emitirRemito).mockReset();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('combina kind, status y productType desde la URL en la petición', async () => {
@@ -165,5 +221,53 @@ describe('TodasVentas', () => {
     renderPage();
 
     expect(await screen.findByText('7 resultados')).toBeInTheDocument();
+  });
+
+  it('emite el remito desde la fila y abre la vista imprimible', async () => {
+    const ventana = {
+      location: { href: '' },
+      close: vi.fn(),
+    } as unknown as Window;
+    vi.spyOn(window, 'open').mockReturnValue(ventana);
+    let conRemito = false;
+    vi.mocked(salesService.getAllSalesPaginated).mockImplementation(async () => ({
+      ...pageMock,
+      content: [
+        conRemito
+          ? {
+              ...venta,
+              remito: {
+                id: 33,
+                number: 1,
+                numberLabel: '000001',
+                issuedAt: '2026-06-02T10:30:00',
+              },
+            }
+          : venta,
+      ],
+      totalElements: 1,
+      numberOfElements: 1,
+      empty: false,
+    }));
+    vi.mocked(salesService.emitirRemito).mockImplementation(async () => {
+      conRemito = true;
+      return documento;
+    });
+
+    renderPage();
+    await screen.findByText('Televisor 32 pulgadas');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Emitir remito' }));
+
+    const dialogo = await screen.findByRole('dialog');
+    fireEvent.click(within(dialogo).getByRole('button', { name: /Emitir remito/ }));
+
+    await waitFor(() => expect(salesService.emitirRemito).toHaveBeenCalledWith(10, undefined));
+    await waitFor(() =>
+      expect(ventana.location.href).toBe('/dashboard/ventas/10/remito'),
+    );
+    expect(
+      await screen.findByRole('button', { name: 'Ver remito N° 000001' }),
+    ).toBeInTheDocument();
   });
 });

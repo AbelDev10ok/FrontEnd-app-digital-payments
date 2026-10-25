@@ -14,3 +14,19 @@
     color: #114332;
   }
 }
+
+/*
+ * Remitos: la vista imprimible se genera en el navegador. El tamaño y margen
+ * de página se fijan acá; el resto del documento usa utilidades `print:`.
+ */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+}

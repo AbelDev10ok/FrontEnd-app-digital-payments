@@ -9,6 +9,7 @@ import Select from '@/shared/components/ui/Select';
 import Field from '@/shared/components/ui/Field';
 import { businessService } from '@/features/negocio/services/businessService';
 import { applyCurrency } from '@/shared/utils/formatCurrency';
+import { etiquetaMoneda, opcionesMonedaNegocio } from '@/shared/utils/currencies';
 import type { BusinessMe } from '@/shared/types/business';
 
 interface MiNegocioProps {
@@ -46,6 +47,9 @@ const TituloCard = ({ children }: { children: React.ReactNode }) => (
 const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
   const [negocio, setNegocio] = useState<BusinessMe | null>(null);
   const [nombre, setNombre] = useState('');
+  const [cuit, setCuit] = useState('');
+  const [direccion, setDireccion] = useState('');
+  const [telefono, setTelefono] = useState('');
   const [moneda, setMoneda] = useState('ARS');
   const [tasa, setTasa] = useState('');
   const [frecuencia, setFrecuencia] = useState('');
@@ -68,6 +72,9 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
       .then((b) => {
         setNegocio(b);
         setNombre(b.name);
+        setCuit(b.cuit ?? '');
+        setDireccion(b.address ?? '');
+        setTelefono(b.phone ?? '');
         setMoneda(b.currency);
         setTasa(b.defaultInterestRate != null ? String(b.defaultInterestRate) : '');
         setFrecuencia(b.defaultPaymentFrequency ?? '');
@@ -93,11 +100,20 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
 
   const guardar = async (destino: 'datos' | 'defaults') => {
     const setFeedback = destino === 'datos' ? setFeedbackDatos : setFeedbackDefaults;
+    // Validación básica del CUIT: vacío es válido (es opcional), pero si se
+    // carga tiene que tener los 11 dígitos que se imprimen en el remito.
+    if (destino === 'datos' && cuit !== '' && !/^\d{11}$/.test(cuit)) {
+      setFeedback({ tipo: 'error', mensaje: 'El CUIT debe tener 11 dígitos, sin guiones.' });
+      return;
+    }
     setGuardando(destino);
     setFeedback(null);
     try {
       const actualizado = await businessService.updateMyBusiness({
         name: nombre.trim(),
+        cuit: cuit.trim(),
+        address: direccion.trim(),
+        phone: telefono.trim(),
         currency: moneda.trim().toUpperCase(),
         defaultInterestRate: tasa === '' ? null : Number(tasa),
         defaultPaymentFrequency: frecuencia || undefined,
@@ -164,17 +180,63 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
                     <Input id="nombre-negocio" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
                   </Field>
                   <Field
-                    label="Moneda (ISO 4217)"
-                    htmlFor="moneda-negocio"
-                    hint="Ejemplo: ARS, USD, PYG"
+                    label="CUIT"
+                    htmlFor="cuit-negocio"
+                    hint="11 dígitos, sin guiones. Es opcional y se imprime en los remitos."
                   >
                     <Input
+                      id="cuit-negocio"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      maxLength={11}
+                      value={cuit}
+                      onChange={(e) => setCuit(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                      placeholder="20123456789"
+                    />
+                  </Field>
+                  <Field
+                    label="Dirección"
+                    htmlFor="direccion-negocio"
+                    hint="Es opcional y se imprime en los remitos."
+                  >
+                    <Input
+                      id="direccion-negocio"
+                      maxLength={255}
+                      value={direccion}
+                      onChange={(e) => setDireccion(e.target.value)}
+                      placeholder="Av. Siempre Viva 123, Ciudad"
+                    />
+                  </Field>
+                  <Field
+                    label="Teléfono"
+                    htmlFor="telefono-negocio"
+                    hint="Es opcional y se imprime en los remitos."
+                  >
+                    <Input
+                      id="telefono-negocio"
+                      type="tel"
+                      maxLength={50}
+                      value={telefono}
+                      onChange={(e) => setTelefono(e.target.value)}
+                      placeholder="11 4444-5555"
+                    />
+                  </Field>
+                  <Field
+                    label="Moneda predeterminada"
+                    htmlFor="moneda-negocio"
+                    hint="Se preselecciona al crear productos y préstamos. Podés elegir otra en cada alta. No modifica las operaciones existentes."
+                  >
+                    <Select
                       id="moneda-negocio"
                       value={moneda}
                       onChange={(e) => setMoneda(e.target.value)}
-                      maxLength={3}
-                      className="uppercase w-32"
-                    />
+                    >
+                      {opcionesMonedaNegocio(moneda).map((m) => (
+                        <option key={m} value={m}>
+                          {etiquetaMoneda(m)}
+                        </option>
+                      ))}
+                    </Select>
                   </Field>
                 </div>
                 {feedbackDatos && <FeedbackMsg feedback={feedbackDatos} />}

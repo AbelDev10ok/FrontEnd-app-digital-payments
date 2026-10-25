@@ -29,6 +29,9 @@ vi.mock('@/features/negocio/services/businessService', () => ({
 const negocio = {
   id: 7,
   name: 'Cobros del Sur',
+  cuit: '20123456789',
+  address: 'Av. Siempre Viva 123',
+  phone: '1144556677',
   currency: 'ARS',
   defaultInterestRate: null,
   defaultPaymentFrequency: null,
@@ -57,7 +60,61 @@ describe('MiNegocio', () => {
     renderPagina();
 
     expect(await screen.findByDisplayValue('Cobros del Sur')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('ARS')).toBeInTheDocument();
+    expect(screen.getByLabelText(/CUIT/)).toHaveValue('20123456789');
+    expect(screen.getByLabelText(/Dirección/)).toHaveValue('Av. Siempre Viva 123');
+    expect(screen.getByLabelText(/Teléfono/)).toHaveValue('1144556677');
+    expect(screen.getByRole('combobox', { name: 'Moneda predeterminada' })).toHaveValue('ARS');
+  });
+
+  it('ofrece solo ARS y USD como moneda predeterminada', async () => {
+    renderPagina();
+    await screen.findByDisplayValue('Cobros del Sur');
+
+    const moneda = screen.getByRole('combobox', { name: 'Moneda predeterminada' });
+    const opciones = Array.from(moneda.querySelectorAll('option')).map((o) => o.value);
+
+    expect(opciones).toEqual(['ARS', 'USD']);
+  });
+
+  it('guarda la moneda predeterminada elegida', async () => {
+    const user = userEvent.setup();
+    vi.mocked(businessService.updateMyBusiness).mockResolvedValue({ ...negocio, currency: 'USD' });
+
+    renderPagina();
+    await screen.findByDisplayValue('Cobros del Sur');
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Moneda predeterminada' }), 'USD');
+    await user.click(screen.getByRole('button', { name: /Guardar cambios/ }));
+
+    await waitFor(() =>
+      expect(businessService.updateMyBusiness).toHaveBeenCalledWith(
+        expect.objectContaining({ currency: 'USD' }),
+      ),
+    );
+  });
+
+  it('explica el alcance de la moneda predeterminada', async () => {
+    renderPagina();
+    await screen.findByDisplayValue('Cobros del Sur');
+
+    expect(
+      screen.getByText(
+        'Se preselecciona al crear productos y préstamos. Podés elegir otra en cada alta. No modifica las operaciones existentes.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('conserva una moneda legada fuera de la lista para no dejar el select vacío', async () => {
+    vi.mocked(businessService.getMyBusiness).mockResolvedValue({ ...negocio, currency: 'PYG' });
+
+    renderPagina();
+    await screen.findByDisplayValue('Cobros del Sur');
+
+    const moneda = screen.getByRole('combobox', { name: 'Moneda predeterminada' });
+    const opciones = Array.from(moneda.querySelectorAll('option')).map((o) => o.value);
+
+    expect(opciones).toEqual(['ARS', 'USD', 'PYG']);
+    expect(moneda).toHaveValue('PYG');
   });
 
   it('guarda los datos del negocio', async () => {
@@ -117,5 +174,81 @@ describe('MiNegocio', () => {
 
     expect(await screen.findByText(/al menos 8 caracteres/)).toBeInTheDocument();
     expect(businessService.changePassword).not.toHaveBeenCalled();
+  });
+
+  it('guarda el CUIT, la dirección y el teléfono que se imprimen en los remitos', async () => {
+    const user = userEvent.setup();
+    vi.mocked(businessService.updateMyBusiness).mockResolvedValue({
+      ...negocio,
+      cuit: '20999999999',
+      address: 'Nueva dirección 456',
+      phone: '11 5555-6666',
+    });
+
+    renderPagina();
+    await screen.findByDisplayValue('Cobros del Sur');
+
+    const cuit = screen.getByLabelText(/CUIT/);
+    await user.clear(cuit);
+    await user.type(cuit, '20999999999');
+    const direccion = screen.getByLabelText(/Dirección/);
+    await user.clear(direccion);
+    await user.type(direccion, 'Nueva dirección 456');
+    const telefono = screen.getByLabelText(/Teléfono/);
+    await user.clear(telefono);
+    await user.type(telefono, '11 5555-6666');
+
+    await user.click(screen.getByRole('button', { name: /Guardar cambios/ }));
+
+    await waitFor(() =>
+      expect(businessService.updateMyBusiness).toHaveBeenCalledWith(
+        expect.objectContaining({
+          cuit: '20999999999',
+          address: 'Nueva dirección 456',
+          phone: '11 5555-6666',
+        }),
+      ),
+    );
+  });
+
+  it('permite borrar los datos opcionales enviando campos vacíos', async () => {
+    const user = userEvent.setup();
+    vi.mocked(businessService.updateMyBusiness).mockResolvedValue({
+      ...negocio,
+      cuit: null,
+      address: null,
+      phone: null,
+    });
+
+    renderPagina();
+    await screen.findByDisplayValue('Cobros del Sur');
+
+    await user.clear(screen.getByLabelText(/CUIT/));
+    await user.clear(screen.getByLabelText(/Dirección/));
+    await user.clear(screen.getByLabelText(/Teléfono/));
+    await user.click(screen.getByRole('button', { name: /Guardar cambios/ }));
+
+    await waitFor(() =>
+      expect(businessService.updateMyBusiness).toHaveBeenCalledWith(
+        expect.objectContaining({ cuit: '', address: '', phone: '' }),
+      ),
+    );
+  });
+
+  it('rechaza un CUIT que no tiene 11 dígitos sin llamar al backend', async () => {
+    const user = userEvent.setup();
+    renderPagina();
+    await screen.findByDisplayValue('Cobros del Sur');
+
+    const cuit = screen.getByLabelText(/CUIT/);
+    await user.clear(cuit);
+    await user.type(cuit, '123');
+
+    await user.click(screen.getByRole('button', { name: /Guardar cambios/ }));
+
+    expect(
+      await screen.findByText('El CUIT debe tener 11 dígitos, sin guiones.'),
+    ).toBeInTheDocument();
+    expect(businessService.updateMyBusiness).not.toHaveBeenCalled();
   });
 });

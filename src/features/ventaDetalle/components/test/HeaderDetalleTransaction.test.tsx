@@ -47,6 +47,13 @@ const abrirMenu = () => {
 };
 
 describe('HeaderDetalleTransaction', () => {
+  it('muestra el cliente junto al producto para saber a quién se le cobra', () => {
+    renderConMocks();
+
+    expect(screen.getByText('Juana Pérez')).toBeInTheDocument();
+    expect(screen.getByText('Televisor 32 pulgadas')).toBeInTheDocument();
+  });
+
   it('muestra las opciones Editar, Anular y Eliminar en una venta sin pagos', () => {
     renderConMocks();
     abrirMenu();
@@ -105,5 +112,71 @@ describe('HeaderDetalleTransaction', () => {
     abrirMenu();
     fireEvent.click(screen.getByText('Eliminar'));
     expect(onDelete).toHaveBeenCalled();
+  });
+
+  it('ofrece emitir el remito de una venta sin remito', () => {
+    const onPrintRemito = vi.fn();
+    render(
+      <MemoryRouter>
+        <HeaderDetalleTransaction
+          transaction={crearTransaccion()}
+          onEdit={vi.fn()}
+          onDelete={vi.fn()}
+          onPrintRemito={onPrintRemito}
+        />
+      </MemoryRouter>,
+    );
+
+    abrirMenu();
+    fireEvent.click(screen.getByText('Emitir remito'));
+
+    expect(onPrintRemito).toHaveBeenCalled();
+  });
+
+  it('muestra el número del remito ya emitido', () => {
+    render(
+      <MemoryRouter>
+        <HeaderDetalleTransaction
+          transaction={crearTransaccion({
+            remito: { id: 1, number: 1, numberLabel: '000001', issuedAt: '2026-06-02T10:00:00' },
+          })}
+          onEdit={vi.fn()}
+          onDelete={vi.fn()}
+          onPrintRemito={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+
+    abrirMenu();
+    expect(screen.getByText('Ver remito N° 000001')).toBeInTheDocument();
+  });
+
+  it('no ofrece remito para préstamos ni para ventas anuladas sin remito', () => {
+    const { unmount } = render(
+      <MemoryRouter>
+        <HeaderDetalleTransaction
+          transaction={crearTransaccion({ kind: 'PRESTAMO' })}
+          onEdit={vi.fn()}
+          onDelete={vi.fn()}
+          onPrintRemito={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    abrirMenu();
+    expect(screen.queryByText(/remito/i)).not.toBeInTheDocument();
+    unmount();
+
+    render(
+      <MemoryRouter>
+        <HeaderDetalleTransaction
+          transaction={crearTransaccion({ status: 'CANCELED' })}
+          onEdit={vi.fn()}
+          onDelete={vi.fn()}
+          onPrintRemito={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    abrirMenu();
+    expect(screen.queryByText(/remito/i)).not.toBeInTheDocument();
   });
 });
