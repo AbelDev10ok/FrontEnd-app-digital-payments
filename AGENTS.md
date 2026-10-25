@@ -26,15 +26,25 @@ SPA de cobros/ventas en React 18 + TypeScript + Vite. Consume un backend Spring 
 ### Path aliases (verified in `vite.config.ts` + `tsconfig.app.json`)
 
 `@/`, `@features/*`, `@shared/*`, `@infrastructure/*`, `@hooks/*`, `@utils/*`.
-**Gotcha:** `@config/*` and `@presentation/*` exist only in tsconfig, not in `vite.config.ts` — they will fail at build time. Don't use them. `@hooks/*` maps to `src/shared/hooks`. Types compartidos viven en `src/shared/types/` (client/dashboard/sales) e se importan vía `@/shared/types/*` — NO usar un alias `@types/*`: `@types` es un prefijo reservado de TypeScript para paquetes de tipos ambientales y cualquier import a `@types/...` falla con `TS6137`.
+**Gotcha:** `@config/*` and `@presentation/*` no longer exist anywhere (removed from `tsconfig.app.json` too) — imports fail with `TS2307`. Don't use them. `@hooks/*` maps to `src/shared/hooks`. Types compartidos viven en `src/shared/types/` (client/dashboard/sales) e se importan vía `@/shared/types/*` — NO usar un alias `@types/*`: `@types` es un prefijo reservado de TypeScript para paquetes de tipos ambientales y cualquier import a `@types/...` falla con `TS6137`.
 
 ## Backend API conventions
 
-- Base URL `http://localhost:8080` is centralized in `src/shared/config/api.ts` (`AUTH_API_URL`, `CLIENTS_API_URL`, `LOANS_API_URL`, `PRODUCT_TYPES_API_URL`). All services must import from there, never hardcode the host. Override via `VITE_API_URL` (see `.env.example`).
+- Base URL `http://localhost:8080` is centralized in `src/shared/config/api.ts` (per-domain constants: `AUTH_API_URL`, `SALES_API_URL`, `LOANS_API_URL`, `CLIENTS_API_URL`, `PRODUCT_TYPES_API_URL`, `PRODUCTS_API_URL`, `ATTRIBUTES_API_URL`, `BUSINESS_API_URL`, `BILLING_API_URL`, `USUARIOS_API_URL`). All services must import from there, never hardcode the host. Override via `VITE_API_URL` (see `.env.example`).
+- Catálogo: `/api/products/all` devuelve **una fila por variante (SKU)** con `id` (producto base), `variantId`, `cost`, `price`, `stock`, `sku`, `variantLabel` y `attributes`. El alta/edición (`POST`/`PUT /api/products`) manda el producto base con `variants[]` (cada una con `id` al editar, `cost`, `price`, `stock`, `barcode`, `attributeValueIds`) y `attributeIds[]`. Categorías jerárquicas en `/api/product-types` (`{name, parentId, slug}`); atributos en `/api/attributes` (POST con `{name, values:[{value}]}`, POST `/{id}/values`, DELETE). Una venta elige **una variante** (`variant` en el payload): al contado el backend calcula el total con el precio de lista y el frontend no manda `amountFee`/`quantityFees`/`cost`.
+- Catálogo en la UI: los atributos de cada variante se muestran como `Nombre: valor` (`src/shared/utils/productSpecs.ts`), con resumen multi-variante (`Color: Rojo / Negro · RAM: 4 GB / 8 GB`, tope 3 + `+N más`) y fallback a `variantLabel`; el buscador del catálogo y del selector de venta también matchea nombre y valor de los atributos. **Productos sólo en categorías hoja:** el alta deshabilita los padres con subcategorías (y avisa si un producto viejo quedó en uno, conservándolo al editar); el filtro del catálogo por un padre incluye toda su rama. Árbol, descendientes y aplanado viven en `src/shared/utils/categoryTree.ts` (lo comparten catálogo, selector de venta y gestión de categorías).
 - Response envelope (unless noted): `{ message, status, data }` with `status === 'OK'`. Unwrap via `handleResponse` (see `src/shared/utils/http.ts`); `getErrorMessage` extracts the message from non-OK responses. Enveloped: loans/stats, clients/stats, auth-register/verify y auth-login. Raw (sin envelope): clients, sellers, product-types y **refresh-token** (`{ accessToken, refreshToken }` directo).
 - Auth endpoints: `/auth/login`, `/auth/refresh-token` (no `/api` prefix). Domain endpoints: `/api/loans`, `/api/clients`, `/api/product-types`, etc.
 - Dates are sent as `YYYY-MM-DD` strings.
 - Pagination uses a Spring-style `Page<T>` DTO (`content`, `totalPages`, `totalElements`, `page` is 0-indexed) — see `Page<T>` in `salesServices.ts` and the `usePaginatedSales`/`usePaginatedClients` hooks.
+
+## Remitos
+
+- Un remito por `VENTA` (nunca `PRESTAMO`), de una sola línea (una venta = un SKU). No se emite de ventas `CANCELED`; sí de `ACTIVE`/`COMPLETED`. Anular conserva los remitos ya emitidos; **borrar la venta los elimina en cascada** (el modal de borrado lo avisa con el número).
+- Endpoints `GET/POST /api/sales/{saleId}/remito` (`ROLE_USER`, envelope). `POST` es idempotente: si ya existe devuelve el snapshot sin cambiar observaciones; `GET` responde 404 si no hay y `salesService.getRemito()` lo traduce a `null`. `SaleResponseDto.remito` trae el resumen (`numberLabel`, `issuedAt`) y lo adjunta el backend en listado y detalle.
+- Primera emisión desde el detalle o la fila del listado: `RemitoEmitModal` avisa que la numeración se asigna al confirmar y permite observaciones opcionales. Abre una pestaña en blanco **sincrónicamente** antes del `POST` (los popups bloqueados se detectan así) y después setea `location.href` a la vista imprimible; si no hay ventana, navega en la misma pestaña. La reimpresión abre el snapshot directo, sin modal.
+- Vista imprimible: ruta lazy `/dashboard/ventas/:id/remito` **fuera de `DashboardLayout`** y declarada antes de `/dashboard/ventas/:id`. Se genera en el navegador (A4 con `@media print`/`@page` en `src/index.css`), sin PDF server-side; el botón «Imprimir» llama a `window.print()` y no abre el diálogo automáticamente.
+- Mi Negocio suma `cuit`, `address` y `phone` opcionales (se imprimen en el remito). El CUIT se valida como vacío u 11 dígitos; enviar `''` borra el dato. Nunca bloquean la emisión.
 
 ## Auth & roles
 
@@ -44,7 +54,7 @@ SPA de cobros/ventas en React 18 + TypeScript + Vite. Consume un backend Spring 
 - `authStore.logout()` limpia el estado local Y llama `POST /auth/logout` con el refresh token (best-effort, ignora errores) para invalidarlo server-side.
 - `TokenRefreshHandler` (mounted once in `App.tsx`) refreshes every 4 min and on tab focus.
 - Roles: `ROLE_ADMIN` → `/admin`, `ROLE_USER` → `/dashboard`. `ProtectedRoute` handles role-based redirects and injects `user`/`onLogout` props.
-- **Route order matters** in `App.tsx`: static ventas routes (`/todas`, `/crear`, `/editar/:id`) must be declared before the dynamic `/dashboard/ventas/:id`.
+- **Route order matters** in `App.tsx`: static ventas routes (`/todas`, `/crear`, `/editar/:id`) and the printable `/dashboard/ventas/:id/remito` must be declared before the dynamic `/dashboard/ventas/:id`.
 
 ## Conventions
 
@@ -54,4 +64,4 @@ SPA de cobros/ventas en React 18 + TypeScript + Vite. Consume un backend Spring 
 
 ## Reference docs (Spanish)
 
-- `MEJORAS.md` — backlog de mejoras pendientes y plan de tests; mark items as done there.
+- `PRODUCT.md` — verdad de producto (usuarios, propósito, principios); `DESIGN.md` — sistema visual Cobros&Ventas; `SAAS.md` — plan de monetización y deploy. `MEJORAS.md`/`ARREGLOS.md` ya no existen: no referenciarlos.

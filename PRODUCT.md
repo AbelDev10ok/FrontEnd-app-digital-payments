@@ -8,43 +8,44 @@ web
 
 ## Users
 
-Small businesses that sell on credit and need to organize their sales or loans in installments and keep track of collections. The product is used on desktop and mobile web.
+Dueños y empleados de pequeños negocios (comercios que venden contado y a cuotas, y prestan dinero) que registran operaciones del día y mantienen su catálogo. Cada negocio (`Business`) es un tenant con sus propios clientes, productos y ventas.
 
 ## Product Purpose
 
-Cobros&Ventas helps a business register a sale or loan, automatically organize its installment schedule, record payments or reschedule installments, and see what remains to be collected.
+Registrar y controlar ventas (contado y cuotas), préstamos y cobros de un negocio desde una SPA, con catálogo de productos/variantes, clientes, agenda de cuotas y resumen diario. Éxito: el negocio asienta cada operación sin errores y sabe qué cobrar hoy.
 
 ## Positioning
 
-The core workflow connects installment-based sales and loans directly to their payment schedules and collection tracking, so the business can move from registering an obligation to recording each collection or rescheduling and reviewing the outstanding balance in one product.
+Herramienta de gestión operativa — "libro de caja vivo" — que combina ventas y préstamos/cobros a cuotas en un mismo lugar, con el importe siempre ligado a su moneda y datos multi-tenant por negocio.
 
 ## Operating Context
 
-The day-to-day workflow is to register a client and a sale or loan, follow the resulting installment schedule, record a payment when collected or move an installment to a later date, and review business metrics. The product is intended for use on the web, including mobile web. Amounts are displayed in guaraníes (Gs.).
+Uso diario en el negocio, desde escritorio y móvil. El catálogo se mantiene en esporádicas sesiones de administración y se consume al crear ventas. Backend Spring Boot 3.5 + PostgreSQL en `http://localhost:8080`; pagos de suscripción vía Mercado Pago.
 
 ## Capabilities and Constraints
 
-- Register sales and loans with installment schedules.
-- Manage clients, sellers, and products.
-- Record installment payments and reschedule installments.
-- Review sales, collections, outstanding amounts, and business metrics.
-- The application has user and administrator roles.
-- The frontend is a React and TypeScript SPA; its Spring Boot backend is maintained separately.
-- The public pricing page presents one monthly subscription plan. Its displayed `$15.000` is explicitly marked in code as a placeholder pending MercadoPago integration, so the actual price and billing status remain unconfirmed.
+- Catálogo: producto base → variantes (SKU); una venta elige una variante; categorías jerárquicas (slug único por negocio); atributos generan variantes por combinación (cartesiano, máx. 200).
+- La moneda es parte del importe: una VENTA hereda la moneda de su producto (se elige al crear y no se edita); un PRESTAMO la elige en el alta. Nunca se convierte ni se reetiqueta un importe guardado.
+- Multi-tenant por `Business`: todo dato pertenece al negocio activo.
+- Roles: `ROLE_ADMIN` → `/admin`, `ROLE_USER` → `/dashboard`.
+- Stack: React 18 + TypeScript + Vite + Tailwind CSS 3 + Zustand; sin librería de componentes UI.
+- Español para toda la copy, mensajes de error y commits.
 
 ## Brand Commitments
 
-- Product name: Cobros&Ventas.
-- Currency shown in the product: guaraníes (Gs.).
+Nombre **Cobros&Ventas**; identidad verde (verde de marca `#1a8059`, títulos Archivo) documentada en `DESIGN.md`; tono operativo, claro y directo.
 
 ## Evidence on Hand
 
-- The working product interface and workflows are in this repository.
-- Spanish public product copy, a pricing page, and legal pages are implemented in `src/features/landing/`; the public header uses a wallet icon and `public/favicon.svg` is present.
-- No customer testimonials, case studies, or independent performance evidence are established here.
+- `DESIGN.md` — sistema visual completo (color, tipografía, componentes, reglas).
+- `SAAS.md` — decisiones de monetización, multi-tenancy y deploy.
+- `AGENTS.md` — convenciones de arquitectura y API.
+- Tests RTL en `src/**/test` como comportamiento verificable.
+- Sin testimonios, clientes ni métricas reales: no inventar evidencia.
 
 ## Product Principles
 
-- Keep installment schedules and outstanding balances clear to the business.
-- Make it practical to record a collection or reschedule an installment during daily operations.
-- Support both installment-based sales and loans in the same collection workflow.
+- Un importe siempre va con su moneda: nunca se reinterpreta ni se convierte.
+- La venta consume el catálogo, no lo edita: el catálogo se mantiene en su sección.
+- Operación primero: densidad escaneable, estados visibles y confirmación antes de destruir datos.
+- Todo dato pertenece al negocio activo (multi-tenant por defecto).
