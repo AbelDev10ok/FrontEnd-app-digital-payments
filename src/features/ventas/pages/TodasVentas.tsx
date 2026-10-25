@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import ErrorMessage from "@/shared/components/feedback/ErrorMessage";
 import Load from "@/shared/components/feedback/Load";
 import usePaginatedSales from "@/features/ventas/hooks/usePaginatedSales";
@@ -12,6 +12,8 @@ import { salesService } from "@features/ventas/services/salesServices";
 import SalesFilters from "@features/ventas/components/SalesFilters";
 import SaleTable from "@features/ventas/components/SaleTable";
 import RemitoEmitModal from "@features/ventas/components/RemitoEmitModal";
+import CancelSaleModal from "@features/ventas/components/CancelSaleModal";
+import DeleteSaleModal from "@features/ventas/components/DeleteSaleModal";
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -39,7 +41,10 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
 
   const [selectedKind, setSelectedKind] = useState<SaleKind | "">("");
   const [remitoSale, setRemitoSale] = useState<SaleResponseDto | null>(null);
+  const [saleToCancel, setSaleToCancel] = useState<SaleResponseDto | null>(null);
+  const [saleToDelete, setSaleToDelete] = useState<SaleResponseDto | null>(null);
 
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
@@ -165,6 +170,22 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     setRemitoSale(sale);
   };
 
+  const handleEdit = (sale: SaleResponseDto) => {
+    navigate(`/dashboard/ventas/editar/${sale.id}`);
+  };
+
+  // Anular y eliminar usan los mismos modales que el detalle: la lista queda
+  // operativa sin obligar a entrar a cada venta.
+  const handleCanceled = () => {
+    setSaleToCancel(null);
+    refresh();
+  };
+
+  const handleDeleted = () => {
+    setSaleToDelete(null);
+    refresh();
+  };
+
   const handleRemitoEmitted = (
     document: SaleDocumentDto,
     printWindow: Window | null,
@@ -217,7 +238,10 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
                   : "No hay ventas registradas"
               }
               selectedStatus={selectedStatus}
+              onEdit={handleEdit}
               onRemito={handleRemito}
+              onCancel={setSaleToCancel}
+              onDelete={setSaleToDelete}
             />
           </>
         )}
@@ -233,6 +257,20 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
         sale={remitoSale}
         onClose={() => setRemitoSale(null)}
         onEmitted={handleRemitoEmitted}
+      />
+
+      <CancelSaleModal
+        isOpen={Boolean(saleToCancel)}
+        sale={saleToCancel}
+        onClose={() => setSaleToCancel(null)}
+        onCanceled={handleCanceled}
+      />
+
+      <DeleteSaleModal
+        isOpen={Boolean(saleToDelete)}
+        sale={saleToDelete}
+        onClose={() => setSaleToDelete(null)}
+        onDeleted={handleDeleted}
       />
     </DashboardLayout>
   );

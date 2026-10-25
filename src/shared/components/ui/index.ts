@@ -1,4 +1,5 @@
 export * from './DebouncedInput';
+export type { ActionMenuItem, ActionMenuItemTone } from './ActionsMenu';
 export type { AlertTone } from './Alert';
 export type { BadgeTone } from './Badge';
 export type { ButtonLinkProps, ButtonProps, ButtonSize, ButtonVariant } from './Button';
@@ -7,6 +8,7 @@ export type { FieldProps } from './Field';
 export type { PageHeaderProps } from './PageHeader';
 export type { StatCardProps, StatTone } from './StatCard';
 export { fieldErrorId, fieldHintId, useFieldA11y } from './fieldA11y';
+export { default as ActionsMenu } from './ActionsMenu';
 export { default as Alert } from './Alert';
 export { default as Badge } from './Badge';
 export { default as Button } from './Button';

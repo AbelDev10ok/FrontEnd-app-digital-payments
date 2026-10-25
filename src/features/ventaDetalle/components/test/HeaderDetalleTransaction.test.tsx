@@ -80,6 +80,13 @@ describe('HeaderDetalleTransaction', () => {
     expect(screen.getByText('Eliminar')).toBeInTheDocument();
   });
 
+  it('nombra la anulación según el tipo de operación', () => {
+    renderConMocks(vi.fn(), vi.fn(), vi.fn(), crearTransaccion({ kind: 'PRESTAMO' }));
+    abrirMenu();
+
+    expect(screen.getByText('Anular préstamo')).toBeInTheDocument();
+  });
+
   it('no renderiza Anular ni Eliminar si no se pasan sus handlers', () => {
     render(
       <MemoryRouter>

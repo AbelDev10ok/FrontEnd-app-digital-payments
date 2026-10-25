@@ -12,6 +12,8 @@ vi.mock('@/features/ventas/services/salesServices', () => ({
     getSalesCounts: vi.fn(),
     getAllSalesPaginated: vi.fn(),
     emitirRemito: vi.fn(),
+    cancelSale: vi.fn(),
+    deleteSale: vi.fn(),
   },
 }));
 
@@ -104,6 +106,8 @@ describe('TodasVentas', () => {
     vi.mocked(salesService.getAllSalesPaginated).mockReset();
     vi.mocked(salesService.getAllSalesPaginated).mockResolvedValue(pageMock);
     vi.mocked(salesService.emitirRemito).mockReset();
+    vi.mocked(salesService.cancelSale).mockReset();
+    vi.mocked(salesService.deleteSale).mockReset();
   });
 
   afterEach(() => {
@@ -257,7 +261,8 @@ describe('TodasVentas', () => {
     renderPage();
     await screen.findByText('Televisor 32 pulgadas');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Emitir remito' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Acciones de la venta #10' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Emitir remito' }));
 
     const dialogo = await screen.findByRole('dialog');
     fireEvent.click(within(dialogo).getByRole('button', { name: /Emitir remito/ }));
@@ -266,8 +271,59 @@ describe('TodasVentas', () => {
     await waitFor(() =>
       expect(ventana.location.href).toBe('/dashboard/ventas/10/remito'),
     );
+    fireEvent.click(screen.getByRole('button', { name: 'Acciones de la venta #10' }));
     expect(
-      await screen.findByRole('button', { name: 'Ver remito N° 000001' }),
+      await screen.findByRole('menuitem', { name: 'Ver remito N° 000001' }),
     ).toBeInTheDocument();
+  });
+
+  it('anula una venta desde la fila y recarga el listado', async () => {
+    vi.mocked(salesService.getAllSalesPaginated).mockResolvedValue({
+      ...pageMock,
+      content: [venta],
+      totalElements: 1,
+      numberOfElements: 1,
+      empty: false,
+    });
+    vi.mocked(salesService.cancelSale).mockResolvedValue({ ...venta, status: 'CANCELED' });
+
+    renderPage();
+    await screen.findByText('Televisor 32 pulgadas');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Acciones de la venta #10' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Anular venta' }));
+
+    const dialogo = await screen.findByRole('dialog');
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Anular' }));
+
+    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, true));
+    await waitFor(() =>
+      expect(vi.mocked(salesService.getAllSalesPaginated).mock.calls.length).toBeGreaterThanOrEqual(2),
+    );
+  });
+
+  it('elimina una venta desde la fila y recarga el listado', async () => {
+    vi.mocked(salesService.getAllSalesPaginated).mockResolvedValue({
+      ...pageMock,
+      content: [venta],
+      totalElements: 1,
+      numberOfElements: 1,
+      empty: false,
+    });
+    vi.mocked(salesService.deleteSale).mockResolvedValue(undefined);
+
+    renderPage();
+    await screen.findByText('Televisor 32 pulgadas');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Acciones de la venta #10' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Eliminar' }));
+
+    const dialogo = await screen.findByRole('dialog');
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Eliminar' }));
+
+    await waitFor(() => expect(salesService.deleteSale).toHaveBeenCalledWith(10));
+    await waitFor(() =>
+      expect(vi.mocked(salesService.getAllSalesPaginated).mock.calls.length).toBeGreaterThanOrEqual(2),
+    );
   });
 });

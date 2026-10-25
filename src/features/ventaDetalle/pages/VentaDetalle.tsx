@@ -14,9 +14,9 @@ import HeaderDetalleTransaction from '../components/HeaderDetalleTransaction';
 import ClientInfoDetalle from '../components/ClientInfoDetalle';
 import InfoTransactionDetalle from '../components/InfoTransactionDetalle';
 import RemitoEmitModal from '@/features/ventas/components/RemitoEmitModal';
+import CancelSaleModal from '@/features/ventas/components/CancelSaleModal';
+import DeleteSaleModal from '@/features/ventas/components/DeleteSaleModal';
 import { SaleDocumentDto, SaleResponseDto } from '@/shared/types/sales';
-import Modal from '@/shared/components/ui/Modal';
-import Select from '@/shared/components/ui/Select';
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -32,8 +32,6 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isRemitoModalOpen, setIsRemitoModalOpen] = useState(false);
-  const [refundOnCancel, setRefundOnCancel] = useState(true);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
 
@@ -54,20 +52,18 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
     setIsDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!id) return;
-    try {
-      await salesService.deleteSale(parseInt(id));
-      navigate('/dashboard/ventas/todas');
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Error al eliminar la venta');
-      setIsDeleteModalOpen(false);
-    }
+  const handleDeleted = () => {
+    setIsDeleteModalOpen(false);
+    navigate('/dashboard/ventas/todas');
   };
 
   const handleOpenCancel = () => {
-    setRefundOnCancel(true);
     setIsCancelModalOpen(true);
+  };
+
+  const handleCanceled = (actualizada: SaleResponseDto) => {
+    setTransaction(actualizada);
+    setIsCancelModalOpen(false);
   };
 
   const handleOpenRemito = () => {
@@ -108,18 +104,6 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
     } else {
       // Si el navegador bloqueó la pestaña, la abrimos en la misma ventana.
       window.location.assign(url);
-    }
-  };
-
-  const handleConfirmCancel = async () => {
-    if (!id) return;
-    try {
-      const updated = await salesService.cancelSale(parseInt(id), refundOnCancel);
-      setTransaction(updated);
-      setActionError(null);
-      setIsCancelModalOpen(false);
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Error al anular la venta');
     }
   };
 
@@ -168,7 +152,6 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
 
   const isLoan = transaction.kind === 'PRESTAMO';
   const hasPaidFees = (transaction.paidFeesCount ?? 0) > 0;
-  const collectedAmount = transaction.collectedAmount ?? 0;
 
   return (
     <DashboardLayout title={`${isLoan ? 'Préstamo' : 'Venta'} #${transaction.id}`} user={user} onLogout={onLogout}>
@@ -223,90 +206,20 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
           refreshTransaction={refreshTransaction}
         />
         </div>
-        <Modal
+
+      <CancelSaleModal
         isOpen={isCancelModalOpen}
+        sale={transaction}
         onClose={() => setIsCancelModalOpen(false)}
-        title="Anular venta"
-      >
-        <div className="mt-4">
-          <p className="text-sm text-gray-600">
-            ¿Estás seguro de que quieres anular {isLoan ? 'este préstamo' : 'esta venta'}{' '}
-            #{transaction.id}? El registro se conservará como anulado y se repondrá el stock
-            del producto. La deuda pendiente quedará en cero.
-          </p>
+        onCanceled={handleCanceled}
+      />
 
-          {collectedAmount > 0 && (
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Monto ya cobrado: {formatCurrency(collectedAmount, transaction.currency ?? undefined)}
-              </label>
-              <Select
-                value={refundOnCancel ? 'refund' : 'retain'}
-                onChange={(e) => setRefundOnCancel(e.target.value === 'refund')}
-                className="mt-2"
-                aria-label="Manejo del monto cobrado al anular"
-              >
-                <option value="refund">Devolver al cliente el monto cobrado</option>
-                <option value="retain">Conservar el monto cobrado</option>
-              </Select>
-            </div>
-          )}
-
-          {transaction.remito && (
-            <p className="mt-2 text-sm text-gray-500">
-              El remito N° {transaction.remito.numberLabel} ya emitido se conserva.
-            </p>
-          )}
-
-          {actionError && <p className="mt-2 text-sm text-red-600">{actionError}</p>}
-          <div className="mt-6 flex justify-end space-x-3">
-            <Button
-              variant="secondary"
-              onClick={() => setIsCancelModalOpen(false)}
-            >
-              Volver
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleConfirmCancel}
-            >
-              Anular
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
+      <DeleteSaleModal
         isOpen={isDeleteModalOpen}
+        sale={transaction}
         onClose={() => setIsDeleteModalOpen(false)}
-        title="Confirmar Eliminación"
-      >
-        <div className="mt-4">
-          <p className="text-sm text-gray-600">
-            ¿Estás seguro de que quieres eliminar {isLoan ? 'este préstamo' : 'esta venta'}? Esta acción no se puede deshacer.
-          </p>
-          {transaction.remito && (
-            <p className="mt-3 text-sm font-medium text-red-700">
-              También se eliminará el remito N° {transaction.remito.numberLabel}.
-            </p>
-          )}
-          {actionError && <p className="mt-2 text-sm text-red-600">{actionError}</p>}
-          <div className="mt-6 flex justify-end space-x-3">
-            <Button
-              variant="secondary"
-              onClick={() => setIsDeleteModalOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleConfirmDelete}
-            >
-              Eliminar
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        onDeleted={handleDeleted}
+      />
 
       <RemitoEmitModal
         isOpen={isRemitoModalOpen}

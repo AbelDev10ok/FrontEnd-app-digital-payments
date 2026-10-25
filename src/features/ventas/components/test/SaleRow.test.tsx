@@ -27,26 +27,59 @@ const crearVenta = (overrides: Partial<SaleResponseDto> = {}): SaleResponseDto =
   ...overrides,
 });
 
-const renderFila = (sale: SaleResponseDto, onRemito = vi.fn()) =>
+const renderFila = (sale: SaleResponseDto) => {
+  const onEdit = vi.fn();
+  const onRemito = vi.fn();
+  const onCancel = vi.fn();
+  const onDelete = vi.fn();
   render(
     <MemoryRouter>
       <table>
         <tbody>
-          <SaleRow sale={sale} selectedStatus="TODAS" onRemito={onRemito} />
+          <SaleRow
+            sale={sale}
+            selectedStatus="TODAS"
+            onEdit={onEdit}
+            onRemito={onRemito}
+            onCancel={onCancel}
+            onDelete={onDelete}
+          />
         </tbody>
       </table>
     </MemoryRouter>,
   );
+  return { onEdit, onRemito, onCancel, onDelete };
+};
+
+const abrirMenu = (tipo: 'venta' | 'préstamo' = 'venta') =>
+  fireEvent.click(screen.getByRole('button', { name: `Acciones de la ${tipo} #10` }));
 
 describe('SaleRow', () => {
-  it('ofrece emitir el remito de una venta sin remito', () => {
-    const onRemito = vi.fn();
-    renderFila(crearVenta(), onRemito);
+  it('ofrece ver el detalle con el ojo, como en Cuotas', () => {
+    renderFila(crearVenta());
 
-    const boton = screen.getByRole('button', { name: 'Emitir remito' });
-    fireEvent.click(boton);
+    const ver = screen.getByRole('link', { name: 'Ver detalle de la venta #10' });
+    expect(ver).toHaveAttribute('href', '/dashboard/ventas/10');
+  });
 
+  it('agrupa Editar, Remito, Anular y Eliminar en el menú de acciones', () => {
+    const { onEdit, onRemito, onCancel, onDelete } = renderFila(crearVenta());
+
+    abrirMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Editar' }));
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 10 }));
+
+    abrirMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Emitir remito' }));
     expect(onRemito).toHaveBeenCalledWith(expect.objectContaining({ id: 10 }));
+
+    abrirMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Anular venta' }));
+    expect(onCancel).toHaveBeenCalledWith(expect.objectContaining({ id: 10 }));
+
+    abrirMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Eliminar' }));
+    expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ id: 10 }));
   });
 
   it('indica el número cuando la venta ya tiene remito', () => {
@@ -56,21 +89,30 @@ describe('SaleRow', () => {
       }),
     );
 
+    abrirMenu();
+
     expect(
-      screen.getByRole('button', { name: 'Ver remito N° 000001' }),
+      screen.getByRole('menuitem', { name: 'Ver remito N° 000001' }),
     ).toBeInTheDocument();
   });
 
-  it('no ofrece remito para préstamos', () => {
+  it('no ofrece remito para préstamos y anula con su nombre', () => {
     renderFila(crearVenta({ kind: 'PRESTAMO' }));
 
-    expect(screen.queryByRole('button', { name: /remito/i })).not.toBeInTheDocument();
+    abrirMenu('préstamo');
+
+    expect(screen.queryByRole('menuitem', { name: /remito/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Anular préstamo' })).toBeInTheDocument();
   });
 
   it('no ofrece emitir remito de una venta anulada sin remito', () => {
     renderFila(crearVenta({ status: 'CANCELED' }));
 
-    expect(screen.queryByRole('button', { name: /remito/i })).not.toBeInTheDocument();
+    abrirMenu();
+
+    expect(screen.queryByRole('menuitem', { name: /remito/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /anular/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Eliminar' })).toBeInTheDocument();
   });
 
   it('permite ver el remito de una venta anulada que ya lo tenía', () => {
@@ -81,8 +123,19 @@ describe('SaleRow', () => {
       }),
     );
 
+    abrirMenu();
+
     expect(
-      screen.getByRole('button', { name: 'Ver remito N° 000001' }),
+      screen.getByRole('menuitem', { name: 'Ver remito N° 000001' }),
     ).toBeInTheDocument();
+  });
+
+  it('oculta Eliminar cuando la venta ya tiene cuotas pagadas', () => {
+    renderFila(crearVenta({ paidFeesCount: 2 }));
+
+    abrirMenu();
+
+    expect(screen.queryByRole('menuitem', { name: 'Eliminar' })).not.toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Anular venta' })).toBeInTheDocument();
   });
 });

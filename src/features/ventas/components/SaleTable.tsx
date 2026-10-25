@@ -7,15 +7,24 @@ type Props = {
   sales: SaleResponseDto[];
   selectedStatus: string;
   emptyMessage?: string;
+  /** Abre la pantalla de edición de la operación. */
+  onEdit: (sale: SaleResponseDto) => void;
   /** Emite el remito o abre el ya emitido. */
   onRemito: (sale: SaleResponseDto) => void;
+  /** Anula la operación conservando el historial. */
+  onCancel: (sale: SaleResponseDto) => void;
+  /** Elimina la operación (solo si no tiene cobros). */
+  onDelete: (sale: SaleResponseDto) => void;
 };
 
 const SaleTable: React.FC<Props> = ({
   sales,
   emptyMessage,
   selectedStatus,
+  onEdit,
   onRemito,
+  onCancel,
+  onDelete,
 }) => {
   return (
     <div className="bg-white rounded-card shadow-card">
@@ -35,7 +44,7 @@ const SaleTable: React.FC<Props> = ({
               <th className={`px-6 py-3 text-left ${eyebrow.table}`}>
                 Estado
               </th>
-              <th className={`px-6 py-3 text-left ${eyebrow.table}`}>
+              <th className={`px-6 py-3 text-right max-md:sticky max-md:right-0 max-md:bg-gray-50 max-md:border-l max-md:border-gray-100 ${eyebrow.table}`}>
                 Acciones
               </th>
             </tr>
@@ -53,7 +62,10 @@ const SaleTable: React.FC<Props> = ({
                   key={sale.id}
                   sale={sale}
                   selectedStatus={selectedStatus}
+                  onEdit={onEdit}
                   onRemito={onRemito}
+                  onCancel={onCancel}
+                  onDelete={onDelete}
                 />
               ))
             )}
