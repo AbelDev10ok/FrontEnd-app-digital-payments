@@ -49,4 +49,40 @@ describe('Modal', () => {
     fireEvent.click(screen.getByText('Contenido'));
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it('Esc cierra el diálogo mientras está abierto', () => {
+    const onClose = vi.fn();
+    render(
+      <Modal isOpen onClose={onClose} title="Título">
+        Contenido
+      </Modal>,
+    );
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('no escucha Esc cuando está cerrado', () => {
+    const onClose = vi.fn();
+    render(
+      <Modal isOpen={false} onClose={onClose} title="Título">
+        Contenido
+      </Modal>,
+    );
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('entra con animación y la desactiva con prefers-reduced-motion', () => {
+    const { container } = render(
+      <Modal isOpen onClose={vi.fn()} title="Título">
+        Contenido
+      </Modal>,
+    );
+
+    const overlay = container.firstChild as HTMLElement;
+    expect(overlay).toHaveClass('animate-modal-overlay', 'motion-reduce:animate-none');
+    expect(overlay.querySelector('.animate-modal-panel')).toHaveClass('motion-reduce:animate-none');
+  });
 });

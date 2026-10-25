@@ -39,4 +39,21 @@ describe('DashboardLayout', () => {
     );
     expect(document.title).toBe('Clientes · Gestión de Cobros y Ventas');
   });
+
+  it('ofrece un salto al contenido antes del menú', () => {
+    render(
+      <MemoryRouter>
+        <DashboardLayout title="Dashboard" user={null} onLogout={vi.fn()}>
+          <p>Contenido de la página</p>
+        </DashboardLayout>
+      </MemoryRouter>,
+    );
+
+    const salto = screen.getByRole('link', { name: 'Saltar al contenido' });
+    expect(salto).toHaveAttribute('href', '#contenido-principal');
+    // El destino tiene que existir y poder recibir el foco.
+    const principal = document.querySelector('#contenido-principal');
+    expect(principal).not.toBeNull();
+    expect(principal).toHaveAttribute('tabindex', '-1');
+  });
 });

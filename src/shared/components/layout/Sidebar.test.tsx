@@ -42,11 +42,12 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: 'Nuevo Préstamo' })).toBeInTheDocument();
   });
 
-  it('expande el submenú de préstamos con Nuevo Préstamo y filtros', async () => {
+  it('expande el submenú de préstamos con los filtros de estado', async () => {
     const user = userEvent.setup();
     renderSidebar('/dashboard');
     await user.click(screen.getByRole('button', { name: /Préstamos/i }));
-    expect(screen.getAllByText('Nuevo Préstamo').length).toBeGreaterThanOrEqual(2);
+    // El submenú es solo filtros: "Nuevo Préstamo" vive una vez, en Acciones rápidas
+    expect(screen.getAllByText('Nuevo Préstamo')).toHaveLength(1);
     expect(screen.getByRole('button', { name: /Todas/i })).toBeInTheDocument();
   });
 
@@ -58,11 +59,12 @@ describe('Sidebar', () => {
     expect(screen.getByText('Crear Cliente')).toBeInTheDocument();
   });
 
-  it('expande el submenú de ventas con Nueva Venta y filtros de estado', async () => {
+  it('expande el submenú de ventas con los filtros de estado', async () => {
     const user = userEvent.setup();
     renderSidebar('/dashboard');
     await user.click(screen.getByRole('button', { name: /Ventas/i }));
-    expect(screen.getAllByText('Nueva Venta').length).toBeGreaterThanOrEqual(2);
+    // El submenú es solo filtros: "Nueva Venta" vive una vez, en Acciones rápidas
+    expect(screen.getAllByText('Nueva Venta')).toHaveLength(1);
     expect(screen.getByRole('button', { name: /Todas/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /A Cobrar/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Completadas/i })).toBeInTheDocument();
@@ -108,7 +110,7 @@ describe('Sidebar', () => {
 
   it('expande solo préstamos al navegar con kind=PRESTAMO (no abre ventas)', () => {
     renderSidebar('/dashboard/ventas/todas?kind=PRESTAMO&status=ACTIVE');
-    expect(screen.getAllByText('Nuevo Préstamo').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('Nuevo Préstamo')).toHaveLength(1);
     // Los submenús colapsados siguen en el DOM (animación de colapso), así que
     // se consulta por rol, que sí respeta lo oculto.
     expect(screen.getAllByRole('link', { name: 'Nueva Venta' })).toHaveLength(1);
@@ -122,9 +124,15 @@ describe('Sidebar', () => {
     renderSidebar('/dashboard/prestamos/crear');
     await user.click(screen.getByRole('link', { name: 'Nueva Venta' }));
     await waitFor(() =>
-      expect(screen.getAllByText('Nueva Venta').length).toBeGreaterThanOrEqual(2),
+      expect(screen.getByRole('button', { name: /Ventas/i })).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      ),
     );
-    expect(screen.getAllByRole('link', { name: 'Nuevo Préstamo' })).toHaveLength(1);
+    expect(screen.getByRole('button', { name: /Préstamos/i })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
   });
 
   it('Nuevo Préstamo abre el menú de préstamos y cierra el de ventas', async () => {
@@ -132,9 +140,15 @@ describe('Sidebar', () => {
     renderSidebar('/dashboard/ventas/crear');
     await user.click(screen.getByRole('link', { name: 'Nuevo Préstamo' }));
     await waitFor(() =>
-      expect(screen.getAllByText('Nuevo Préstamo').length).toBeGreaterThanOrEqual(2),
+      expect(screen.getByRole('button', { name: /Préstamos/i })).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      ),
     );
-    expect(screen.getAllByRole('link', { name: 'Nueva Venta' })).toHaveLength(1);
+    expect(screen.getByRole('button', { name: /Ventas/i })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
   });
 
   it('llama onNavigate al navegar', async () => {

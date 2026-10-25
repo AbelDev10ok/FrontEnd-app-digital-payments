@@ -93,7 +93,7 @@ const AutocompleteSeller: React.FC<Props> = ({ value, sellers, onChange, placeho
             onKeyDown={handleKeyDown}
             onBlur={closeList}
             placeholder={placeholder}
-            className={`w-full pl-10 pr-4 py-3 border ${error ? 'border-red-500' : 'border-gray-200'} rounded-xl`}
+            className={`w-full pl-10 pr-4 py-3 border ${error ? 'border-red-500' : 'border-gray-200'} rounded-xl placeholder:text-gray-500`}
           />
           <div aria-hidden="true" className="absolute left-3 top-3 text-gray-400"><User className="w-4 h-4"/></div>
           <ul

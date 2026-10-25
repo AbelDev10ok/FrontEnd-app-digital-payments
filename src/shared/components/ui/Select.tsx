@@ -17,7 +17,7 @@ export default function Select({ className = '', invalid = false, ...rest }: Sel
       {...rest}
       aria-invalid={isInvalid || undefined}
       aria-describedby={describedBy}
-      className={`w-full px-4 py-2.5 border border-gray-200 rounded-input bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 ${invalidClass} ${className}`}
+      className={`w-full px-4 py-2.5 border border-gray-200 rounded-input bg-white transition-[border-color,box-shadow] duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 ${invalidClass} ${className}`}
     />
   );
 }

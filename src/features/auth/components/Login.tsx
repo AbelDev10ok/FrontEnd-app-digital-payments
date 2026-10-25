@@ -118,7 +118,7 @@ const Login: React.FC = () => {
                   onBlur={() => validateEmail(email)}
                   aria-invalid={emailError ? true : undefined}
                   aria-describedby={emailError ? fieldErrorId('email') : undefined}
-                  className={`w-full pl-12 pr-4 py-3 border rounded-input focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  className={`w-full pl-12 pr-4 py-3 border rounded-input focus:outline-none focus:ring-2 transition-[border-color,box-shadow] duration-150 ease-out ${
                     emailError
                       ? "border-red-300 focus:ring-red-500 focus:border-red-500"
                       : "border-gray-200 focus:ring-brand-500 focus:border-brand-500"
@@ -146,7 +146,7 @@ const Login: React.FC = () => {
                   onBlur={() => validatePassword(password)}
                   aria-invalid={passwordError ? true : undefined}
                   aria-describedby={passwordError ? fieldErrorId('password') : undefined}
-                  className={`w-full pl-12 pr-12 py-3 border rounded-input focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  className={`w-full pl-12 pr-12 py-3 border rounded-input focus:outline-none focus:ring-2 transition-[border-color,box-shadow] duration-150 ease-out ${
                     passwordError
                       ? "border-red-300 focus:ring-red-500 focus:border-red-500"
                       : "border-gray-200 focus:ring-brand-500 focus:border-brand-500"

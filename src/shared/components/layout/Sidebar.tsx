@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { salesService } from "@/features/ventas/services/salesServices";
 import { ProductTypeDto, SalesCountsDto } from "@/shared/types/sales";
-import { SALE_STATUS_DOT } from "@shared/utils/statusUi";
 import { eyebrow, radius } from "@/shared/theme";
 import type { LucideIcon } from "lucide-react";
 
@@ -29,20 +28,30 @@ interface SidebarProps {
 
 type SaleKindParam = "VENTA" | "PRESTAMO" | undefined;
 
+type SubmenuLink = { title: string; icon: LucideIcon; path: string };
+
+interface MenuItem {
+  title: string;
+  icon: LucideIcon;
+  hasSubmenu: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+  submenu: SubmenuLink[];
+}
+
 const STATUS_OPTIONS: {
   label: string;
   value: string;
-  color: string;
   countKey: keyof SalesCountsDto;
 }[] = [
-  { label: "Todas", value: "Todas", color: "bg-brand-500", countKey: "total" },
-  { label: "A Cobrar", value: "A_COBRAR", color: SALE_STATUS_DOT.A_COBRAR, countKey: "aCobrar" },
-  { label: "Activas", value: "ACTIVE", color: SALE_STATUS_DOT.ACTIVE, countKey: "active" },
-  { label: "Completadas", value: "COMPLETED", color: SALE_STATUS_DOT.COMPLETED, countKey: "completed" },
+  { label: "Todas", value: "Todas", countKey: "total" },
+  { label: "A Cobrar", value: "A_COBRAR", countKey: "aCobrar" },
+  { label: "Activas", value: "ACTIVE", countKey: "active" },
+  { label: "Completadas", value: "COMPLETED", countKey: "completed" },
 ];
 
 // DESIGN.md: "navegación de 8px"; el hover va en ≤150ms (interacción de alta frecuencia)
-const navBase = "p-3 rounded-lg text-sm transition-colors duration-150";
+const navBase = "px-3 py-2.5 rounded-lg text-sm transition-colors duration-150";
 const navIdle = "text-gray-600 hover:bg-gray-50 hover:text-gray-900";
 // El estado activo usa el mismo lenguaje que los chips (ring, no sombra)
 const navActive = "bg-brand-50 text-brand-700 ring-1 ring-brand-200";
@@ -65,7 +74,7 @@ const filterChipClass = (isActive: boolean) =>
   }`;
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <div className={`px-3 pt-4 pb-1 ${eyebrow.hero}`}>
+  <div className={`px-3 pt-3 pb-1 ${eyebrow.hero}`}>
     {children}
   </div>
 );
@@ -160,7 +169,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
     return kind ? currentKind === kind : !currentKind;
   };
 
-  const menuItems = useMemo(
+  const menuItems = useMemo<MenuItem[]>(
     () => [
       {
         title: "Clientes",
@@ -187,13 +196,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
         hasSubmenu: true,
         expanded: ventasExpanded,
         onToggle: () => setVentasExpanded((prev) => !prev),
-        submenu: [
-          {
-            title: "Nueva Venta",
-            icon: UserPlus,
-            path: "/dashboard/ventas/crear",
-          },
-        ],
+        // Los filtros de estado viven acá; "Nueva Venta" ya está en Acciones rápidas.
+        submenu: [],
       },
       {
         title: "Préstamos",
@@ -201,20 +205,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
         hasSubmenu: true,
         expanded: prestamosExpanded,
         onToggle: () => setPrestamosExpanded((prev) => !prev),
-        submenu: [
-          {
-            title: "Nuevo Préstamo",
-            icon: UserPlus,
-            path: "/dashboard/prestamos/crear",
-          },
-        ],
+        submenu: [],
       },
     ],
     [clientesExpanded, ventasExpanded, prestamosExpanded],
   );
 
   const renderSubmenuLink = (
-    subItem: { title: string; icon: LucideIcon; path: string },
+    subItem: SubmenuLink,
   ) => {
     const isKindSensitive = subItem.path.startsWith("/dashboard/ventas/todas");
     const expectsKind = subItem.path.includes("kind=PRESTAMO");
@@ -257,7 +255,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
               onClick={() => navigateToSales(kind, { status: option.value })}
               className={filterChipClass(isActive)}
             >
-              <span className={`w-1.5 h-1.5 rounded-full ${option.color}`} />
               <span>{option.label}</span>
               {typeof count === "number" && count > 0 && (
                 <span className="ml-auto text-xs font-medium text-gray-400">
@@ -282,7 +279,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
               !currentSearch().get("productType"),
           )}
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
           <span>Todas</span>
         </button>
         {productTypes.map((pt) => {
@@ -297,7 +293,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
               }
               className={filterChipClass(isActive)}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
               <span>{pt.name}</span>
             </button>
           );
@@ -308,8 +303,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
 
   return (
     <aside
+      aria-label="Menú principal"
       className={`
-      fixed left-0 top-0 h-full bg-white border-r border-gray-100 transition-transform duration-300 z-50
+      fixed left-0 top-0 h-full bg-white border-r border-gray-100 transition-transform duration-300 motion-reduce:transition-none z-50
       lg:w-64 lg:translate-x-0
       ${isOpen ? "translate-x-0 w-64" : "-translate-x-full w-64"}
     `}
@@ -331,8 +327,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          <SectionLabel>Visión general</SectionLabel>
+        <nav className="flex-1 px-4 py-3 space-y-0.5 overflow-y-auto">
+          <SectionLabel>Operación</SectionLabel>
           <NavLink
             to="/dashboard"
             end
@@ -341,6 +337,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
           >
             <LayoutDashboard strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
             <span>Dashboard</span>
+          </NavLink>
+          <NavLink
+            to="/dashboard/cobros"
+            onClick={onNavigate}
+            className={({ isActive }) => navLinkClass(isActive)}
+          >
+            <CalendarClock strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
+            <span>Cobros de hoy</span>
+          </NavLink>
+          <NavLink
+            to="/dashboard/cuotas"
+            onClick={onNavigate}
+            className={({ isActive }) => navLinkClass(isActive)}
+          >
+            <ListChecks strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
+            <span>Cuotas</span>
           </NavLink>
 
           <SectionLabel>Gestión</SectionLabel>
@@ -362,7 +374,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
                     <span aria-hidden="true" className="relative h-4 w-4 flex-shrink-0">
                       <ChevronDown
                         strokeWidth={1.5}
-                        className={`h-4 w-4 transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+                        className={`h-4 w-4 transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none ${
                           item.expanded
                             ? "scale-100 opacity-100 blur-0"
                             : "scale-[0.25] opacity-0 blur-[4px]"
@@ -370,7 +382,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
                       />
                       <ChevronRight
                         strokeWidth={1.5}
-                        className={`absolute inset-0 h-4 w-4 transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+                        className={`absolute inset-0 h-4 w-4 transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none ${
                           item.expanded
                             ? "scale-[0.25] opacity-0 blur-[4px]"
                             : "scale-100 opacity-100 blur-0"
@@ -384,7 +396,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
                           id={`submenu-${index}`}
                           role="menu"
                           aria-hidden={!item.expanded}
-                          className={`grid transition-[grid-template-rows,opacity,visibility] duration-200 ease-[cubic-bezier(0.2,0,0,1)] ${
+                          className={`grid transition-[grid-template-rows,opacity,visibility] duration-200 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none ${
                             item.expanded
                               ? "grid-rows-[1fr] opacity-100 visible"
                               : "grid-rows-[0fr] opacity-0 invisible"
@@ -411,7 +423,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
                                   <span aria-hidden="true" className="relative ml-auto block h-3 w-3">
                                     <ChevronDown
                                       strokeWidth={1.5}
-                                      className={`h-3 w-3 transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+                                      className={`h-3 w-3 transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none ${
                                         productTypesExpanded
                                           ? "scale-100 opacity-100 blur-0"
                                           : "scale-[0.25] opacity-0 blur-[4px]"
@@ -419,7 +431,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
                                     />
                                     <ChevronRight
                                       strokeWidth={1.5}
-                                      className={`absolute inset-0 h-3 w-3 transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+                                      className={`absolute inset-0 h-3 w-3 transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none ${
                                         productTypesExpanded
                                           ? "scale-[0.25] opacity-0 blur-[4px]"
                                           : "scale-100 opacity-100 blur-0"
@@ -454,24 +466,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
           >
             <Package strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
             <span>Productos</span>
-          </NavLink>
-
-          <SectionLabel>Operación</SectionLabel>
-          <NavLink
-            to="/dashboard/cobros"
-            onClick={onNavigate}
-            className={({ isActive }) => navLinkClass(isActive)}
-          >
-            <CalendarClock strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
-            <span>Cobros de hoy</span>
-          </NavLink>
-          <NavLink
-            to="/dashboard/cuotas"
-            onClick={onNavigate}
-            className={({ isActive }) => navLinkClass(isActive)}
-          >
-            <ListChecks strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
-            <span>Cuotas</span>
           </NavLink>
 
           <SectionLabel>Acciones rápidas</SectionLabel>

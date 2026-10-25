@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Check, ArrowLeft } from 'lucide-react';
 import PublicHeader from '../components/PublicHeader';
 import PublicFooter from '../components/PublicFooter';
+import FaqList from '../components/FaqList';
 
 /**
  * Precio placeholder: se define definitivamente junto con la integración
@@ -15,6 +16,18 @@ const INCLUYE = [
   'Clientes y vendedores sin límite',
   'Cronograma de cuotas con cobro y posposición',
   'Dashboard con tus números del mes',
+];
+
+const PREGUNTAS = [
+  {
+    pregunta: '¿Puedo probar antes de pagar?',
+    respuesta: 'Sí. Al crear tu cuenta podés usar la app y decidir después si te sirve.',
+  },
+  {
+    pregunta: '¿Qué pasa si cancelo?',
+    respuesta:
+      'La cuenta queda pausada y tus datos se conservan: al volver a suscribirte, todo sigue donde lo dejaste.',
+  },
 ];
 
 const Precios: React.FC = () => {
@@ -77,23 +90,12 @@ const Precios: React.FC = () => {
           </div>
         </article>
 
-        <section aria-label="Preguntas sobre el plan" className="mt-12 space-y-6">
-          <div>
-            <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500">
-              ¿Puedo probar antes de pagar?
-            </h2>
-            <p className="mt-1.5 text-sm leading-relaxed text-gray-600">
-              Sí. Al crear tu cuenta podés usar la app y decidir después si te sirve.
-            </p>
-          </div>
-          <div>
-            <h2 className="text-sm font-bold uppercase tracking-wide text-gray-500">
-              ¿Qué pasa si cancelo?
-            </h2>
-            <p className="mt-1.5 text-sm leading-relaxed text-gray-600">
-              La cuenta queda pausada y tus datos se conservan: al volver a suscribirte,
-              todo sigue donde lo dejaste.
-            </p>
+        <section aria-label="Preguntas sobre el plan" className="mt-12">
+          <h2 className="font-display text-2xl font-extrabold tracking-tight text-brand-950 sm:text-3xl">
+            Preguntas frecuentes
+          </h2>
+          <div className="mt-6">
+            <FaqList items={PREGUNTAS} />
           </div>
         </section>
       </main>

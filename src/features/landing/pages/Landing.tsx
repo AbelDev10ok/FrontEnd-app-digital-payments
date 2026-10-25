@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import FaqList from '../components/FaqList';
 import {
   CalendarCheck2,
   HandCoins,
@@ -335,21 +336,8 @@ const Landing: React.FC = () => {
           <h2 className="font-display text-2xl font-extrabold tracking-tight text-brand-950 sm:text-3xl">
             Preguntas frecuentes
           </h2>
-          <div className="mt-8 divide-y divide-gray-200 rounded-card border border-gray-200 bg-white">
-            {FAQ.map((item) => (
-              <details key={item.pregunta} className="group px-5 py-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-gray-900 [&::-webkit-details-marker]:hidden">
-                  {item.pregunta}
-                  <span
-                    aria-hidden="true"
-                    className="text-brand-600 transition-transform duration-200 group-open:rotate-45"
-                  >
-                    +
-                  </span>
-                </summary>
-                <p className="mt-3 text-sm leading-relaxed text-gray-600">{item.respuesta}</p>
-              </details>
-            ))}
+          <div className="mt-8">
+            <FaqList items={FAQ} />
           </div>
         </div>
       </section>

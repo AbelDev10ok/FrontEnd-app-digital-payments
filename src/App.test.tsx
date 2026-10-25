@@ -46,7 +46,8 @@ vi.mock('@/features/ventas/services/salesServices', () => ({
         totalVentas: 0,
         totalVendido: 0,
         totalCobrado: 0,
-        pendientePorCobrar: 0,
+        pendienteDelMes: 0,
+        deudaTotal: 0,
         ganancia: 0,
         reembolsos: 0,
         completadas: 0,
@@ -158,7 +159,7 @@ describe('rutas de App', () => {
     setAuthedUser();
     window.history.pushState({}, '', '/dashboard/ventas/todas');
     render(<App />);
-    const titulos = await screen.findAllByText('Todas las Ventas', undefined, { timeout: 10000 });
+    const titulos = await screen.findAllByText('Crear Venta', undefined, { timeout: 10000 });
     expect(titulos.length).toBeGreaterThan(0);
   });
 

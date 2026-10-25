@@ -36,6 +36,24 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, user
 
   return (
     <div className="min-h-screen bg-gray-50 relative">
+      {/* Salto al contenido: sin esto la tabulación entra por el menú lateral
+          (18 paradas) antes de llegar a la pantalla. Queda fuera del viewport
+          por transform, no por `display:none`: sigue en el orden de tabulación
+          y un lector de pantalla lo lee. */}
+      <a
+        href="#contenido-principal"
+        onClick={(e) => {
+          // El ancla nativa deja el hash en la URL y agrega una entrada al
+          // historial (el "Atrás" vuelve al mismo lugar): el foco se mueve
+          // igual, y el `href` queda para no depender de JavaScript.
+          e.preventDefault();
+          document.getElementById('contenido-principal')?.focus();
+        }}
+        className="absolute left-4 top-4 z-50 -translate-y-24 rounded-input bg-white px-4 py-2 text-sm font-medium text-brand-700 shadow-card ring-2 ring-brand-500 transition-transform focus:translate-y-0"
+      >
+        Saltar al contenido
+      </a>
+
       {/* Resplandor decorativo como el hero de la landing */}
       <div
         aria-hidden="true"
@@ -46,9 +64,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, user
       <Sidebar isOpen={sidebarOpen} onNavigate={() => setSidebarOpen(false)} />
 
       {/* Main Content */}
-      <div className="transition-all duration-300 lg:ml-64 relative">
+      <div className="transition-[margin] duration-300 ease-out lg:ml-64 relative">
         <Header
-          title={title}
           user={user}
           onLogout={handleLogout}
           showMenuButton
@@ -59,7 +76,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, user
         />
 
         {/* Page Content */}
-        <main className="p-4 md:p-6">
+        <main id="contenido-principal" tabIndex={-1} className="p-4 md:p-6 focus:outline-none">
           {children}
         </main>
       </div>

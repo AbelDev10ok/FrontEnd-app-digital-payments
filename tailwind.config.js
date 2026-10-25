@@ -31,9 +31,26 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(12px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        // Entrada de diálogos: aparecen, no saltan.
+        'modal-overlay': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'modal-panel': {
+          '0%': { opacity: '0', transform: 'translateY(6px) scale(0.98)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        // Confirmación de cobro: la fila cobrada se tiñe y se apaga.
+        'paid-flash': {
+          '0%': { backgroundColor: 'rgb(215 242 228)' },
+          '100%': { backgroundColor: 'rgb(255 255 255 / 0)' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 0.6s ease-out both',
+        'modal-overlay': 'modal-overlay 0.16s ease-out both',
+        'modal-panel': 'modal-panel 0.18s cubic-bezier(0.2, 0, 0, 1) both',
+        'paid-flash': 'paid-flash 1.4s ease-out both',
       },
       fontFamily: {
         sans: [

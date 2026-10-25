@@ -31,7 +31,7 @@ const base =
   'inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-[color,background-color,border-color,box-shadow,transform] duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60 disabled:cursor-not-allowed';
 
 // Feedback táctil al presionar: siempre 0.96 (nunca por debajo de 0.95).
-const tapScale = 'active:scale-[0.96]';
+const tapScale = 'active:scale-[0.96] motion-reduce:active:scale-100';
 
 const variants: Record<ButtonVariant, string> = {
   primary:

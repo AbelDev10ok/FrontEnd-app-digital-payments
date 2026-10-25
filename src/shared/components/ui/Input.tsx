@@ -1,8 +1,10 @@
 import type { InputHTMLAttributes } from 'react';
 import { mergeDescribedBy, useFieldA11y } from './fieldA11y';
 
+// El foco solo cambia borde y anillo: se nombran esas propiedades (nunca
+// `transition-all`) y se limita a 150ms por ser una interacción frecuente.
 export const inputBaseClass =
-  'w-full px-4 py-2.5 border border-gray-200 rounded-input focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500';
+  'w-full px-4 py-2.5 border border-gray-200 rounded-input transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   invalid?: boolean;
