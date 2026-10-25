@@ -29,3 +29,16 @@ export function toInputDate(dateString: string): string {
   if (dateOnly) return dateOnly[1];
   return getLocalDateString(new Date(dateString));
 }
+
+/**
+ * Fecha y hora legibles sin pasar por `Date`, para no correr la hora por zona
+ * horaria. El backend sella el horario de los cobros y lo envía como fecha
+ * local sin zona: `2026-11-12T15:45:30` → `12/11/2026 · 15:45`.
+ * Un string solo-fecha (`2026-11-12`) se devuelve como `12/11/2026`.
+ */
+export function formatDateHour(iso: string): string {
+  const fecha = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  const dia = fecha ? `${fecha[3]}/${fecha[2]}/${fecha[1]}` : iso;
+  const hora = /[T ](\d{2}):(\d{2})/.exec(iso);
+  return hora ? `${dia} · ${hora[1]}:${hora[2]}` : dia;
+}

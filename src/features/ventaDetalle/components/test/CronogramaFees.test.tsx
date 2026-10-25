@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CronogramaFees from '../CronogramaFees';
 import type { FeeDto, SaleResponseDto } from '@/shared/types/sales';
@@ -11,7 +11,21 @@ vi.mock('@/features/ventas/services/salesServices', () => ({
 }));
 
 vi.mock('@/features/cobros/components/PayFeeModal', () => ({
-  default: () => <div data-testid="modal-pago" />,
+  default: ({
+    cuota,
+    onPaid,
+  }: {
+    cuota: { id: number } | null;
+    onPaid: () => void;
+  }) => (
+    <div data-testid="modal-pago">
+      {cuota && (
+        <button type="button" onClick={onPaid}>
+          simular cobro {cuota.id}
+        </button>
+      )}
+    </div>
+  ),
 }));
 
 vi.mock('@/features/ventaDetalle/components/PosponedFeeModal', () => ({
@@ -114,9 +128,47 @@ describe('CronogramaFees', () => {
     );
 
     expect(screen.getByText('Cobrado $15.000 de $60.000')).toBeInTheDocument();
-    expect(screen.getByText((content) => content.includes('cuotas cobradas'))).toBeInTheDocument();
+    expect(screen.getByText('1 cuota cobrada')).toBeInTheDocument();
     const barra = screen.getByRole('progressbar', { name: 'Progreso de cobro' });
     expect(barra).toHaveAttribute('aria-valuenow', '25');
+  });
+
+  it('muestra como cobrado la suma de los cobros, no lo que reste el saldo', () => {
+    // Venta con el saldo inconsistente (lo que dejaba el borrado de cuotas): la
+    // barra no puede decir que se cobró plata que nunca entró.
+    const transaction = crearTransaccion({
+      priceTotal: 150000,
+      remainingAmount: 50000,
+      quantityFees: 6,
+      amountFee: 25000,
+      paidFeesCount: 1,
+      totalFees: 2,
+      fees: [
+        crearCuota({
+          id: 1,
+          numberFee: 1,
+          amount: 25000,
+          paid: true,
+          status: 'PAID',
+          paidAmount: 25000,
+          paymentDate: '2026-10-18',
+        }),
+        crearCuota({ id: 2, numberFee: 2, expirationDate: '2026-11-01' }),
+      ],
+    });
+
+    render(
+      <CronogramaFees
+        transaction={transaction}
+        formatDate={formatDate}
+        formatCurrency={formatCurrency}
+        refreshTransaction={refreshTransaction}
+      />,
+    );
+
+    expect(screen.getByText('Cobrado $25.000 de $150.000')).toBeInTheDocument();
+    const barra = screen.getByRole('progressbar', { name: 'Progreso de cobro' });
+    expect(barra).toHaveAttribute('aria-valuenow', '17');
   });
 
   it('etiqueta cada cuota con su estado: pagada, vencida y próxima', () => {
@@ -186,6 +238,30 @@ describe('CronogramaFees', () => {
 
     fireEvent.click(screen.getAllByRole('button', { name: /^Cobrar$/ })[0]);
     expect(screen.getByTestId('modal-pago')).toBeInTheDocument();
+  });
+
+  it('tiñe la fila recién cobrada y la apaga al segundo y medio', () => {
+    render(
+      <CronogramaFees
+        transaction={armarCronograma()}
+        formatDate={formatDate}
+        formatCurrency={formatCurrency}
+        refreshTransaction={refreshTransaction}
+      />,
+    );
+
+    // La primera cuota impaga es la 2: se cobra desde su botón.
+    fireEvent.click(screen.getAllByRole('button', { name: /^Cobrar$/ })[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'simular cobro 2' }));
+
+    const fila = screen.getByText('Cuota 2').closest('li');
+    expect(fila).toHaveClass('animate-paid-flash');
+    expect(refreshTransaction).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      vi.advanceTimersByTime(1700);
+    });
+    expect(fila).not.toHaveClass('animate-paid-flash');
   });
 
   it('abre el modal de posponer al tocar el botón de una cuota', () => {

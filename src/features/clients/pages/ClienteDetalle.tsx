@@ -8,7 +8,8 @@ import ClientEstadoFinansa from '@features/clients/components/ClientEstadoFinans
 import ClientResumenFinansas from '@features/clients/components/ClientResumenFinansas';
 import { clientService } from '@features/clients/services/clientServices';
 import DashboardLayout from '@/shared/components/layout/DashboardLayout';
-import { formatCurrency } from '@/shared/utils/formatCurrency';
+import { formatMoneyByCurrency, hasMoney, mergeMoney } from '@/shared/utils/formatCurrency';
+import type { MontosPorMoneda } from '@/shared/types/money';
 import { Alert, Card } from '@/shared/components/ui';
 import Button from '@/shared/components/ui/Button';
 
@@ -23,11 +24,16 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [financialStats, setFinancialStats] = useState({
-    deudaVentas: 0,
-    ventasPagadas: 0,
-    deudaPrestamos: 0,
-    prestamosPagados: 0
+  const [financialStats, setFinancialStats] = useState<{
+    deudaVentas: MontosPorMoneda;
+    ventasPagadas: MontosPorMoneda;
+    deudaPrestamos: MontosPorMoneda;
+    prestamosPagados: MontosPorMoneda;
+  }>({
+    deudaVentas: {},
+    ventasPagadas: {},
+    deudaPrestamos: {},
+    prestamosPagados: {}
   });
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -149,7 +155,8 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
     );
   }
 
-  const deudaTotal = financialStats.deudaVentas + financialStats.deudaPrestamos;
+  // Suma por moneda: las monedas distintas nunca se suman entre sí
+  const deudaTotal = mergeMoney(financialStats.deudaVentas, financialStats.deudaPrestamos);
 
   return (
     <DashboardLayout title={`Cliente: ${client.name}`} user={user} onLogout={onLogout}>
@@ -171,7 +178,7 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
             <h2 className="text-2xl font-display font-bold tracking-tight text-gray-900 flex items-center gap-2">
               {client.name}
               {!loadingStats && (
-                deudaTotal > 0
+                hasMoney(deudaTotal)
                   ? <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700"><AlertTriangle className="w-3.5 h-3.5" />Con deuda</span>
                   : <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"><CheckCircle2 className="w-3.5 h-3.5" />Al día</span>
               )}
@@ -194,11 +201,11 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
             </div>
           </Card>
         ) : (
-          <ClientEstadoFinansa financialStats={financialStats} formatCurrency={formatCurrency} />
+          <ClientEstadoFinansa financialStats={financialStats} formatMoney={formatMoneyByCurrency} />
         )}
 
         {/* Financial Summary */}
-        <ClientResumenFinansas financialStats={financialStats} formatCurrency={formatCurrency} />
+        <ClientResumenFinansas financialStats={financialStats} formatMoney={formatMoneyByCurrency} />
 
         {/* Action Buttons */}
         <div className="flex justify-end space-x-4">

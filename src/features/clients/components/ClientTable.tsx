@@ -2,6 +2,7 @@ import { Client } from "@/shared/types/client";
 import { Link } from "react-router-dom";
 import { eyebrow, neutral, neutralBg, tones } from "@/shared/theme";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { hasMoney } from "@/shared/utils/formatCurrency";
 
 
 type ClientTableProps = {
@@ -77,7 +78,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, searchTerm }) => {
                           </Link>
                         </td>
                         <td className="px-6 py-4 block md:table-cell text-right md:text-left relative before:content-[attr(data-label)] before:absolute before:left-6 before:text-sm before:font-bold before:text-gray-500 md:before:content-none" data-label="Estado">
-                          {cliente.deudaTotal && cliente.deudaTotal > 0 ? (
+                          {hasMoney(cliente.deudaTotal) ? (
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
                               <AlertTriangle className="w-3.5 h-3.5" />
                               Con deuda

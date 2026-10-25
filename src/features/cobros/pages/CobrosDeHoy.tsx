@@ -5,11 +5,14 @@ import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import PageHeader from '@/shared/components/ui/PageHeader';
 import Card from '@/shared/components/ui/Card';
 import Button from '@/shared/components/ui/Button';
-import { formatCurrency } from '@/shared/utils/formatCurrency';
+import { formatCurrency, formatMoneyByCurrency } from '@/shared/utils/formatCurrency';
 import { collectionsService } from '@/features/cobros/services/collectionsService';
 import PayFeeModal from '@/features/cobros/components/PayFeeModal';
 import CuotaEstadoBadge from '@/features/cobros/components/CuotaEstadoBadge';
+import { montoCobrableDeCuota } from '@/features/cobros/utils/montoCobrable';
+import { sufijoTotalCuotas } from '@/features/cobros/utils/numeroCuota';
 import type { CobrosHoyResponse, CuotaItem } from '@/shared/types/business';
+import type { MontosPorMoneda } from '@/shared/types/money';
 
 interface CobrosDeHoyProps {
   user: { email?: string; role?: string } | null;
@@ -18,31 +21,26 @@ interface CobrosDeHoyProps {
 
 const formatearFecha = (iso: string) => iso.split('-').reverse().join('/');
 
-const ResumenChip = ({
+const ResumenLinea = ({
   titulo,
   cantidad,
   monto,
-  tono,
 }: {
   titulo: string;
   cantidad: number;
-  monto: number;
-  tono: 'amber' | 'red';
+  monto: MontosPorMoneda;
 }) => (
-  <Card className="flex-1 min-w-[220px] p-5">
-    <div className="flex items-center justify-between">
-      <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">{titulo}</p>
-      <span
-        className={`w-2 h-2 rounded-full ${tono === 'amber' ? 'bg-amber-500' : 'bg-red-500'}`}
-      />
-    </div>
-    <p className="mt-2 font-display text-2xl font-extrabold tracking-tight text-brand-950 tabular-nums">
-      {formatCurrency(monto)}
+  <div className="flex-1 min-w-[200px] px-5 py-3">
+    <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">{titulo}</p>
+    <p className="mt-1 flex items-baseline gap-2">
+      <span className="font-display text-xl font-extrabold tracking-tight text-brand-950 tabular-nums">
+        {formatMoneyByCurrency(monto) || formatCurrency(0)}
+      </span>
+      <span className="text-xs text-gray-500">
+        {cantidad} {cantidad === 1 ? 'cuota' : 'cuotas'}
+      </span>
     </p>
-    <p className="mt-0.5 text-sm text-gray-500">
-      {cantidad} {cantidad === 1 ? 'cuota pendiente' : 'cuotas pendientes'}
-    </p>
-  </Card>
+  </div>
 );
 
 const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
@@ -91,9 +89,9 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
 
       {data && (
         <>
-          <div className="flex flex-wrap gap-4 mb-6">
-            <ResumenChip titulo="Vencen hoy" cantidad={data.hoy.cantidad} monto={data.hoy.monto} tono="amber" />
-            <ResumenChip titulo="Vencidas" cantidad={data.vencidas.cantidad} monto={data.vencidas.monto} tono="red" />
+          <div className="flex flex-wrap gap-0 divide-y divide-gray-100 sm:divide-y-0 sm:divide-x sm:divide-gray-100 mb-6 rounded-card bg-white shadow-card">
+            <ResumenLinea titulo="Vencen hoy" cantidad={data.hoy.cantidad} monto={data.hoy.monto} />
+            <ResumenLinea titulo="Vencidas" cantidad={data.vencidas.cantidad} monto={data.vencidas.monto} />
           </div>
 
           <Card>
@@ -124,7 +122,7 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
 
                     <div className="text-sm text-gray-600 whitespace-nowrap">
                       Cuota <span className="font-semibold text-brand-800">{cuota.numeroCuota}</span>
-                      {cuota.totalCuotas ? ` de ${cuota.totalCuotas}` : ''}
+                      {sufijoTotalCuotas(cuota.numeroCuota, cuota.totalCuotas, 'de')}
                       <span className="block text-xs text-gray-400 mt-0.5">
                         Vencía el {formatearFecha(cuota.fechaVencimiento)}
                       </span>
@@ -133,7 +131,7 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
                     <CuotaEstadoBadge cuota={cuota} />
 
                     <p className="font-mono text-base font-semibold tabular-nums text-brand-950 min-w-[110px] text-right">
-                      {formatCurrency(cuota.monto ?? 0)}
+                      {formatCurrency(montoCobrableDeCuota(cuota), cuota.currency ?? undefined)}
                     </p>
 
                     <div className="flex items-center gap-2 ml-auto">
@@ -162,7 +160,12 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
         </>
       )}
 
-      <PayFeeModal cuota={cuotaACobrar} onClose={() => setCuotaACobrar(null)} onPaid={cargar} />
+      <PayFeeModal
+        cuota={cuotaACobrar}
+        onClose={() => setCuotaACobrar(null)}
+        onPaid={cargar}
+        deudaRestante={cuotaACobrar?.deudaVenta ?? undefined}
+      />
     </DashboardLayout>
   );
 };

@@ -5,9 +5,12 @@ import { StatCard } from '@/shared/components/ui';
 interface InfoDetalleTransactionProps {
     transaction: SaleResponseDto
     formatCurrency: (amount: number) => string;
+    /** Si false, en móvil sólo quedan los dos números de la cobranza (total y
+     *  pendiente) y el resto se lee desde "Ver detalles". Desde `sm` se ve todo. */
+    showDetails?: boolean;
 }
 
-export default function StateDetalleTransaction({transaction, formatCurrency}: InfoDetalleTransactionProps) {
+export default function StateDetalleTransaction({transaction, formatCurrency, showDetails = true}: InfoDetalleTransactionProps) {
     const profit = transaction.priceTotal - transaction.cost;
     const isLoan = transaction.kind === 'PRESTAMO';
     const interest = transaction.interestRate != null && transaction.cost > 0
@@ -89,42 +92,47 @@ export default function StateDetalleTransaction({transaction, formatCurrency}: I
                 tone="warning"
             />
 
-            <StatCard
-                label="Ganancia Esperada"
-                value={formatCurrency(profit)}
-                icon={<TrendingUp className="w-6 h-6" />}
-                tone="success"
-            />
-
-            {isLoan && (
+            {/* En móvil estos datos acompañan, no encabezan: el cronograma (y el
+                botón Cobrar) tienen que quedar cerca. `contents` mantiene la
+                grilla intacta cuando se muestran. */}
+            <div className={showDetails ? "contents" : "hidden sm:contents"}>
                 <StatCard
-                    label="Interés"
-                    value={transaction.interestRate != null ? `${transaction.interestRate}% (${formatCurrency(interest)})` : '—'}
+                    label="Ganancia Esperada"
+                    value={formatCurrency(profit)}
                     icon={<TrendingUp className="w-6 h-6" />}
+                    tone="success"
+                />
+
+                {isLoan && (
+                    <StatCard
+                        label="Interés"
+                        value={transaction.interestRate != null ? `${transaction.interestRate}% (${formatCurrency(interest)})` : '—'}
+                        icon={<TrendingUp className="w-6 h-6" />}
+                        tone="brand"
+                    />
+                )}
+
+                <StatCard
+                    label="Cuotas Acordadas"
+                    value={transaction.quantityFees}
+                    icon={<Hash className="w-6 h-6" />}
                     tone="brand"
                 />
-            )}
 
-            <StatCard
-                label="Cuotas Acordadas"
-                value={transaction.quantityFees}
-                icon={<Hash className="w-6 h-6" />}
-                tone="brand"
-            />
+                <StatCard
+                    label="Cuotas Pagadas"
+                    value={transaction.paidFeesCount}
+                    icon={<CheckCircle className="w-6 h-6" />}
+                    tone="success"
+                />
 
-            <StatCard
-                label="Cuotas Pagadas"
-                value={transaction.paidFeesCount}
-                icon={<CheckCircle className="w-6 h-6" />}
-                tone="success"
-            />
-
-            <StatCard
-                label={isLoan ? "Monto Entregado" : "Costo"}
-                value={formatCurrency(transaction.cost)}
-                icon={<Receipt className="w-6 h-6" />}
-                tone="neutral"
-            />
+                <StatCard
+                    label={isLoan ? "Monto Entregado" : "Costo"}
+                    value={formatCurrency(transaction.cost)}
+                    icon={<Receipt className="w-6 h-6" />}
+                    tone="neutral"
+                />
+            </div>
         </div>
     );
 }

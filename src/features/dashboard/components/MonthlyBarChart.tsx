@@ -22,8 +22,29 @@ interface MonthlyBarChartProps {
   series: MonthlySales[];
 }
 
-const MonthlyBarChart: React.FC<MonthlyBarChartProps> = ({ series }) => {
-  const max = Math.max(...series.map((m) => Math.max(m.vendido, m.cobrado)), 1);
+/** Barras de un mes a otro para UNA sola moneda (los ejes no mezclan monedas). */
+const SeriePorMoneda: React.FC<{ series: MonthlySales[]; moneda?: string }> = ({
+  series,
+  moneda,
+}) => {
+  const monto = (m: MonthlySales, campo: "vendido" | "cobrado") =>
+    (moneda ? (m[campo][moneda] ?? 0) : 0);
+
+  const max = Math.max(
+    ...series.map((m) => Math.max(monto(m, "vendido"), monto(m, "cobrado"))),
+    1,
+  );
+
+  // Sin movimientos no se dibujan barras: una barra mínima en un mes en 0
+  // parecería un monto chico en vez de nada
+  const hayDatos = series.some((m) => monto(m, "vendido") > 0 || monto(m, "cobrado") > 0);
+  if (!hayDatos) {
+    return (
+      <p className="text-sm text-gray-500 py-8 text-center">
+        Sin movimientos en este período.
+      </p>
+    );
+  }
 
   return (
     <div>
@@ -37,19 +58,23 @@ const MonthlyBarChart: React.FC<MonthlyBarChartProps> = ({ series }) => {
               <div
                 className="w-1/2 max-w-[14px] rounded-t-sm bg-brand-500 hover:bg-brand-600 transition-colors"
                 style={{
-                  height: `${Math.max((m.vendido / max) * BAR_AREA_HEIGHT, 2)}px`,
+                  height: monto(m, "vendido") > 0
+                    ? `${Math.max((monto(m, "vendido") / max) * BAR_AREA_HEIGHT, 2)}px`
+                    : 0,
                 }}
-                title={`Vendido ${MESES_CORTOS[m.month - 1]} ${m.year}: ${formatCurrency(m.vendido)} · Ganancia Esperada: ${formatCurrency(m.ganancia)}`}
+                title={`Vendido ${MESES_CORTOS[m.month - 1]} ${m.year}: ${formatCurrency(monto(m, "vendido"), moneda)} · Ganancia Esperada: ${formatCurrency(moneda ? (m.ganancia[moneda] ?? 0) : 0, moneda)}`}
               />
               <div
                 className="w-1/2 max-w-[14px] rounded-t-sm bg-emerald-300 hover:bg-emerald-400 transition-colors"
                 style={{
-                  height: `${Math.max((m.cobrado / max) * BAR_AREA_HEIGHT, 2)}px`,
+                  height: monto(m, "cobrado") > 0
+                    ? `${Math.max((monto(m, "cobrado") / max) * BAR_AREA_HEIGHT, 2)}px`
+                    : 0,
                 }}
-                title={`Cobrado ${MESES_CORTOS[m.month - 1]} ${m.year}: ${formatCurrency(m.cobrado)}`}
+                title={`Cobrado ${MESES_CORTOS[m.month - 1]} ${m.year}: ${formatCurrency(monto(m, "cobrado"), moneda)}`}
               />
             </div>
-            <span className="text-[10px] text-gray-500">
+            <span className="text-[11px] text-gray-500">
               {MESES_CORTOS[m.month - 1]}
             </span>
           </div>
@@ -67,6 +92,33 @@ const MonthlyBarChart: React.FC<MonthlyBarChartProps> = ({ series }) => {
       </div>
     </div>
   );
+};
+
+const MonthlyBarChart: React.FC<MonthlyBarChartProps> = ({ series }) => {
+  // Monedas presentes en la serie. Con una sola moneda se dibuja el gráfico
+  // actual; con varias se dibuja UNO POR MONEDA, porque montos de monedas
+  // distintas no se comparan ni se suman en el mismo eje.
+  const monedas = [...new Set(
+    series.flatMap((m) => [
+      ...Object.keys(m.vendido ?? {}),
+      ...Object.keys(m.cobrado ?? {}),
+    ]),
+  )].sort();
+
+  if (monedas.length > 1) {
+    return (
+      <div className="space-y-6">
+        {monedas.map((moneda) => (
+          <div key={moneda}>
+            <p className="text-xs font-semibold text-gray-500 mb-2">{moneda}</p>
+            <SeriePorMoneda series={series} moneda={moneda} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return <SeriePorMoneda series={series} moneda={monedas[0]} />;
 };
 
 export default MonthlyBarChart;

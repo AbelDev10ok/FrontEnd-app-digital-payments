@@ -1,7 +1,7 @@
 import { AlertCircle, Users, DollarSign } from 'lucide-react';
 
 import Load from '@/shared/components/feedback/Load.tsx';
-import { formatCurrency } from '@/shared/utils/formatCurrency';
+import { formatMoneyByCurrency, hasMoney, mergeMoney } from '@/shared/utils/formatCurrency';
 import { FetchParamsClients } from '@/shared/types/client';
 import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import HeaderClientes from '@/features/clients/components/HeaderClientes';
@@ -52,8 +52,9 @@ const Clientes: React.FC<PageProps> = ({ user, onLogout }) => {
 
   const stats = !loading && clients.length > 0
     ? {
-        conDeuda: clients.filter(c => c.deudaTotal && c.deudaTotal > 0).length,
-        totalDeuda: clients.reduce((sum, c) => sum + (c.deudaTotal || 0), 0),
+        conDeuda: clients.filter(c => hasMoney(c.deudaTotal)).length,
+        // Suma por moneda: las monedas distintas nunca se suman entre sí
+        totalDeuda: mergeMoney(...clients.map(c => c.deudaTotal)),
       }
     : null;
   
@@ -102,7 +103,7 @@ const Clientes: React.FC<PageProps> = ({ user, onLogout }) => {
               </div>
               <div>
                 <p className="text-xs text-gray-500 font-medium">Deuda total</p>
-                <p className="text-lg font-bold text-gray-900">{formatCurrency(stats.totalDeuda)}</p>
+                <p className="text-lg font-bold text-gray-900">{formatMoneyByCurrency(stats.totalDeuda)}</p>
               </div>
             </div>
           </div>

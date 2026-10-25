@@ -15,6 +15,8 @@ import {
 } from '@/features/cobros/services/collectionsService';
 import PayFeeModal from '@/features/cobros/components/PayFeeModal';
 import CuotaEstadoBadge from '@/features/cobros/components/CuotaEstadoBadge';
+import { montoCobrableDeCuota } from '@/features/cobros/utils/montoCobrable';
+import { sufijoTotalCuotas } from '@/features/cobros/utils/numeroCuota';
 import type { CuotaEstadoFiltro, CuotaItem } from '@/shared/types/business';
 
 interface CuotasProps {
@@ -183,7 +185,7 @@ const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
                     </td>
                     <td className="px-5 py-3.5 text-sm text-gray-600 whitespace-nowrap">
                       {cuota.numeroCuota}
-                      {cuota.totalCuotas ? ` / ${cuota.totalCuotas}` : ''}
+                      {sufijoTotalCuotas(cuota.numeroCuota, cuota.totalCuotas, '/')}
                     </td>
                     <td className="px-5 py-3.5 text-sm text-gray-600 whitespace-nowrap tabular-nums">
                       {formatearFecha(cuota.fechaVencimiento)}
@@ -192,7 +194,7 @@ const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
                       <CuotaEstadoBadge cuota={cuota} />
                     </td>
                     <td className="px-5 py-3.5 text-right font-mono text-sm font-semibold tabular-nums text-brand-950 whitespace-nowrap">
-                      {formatCurrency(cuota.monto ?? 0)}
+                      {formatCurrency(montoCobrableDeCuota(cuota), cuota.currency ?? undefined)}
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center justify-end gap-1">
@@ -227,7 +229,12 @@ const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
         <Paginación page={page} setPage={setPage} totalPages={totalPages} />
       )}
 
-      <PayFeeModal cuota={cuotaACobrar} onClose={() => setCuotaACobrar(null)} onPaid={cargar} />
+      <PayFeeModal
+        cuota={cuotaACobrar}
+        onClose={() => setCuotaACobrar(null)}
+        onPaid={cargar}
+        deudaRestante={cuotaACobrar?.deudaVenta ?? undefined}
+      />
     </DashboardLayout>
   );
 };

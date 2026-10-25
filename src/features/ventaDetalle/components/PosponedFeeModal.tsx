@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { X, Calendar, DollarSign, Trash2 } from "lucide-react";
+import { X, Calendar, Trash2 } from "lucide-react";
 import { salesService } from "@/features/ventas/services/salesServices";
 import { Button, Input } from "@/shared/components/ui";
-import { formatCurrency } from "@/shared/utils/formatCurrency";
+import { formatCurrency, getCurrencySymbol } from "@/shared/utils/formatCurrency";
 import { toInputDate } from "@/shared/utils/formatDate";
 
 interface PostponeFeeModalProps {
@@ -11,6 +11,8 @@ interface PostponeFeeModalProps {
   onSuccess: () => void;
   saleId: number;
   feeId: number;
+  /** Moneda ISO 4217 heredada de la venta (snapshot de la transacción) */
+  currency?: string | null;
   currentDate: string;
   saleDate: string;
   currentAmount: number;
@@ -25,6 +27,7 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
   onSuccess,
   saleId,
   feeId,
+  currency,
   currentDate,
   saleDate,
   currentAmount,
@@ -42,6 +45,9 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
   const [error, setError] = useState("");
 
   if (!isOpen) return null;
+
+  // '$' en ARS, 'US$' en USD: el monto ya pertenece a la moneda de la venta.
+  const simbolo = getCurrencySymbol(currency ?? undefined);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,7 +141,7 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
                   min={saleDate ? toInputDate(saleDate) : undefined}
-                  className="pl-10 transition-all"
+                  className="pl-10 transition-[border-color,box-shadow] duration-150 ease-out"
                   required
                 />
               </div>
@@ -159,7 +165,7 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                     type="date"
                     value={newPaymentDate}
                     onChange={(e) => setNewPaymentDate(e.target.value)}
-                    className="pl-10 transition-all"
+                    className="pl-10 transition-[border-color,box-shadow] duration-150 ease-out"
                   />
                 </div>
               </div>
@@ -169,20 +175,20 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                   Monto de la Cuota
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <DollarSign className="h-5 w-5 text-gray-400" />
-                  </div>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-500 pointer-events-none">
+                    {simbolo}
+                  </span>
                   <Input
                     type="number"
                     value={newAmount}
                     onChange={(e) => setNewAmount(e.target.value)}
                     step="0.01"
                     min="0"
-                    className="pl-10 transition-all"
+                    className={`${simbolo.length > 1 ? 'pl-12' : 'pl-8'} transition-[border-color,box-shadow] duration-150 ease-out`}
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  El monto no puede superar la deuda actual: {formatCurrency(maxAmount)}
+                  El monto no puede superar la deuda actual: {formatCurrency(maxAmount, currency ?? undefined)}
                 </p>
               </div>
             </>

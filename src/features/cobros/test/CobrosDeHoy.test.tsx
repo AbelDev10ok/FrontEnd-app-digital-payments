@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import CobrosDeHoy from '../pages/CobrosDeHoy';
 import { collectionsService } from '@/features/cobros/services/collectionsService';
@@ -16,6 +17,7 @@ vi.mock('@/features/ventas/services/salesServices', () => ({
       aCobrar: 0,
     }),
     markFeeAsPaid: vi.fn(),
+    getFeePayments: vi.fn().mockResolvedValue([]),
   },
 }));
 
@@ -28,8 +30,8 @@ vi.mock('@/features/cobros/services/collectionsService', () => ({
 
 const cobroVencido: CobrosHoyResponse = {
   fecha: '2026-08-25',
-  hoy: { cantidad: 1, monto: 15000 },
-  vencidas: { cantidad: 1, monto: 20000 },
+  hoy: { cantidad: 1, monto: { ARS: 15000 } },
+  vencidas: { cantidad: 1, monto: { ARS: 20000 } },
   items: [
     {
       id: 10,
@@ -96,8 +98,8 @@ describe('CobrosDeHoy', () => {
   it('muestra el estado vacío cuando no hay cobros pendientes', async () => {
     vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue({
       fecha: '2026-08-25',
-      hoy: { cantidad: 0, monto: 0 },
-      vencidas: { cantidad: 0, monto: 0 },
+      hoy: { cantidad: 0, monto: {} },
+      vencidas: { cantidad: 0, monto: {} },
       items: [],
     });
 
@@ -107,11 +109,86 @@ describe('CobrosDeHoy', () => {
     expect(screen.queryByRole('button', { name: /Cobrar/ })).not.toBeInTheDocument();
   });
 
+  it('muestra el total del plan en una cuota acordada', async () => {
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue(cobroVencido);
+
+    renderPagina();
+
+    const fila = (await screen.findByText('Maria Lopez')).closest('li')!;
+    expect(fila).toHaveTextContent('Cuota 1 de 12');
+  });
+
+  it('oculta el total del plan en una cuota extra generada por un pago parcial', async () => {
+    // Los pagos parciales reparten la deuda en más cuotas que las acordadas: la 7
+    // existe, pero el "de 6" ya no la describe
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue({
+      fecha: '2026-08-25',
+      hoy: { cantidad: 1, monto: { ARS: 15000 } },
+      vencidas: { cantidad: 0, monto: {} },
+      items: [{ ...cobroVencido.items[0], numeroCuota: 7, totalCuotas: 6 }],
+    });
+
+    renderPagina();
+
+    const fila = (await screen.findByText('Maria Lopez')).closest('li')!;
+    expect(fila).toHaveTextContent('Cuota 7');
+    expect(fila).not.toHaveTextContent('de 6');
+  });
+
   it('muestra el error del backend', async () => {
     vi.mocked(collectionsService.getCobrosHoy).mockRejectedValue(new Error('sin conexión'));
 
     renderPagina();
 
     expect(await screen.findByText('sin conexión')).toBeInTheDocument();
+  });
+
+  it('muestra el monto cobrable cuando la deuda de la venta es menor que la cuota', async () => {
+    // Cuota de 25.000 en una venta que sólo debe 10.000: la fila no puede
+    // prometer más de lo que se puede cobrar
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue({
+      fecha: '2026-08-25',
+      hoy: { cantidad: 1, monto: { ARS: 40000 } },
+      vencidas: { cantidad: 0, monto: {} },
+      items: [{ ...cobroVencido.items[0], monto: 25000, deudaVenta: 10000 }],
+    });
+
+    renderPagina();
+
+    expect(await screen.findByText('Maria Lopez')).toBeInTheDocument();
+    expect(screen.getByText('$ 10.000')).toBeInTheDocument();
+    expect(screen.queryByText('$ 25.000')).not.toBeInTheDocument();
+  });
+
+  it('precarga el cobro con el monto cobrable de la cuota', async () => {
+    const user = userEvent.setup();
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue({
+      fecha: '2026-08-25',
+      hoy: { cantidad: 1, monto: { ARS: 40000 } },
+      vencidas: { cantidad: 0, monto: {} },
+      items: [{ ...cobroVencido.items[0], monto: 25000, deudaVenta: 10000 }],
+    });
+
+    renderPagina();
+
+    await user.click(await screen.findByRole('button', { name: /Cobrar/ }));
+
+    expect(screen.getByLabelText(/Monto cobrado/i)).toHaveValue(10000);
+  });
+
+  it('precarga el cobro con el monto de la cuota cuando la deuda es mayor', async () => {
+    const user = userEvent.setup();
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue({
+      fecha: '2026-08-25',
+      hoy: { cantidad: 1, monto: { ARS: 40000 } },
+      vencidas: { cantidad: 0, monto: {} },
+      items: [{ ...cobroVencido.items[0], monto: 25000, deudaVenta: 60000 }],
+    });
+
+    renderPagina();
+
+    await user.click(await screen.findByRole('button', { name: /Cobrar/ }));
+
+    expect(screen.getByLabelText(/Monto cobrado/i)).toHaveValue(25000);
   });
 });

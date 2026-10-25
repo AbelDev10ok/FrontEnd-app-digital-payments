@@ -42,6 +42,20 @@ describe('PostponeFeeModal', () => {
     expect(screen.getByText('Monto de la Cuota')).toBeInTheDocument();
   });
 
+  it('muestra el símbolo de la moneda de la venta en el monto', () => {
+    renderModal({ currency: 'USD' });
+
+    const montoInput = screen.getByRole('spinbutton');
+    expect(montoInput.parentElement?.querySelector('span')?.textContent).toBe('US$');
+  });
+
+  it('muestra $ cuando la venta está en pesos', () => {
+    renderModal({ currency: 'ARS' });
+
+    const montoInput = screen.getByRole('spinbutton');
+    expect(montoInput.parentElement?.querySelector('span')?.textContent).toBe('$');
+  });
+
   it('rechaza subir el monto por encima del saldo restante sin llamar al servicio', async () => {
     const user = userEvent.setup();
     const { onSuccess, onClose } = renderModal();

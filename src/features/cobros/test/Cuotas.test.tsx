@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import Cuotas from '../pages/Cuotas';
@@ -74,6 +74,34 @@ describe('Cuotas', () => {
     expect(screen.getByRole('button', { name: /Cobrar/ })).toBeInTheDocument();
   });
 
+  it('muestra el total del plan en una cuota acordada', async () => {
+    renderPagina();
+
+    const fila = (await screen.findByText('Maria Lopez')).closest('tr')!;
+    expect(within(fila).getByText('1 / 12')).toBeInTheDocument();
+  });
+
+  it('oculta el total del plan en una cuota extra generada por un pago parcial', async () => {
+    // Los pagos parciales reparten la deuda en más cuotas que las acordadas: la 7
+    // existe, pero el "/ 6" ya no la describe
+    vi.mocked(collectionsService.getCuotas).mockResolvedValue({
+      content: [{ ...cuota, numeroCuota: 7, totalCuotas: 6 }],
+      totalPages: 1,
+      totalElements: 1,
+      number: 0,
+      size: 20,
+      first: true,
+      last: true,
+      empty: false,
+    } as never);
+
+    renderPagina();
+
+    const fila = (await screen.findByText('Maria Lopez')).closest('tr')!;
+    expect(within(fila).getByText('7')).toBeInTheDocument();
+    expect(within(fila).queryByText(/\/ 6/)).not.toBeInTheDocument();
+  });
+
   it('pide el filtro de vencidas al cambiar el select de estado', async () => {
     const user = userEvent.setup();
     renderPagina();
@@ -103,5 +131,65 @@ describe('Cuotas', () => {
     renderPagina();
 
     expect(await screen.findByText('Sin resultados')).toBeInTheDocument();
+  });
+
+  it('muestra el monto de la cuota y ofrece cobrarla', async () => {
+    vi.mocked(collectionsService.getCuotas).mockResolvedValue({
+      content: [{ ...cuota }],
+      totalPages: 1,
+      totalElements: 1,
+      number: 0,
+      size: 20,
+      first: true,
+      last: true,
+      empty: false,
+    } as never);
+
+    renderPagina();
+
+    expect(await screen.findByText('Maria Lopez')).toBeInTheDocument();
+    // El monto que se muestra es el de la cuota
+    expect(screen.getByText('$ 15.000')).toBeInTheDocument();
+    // Una cuota impaga ofrece el cobro desde el listado
+    expect(screen.getByRole('button', { name: /Cobrar/ })).toBeInTheDocument();
+  });
+
+  it('acota el monto de una cuota impaga a la deuda de la venta', async () => {
+    // Cuota de 25.000 en una venta que sólo debe 10.000: se muestra lo cobrable
+    vi.mocked(collectionsService.getCuotas).mockResolvedValue({
+      content: [{ ...cuota, monto: 25000, deudaVenta: 10000 }],
+      totalPages: 1,
+      totalElements: 1,
+      number: 0,
+      size: 20,
+      first: true,
+      last: true,
+      empty: false,
+    } as never);
+
+    renderPagina();
+
+    expect(await screen.findByText('Maria Lopez')).toBeInTheDocument();
+    expect(screen.getByText('$ 10.000')).toBeInTheDocument();
+    expect(screen.queryByText('$ 25.000')).not.toBeInTheDocument();
+  });
+
+  it('en una cuota ya cobrada muestra su monto y no la deuda que queda', async () => {
+    vi.mocked(collectionsService.getCuotas).mockResolvedValue({
+      content: [{ ...cuota, monto: 25000, deudaVenta: 5000, pagada: true, estado: 'PAID' }],
+      totalPages: 1,
+      totalElements: 1,
+      number: 0,
+      size: 20,
+      first: true,
+      last: true,
+      empty: false,
+    } as never);
+
+    renderPagina();
+
+    expect(await screen.findByText('Maria Lopez')).toBeInTheDocument();
+    expect(screen.getByText('$ 25.000')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Cobrar/ })).not.toBeInTheDocument();
   });
 });

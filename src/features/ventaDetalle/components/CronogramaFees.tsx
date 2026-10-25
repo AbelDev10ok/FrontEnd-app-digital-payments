@@ -5,6 +5,7 @@ import type { SaleResponseDto, FeeDto } from "@/shared/types/sales";
 import type { CuotaItem } from "@/shared/types/business";
 import { Button } from "@/shared/components/ui";
 import { tones, neutral, neutralBg } from "@/shared/theme";
+import { formatDateHour } from "@/shared/utils/formatDate";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -61,6 +62,9 @@ export default function CronogramaFees({
   refreshTransaction,
 }: CronogramaFeesProps) {
   const [cuotaACobrar, setCuotaACobrar] = useState<CuotaItem | null>(null);
+  // Cuota recién cobrada: se tiñe un instante para que el cambio a "Pagada"
+  // se vea, en lugar de aparecer sin transición.
+  const [justPaidId, setJustPaidId] = useState<number | null>(null);
   const [editingFee, setEditingFee] = useState<{
     id: number;
     date: string;
@@ -71,7 +75,7 @@ export default function CronogramaFees({
 
   const estados = getFeeListStates(transaction.fees);
 
-  const feeToCuota = (fee: FeeDto): CuotaItem =>
+  const feeToCuota = (fee: FeeDto, estadoVisual: FeeVisualState): CuotaItem =>
     ({
       id: fee.id,
       saleId: transaction.id,
@@ -79,18 +83,37 @@ export default function CronogramaFees({
       clientName: transaction.client.name,
       saleDescription: transaction.descriptionProduct,
       numeroCuota: fee.numberFee,
-      monto: transaction.amountFee,
+      totalCuotas: transaction.quantityFees,
+      monto: fee.amount,
       fechaVencimiento: fee.expirationDate,
       pagada: fee.paid,
+      fechaPago: fee.paymentDate ?? null,
+      fechaPagoHora: fee.lastPaymentAt ?? null,
+      paymentMethod: fee.paymentMethod ?? null,
       diasAtraso: 0,
-      estado: "UPCOMING",
+      estado:
+        estadoVisual === "pagada"
+          ? "PAID"
+          : estadoVisual === "vencida"
+            ? "DELAYED"
+            : "UPCOMING",
+      currency: transaction.currency ?? null,
     }) as const;
 
   // ----- Datos de la barra de progreso -----
-  const cobrado = Math.max(
-    transaction.priceTotal - transaction.remainingAmount,
-    0,
-  );
+  // Cobrado sale de los cobros registrados en cada cuota, no de restar el saldo:
+  // el saldo es un número que puede quedar viejo, la plata que entró no.
+  const cobrado = transaction.fees.reduce((total, fee) => {
+    // Cuotas cobradas antes del log de pagos no traen paidAmount: su monto es
+    // lo que se cobró, igual que hace el backend
+    const deLaCuota =
+      fee.paidAmount && fee.paidAmount > 0
+        ? fee.paidAmount
+        : fee.paid
+          ? fee.amount || 0
+          : 0;
+    return total + deLaCuota;
+  }, 0);
   const porcentaje =
     transaction.priceTotal > 0
       ? Math.min(Math.round((cobrado / transaction.priceTotal) * 100), 100)
@@ -127,7 +150,8 @@ export default function CronogramaFees({
               />
             </div>
             <p className={`mt-1.5 text-xs ${neutral.muted}`}>
-              {transaction.paidFeesCount} cuotas cobradas
+              {transaction.paidFeesCount}{" "}
+              {transaction.paidFeesCount === 1 ? "cuota cobrada" : "cuotas cobradas"}
             </p>
           </div>
 
@@ -138,13 +162,22 @@ export default function CronogramaFees({
               const config = STATE_CONFIG[estado];
               const { Icon } = config;
               return (
-                <li key={fee.id} className={`py-3.5 ${config.row ?? ""}`}>
-                  <div className="flex items-center gap-3">
+                <li
+                  key={fee.id}
+                  className={`py-3.5 ${config.row ?? ""} ${
+                    fee.id === justPaidId
+                      ? "animate-paid-flash motion-reduce:animate-none"
+                      : ""
+                  }`}
+                >
+                  {/* En móvil la fila se parte en dos líneas: monto, estado y
+                      Cobrar no entran junto al número de cuota y desbordaban. */}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:flex-nowrap">
                     <Icon
                       className={`h-5 w-5 shrink-0 ${config.iconClass}`}
                       aria-hidden="true"
                     />
-                    <span className={`text-sm font-medium ${neutral.primary}`}>
+                    <span className={`whitespace-nowrap text-sm font-medium ${neutral.primary}`}>
                       Cuota {fee.numberFee}
                     </span>
                     <span
@@ -170,7 +203,7 @@ export default function CronogramaFees({
                         <Button
                           size="sm"
                           leftIcon={<HandCoins className="w-4 h-4" />}
-                          onClick={() => setCuotaACobrar(feeToCuota(fee))}
+                          onClick={() => setCuotaACobrar(feeToCuota(fee, estado))}
                         >
                           Cobrar
                         </Button>
@@ -194,27 +227,33 @@ export default function CronogramaFees({
                     </div>
                   </div>
 
-                  {/* Información de pago */}
-                  {fee.paid && (
+                  {/* Información de cobro: método y fecha/hora */}
+                  {(fee.lastPaymentAt ?? fee.paymentDate) && (
                     <p
-                      className={`mt-1 pl-8 text-xs flex justify-start   ${tones.success.text}`}
+                      className={`mt-1 pl-8 text-xs flex flex-wrap items-center gap-x-2 gap-y-0.5 ${
+                        fee.paid ? tones.success.text : tones.warning.text
+                      }`}
                     >
-                      <span className="inline-flex items-center gap-2">
-                        {fee.paymentMethod === "TRANSFERENCIA" ? (
-                          <Building2 className="w-3.5 h-3.5" />
-                        ) : (
-                          <Banknote className="w-3.5 h-3.5" />
-                        )}
-                        {fee.paymentMethod === "TRANSFERENCIA"
-                          ? "Transferencia"
-                          : "Efectivo"}
-                      </span>
-                      {fee.paidAmount != null && fee.paidAmount !== fee.amount
-                        ? ` · Pagado ${formatCurrency(fee.paidAmount)}`
-                        : ""}
-                      {fee.paymentDate
-                        ? ` el ${formatDate(fee.paymentDate)}`
-                        : ""}
+                      {fee.paymentMethod && (
+                        <span className="inline-flex items-center gap-1.5">
+                          {fee.paymentMethod === "TRANSFERENCIA" ? (
+                            <Building2 className="w-3.5 h-3.5" />
+                          ) : (
+                            <Banknote className="w-3.5 h-3.5" />
+                          )}
+                          {fee.paymentMethod === "TRANSFERENCIA"
+                            ? "Transferencia"
+                            : "Efectivo"}
+                        </span>
+                      )}
+                      {(fee.lastPaymentAt ?? fee.paymentDate) && (
+                        <span>
+                          el{" "}
+                          {formatDateHour(
+                            fee.lastPaymentAt ?? fee.paymentDate ?? "",
+                          )}
+                        </span>
+                      )}
                     </p>
                   )}
                 </li>
@@ -225,7 +264,11 @@ export default function CronogramaFees({
           <PayFeeModal
             cuota={cuotaACobrar}
             onClose={() => setCuotaACobrar(null)}
-            onPaid={refreshTransaction}
+            onPaid={() => {
+              setJustPaidId(cuotaACobrar?.id ?? null);
+              refreshTransaction();
+              window.setTimeout(() => setJustPaidId(null), 1700);
+            }}
             deudaRestante={transaction.remainingAmount}
             fechaMinima={transaction.dateSale}
           />
@@ -239,6 +282,7 @@ export default function CronogramaFees({
               }}
               saleId={transaction.id}
               feeId={editingFee.id}
+              currency={transaction.currency}
               currentDate={editingFee.date}
               saleDate={transaction.dateSale}
               currentAmount={editingFee.amount}

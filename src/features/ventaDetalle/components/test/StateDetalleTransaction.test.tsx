@@ -101,4 +101,33 @@ describe('StateDetalleTransaction', () => {
     expect(screen.queryByText('Cobrado antes de anular')).not.toBeInTheDocument();
     expect(screen.queryByText('Deuda Pendiente')).not.toBeInTheDocument();
   });
+
+  it('en móvil deja la economía detrás de "Ver detalles"', () => {
+    const { rerender } = render(
+      <StateDetalleTransaction
+        transaction={crearTransaccion({ status: 'ACTIVE' })}
+        formatCurrency={formatCurrency}
+        showDetails={false}
+      />,
+    );
+
+    // El bloque se esconde sólo por debajo de `sm`: en escritorio sigue visible
+    // (jsdom no aplica media queries, así que se verifica el contrato de clases).
+    expect(screen.getByText('Monto Total')).toBeInTheDocument();
+    expect(screen.getByText('Monto Pendiente')).toBeInTheDocument();
+    expect(screen.getByText('Ganancia Esperada').closest('.hidden')).toHaveClass(
+      'hidden',
+      'sm:contents',
+    );
+
+    rerender(
+      <StateDetalleTransaction
+        transaction={crearTransaccion({ status: 'ACTIVE' })}
+        formatCurrency={formatCurrency}
+        showDetails
+      />,
+    );
+
+    expect(screen.getByText('Ganancia Esperada').closest('.hidden')).toBeNull();
+  });
 });

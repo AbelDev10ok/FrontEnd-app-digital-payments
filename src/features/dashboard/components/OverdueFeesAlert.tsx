@@ -1,10 +1,12 @@
 import { AlertTriangle } from "lucide-react";
 import { Card } from "@/shared/components/ui";
-import { formatCurrency } from "@/shared/utils/formatCurrency";
+import { formatMoneyByCurrency } from "@/shared/utils/formatCurrency";
+import type { MontosPorMoneda } from "@/shared/types/money";
 
 interface OverdueFeesAlertProps {
   cantidad: number;
-  monto: number;
+  /** Montos por moneda: las monedas distintas nunca se suman entre sí */
+  monto: MontosPorMoneda;
 }
 
 const OverdueFeesAlert: React.FC<OverdueFeesAlertProps> = ({ cantidad, monto }) => {
@@ -21,7 +23,7 @@ const OverdueFeesAlert: React.FC<OverdueFeesAlertProps> = ({ cantidad, monto }) 
             {cantidad} {cantidad === 1 ? "cuota vencida" : "cuotas vencidas"}
           </p>
           <p className="text-sm text-red-700">
-            Monto total por cobrar: {formatCurrency(monto)}
+            Monto total por cobrar: {formatMoneyByCurrency(monto)}
           </p>
         </div>
       </div>

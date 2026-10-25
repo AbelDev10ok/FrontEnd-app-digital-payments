@@ -1,5 +1,5 @@
 import type { DashboardAnual } from "@/shared/types/dashboard";
-import { formatCurrency } from "@/shared/utils/formatCurrency";
+import { formatCurrency, formatMoneyByCurrency } from "@/shared/utils/formatCurrency";
 
 interface AnnualSummaryProps {
   anual: DashboardAnual;
@@ -8,9 +8,9 @@ interface AnnualSummaryProps {
 const AnnualSummary: React.FC<AnnualSummaryProps> = ({ anual }) => {
   const items = [
     { label: "Ventas", value: String(anual.totalVentas) },
-    { label: "Vendido", value: formatCurrency(anual.totalVendido) },
-    { label: "Cobrado", value: formatCurrency(anual.totalCobrado) },
-    { label: "Ganancia Esperada", value: formatCurrency(anual.ganancia) },
+    { label: "Vendido", value: formatMoneyByCurrency(anual.totalVendido) || formatCurrency(0) },
+    { label: "Cobrado", value: formatMoneyByCurrency(anual.totalCobrado) || formatCurrency(0) },
+    { label: "Ganancia esperada", value: formatMoneyByCurrency(anual.ganancia) || formatCurrency(0) },
   ];
 
   return (

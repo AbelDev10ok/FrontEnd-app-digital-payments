@@ -1,5 +1,6 @@
 import { authenticatedFetch } from "@/features/auth/services/authServices";
 import { Client, ClientRequest } from "@/shared/types/client";
+import { MontosPorMoneda } from "@/shared/types/money";
 import { CLIENTS_API_URL } from "@/shared/config/api";
 import { getErrorMessage } from "@/shared/utils/http";
 
@@ -68,7 +69,7 @@ export const clientService = {
   },
 
   // Calcular deuda total de ventas de un cliente
-  async calcularDeudaTotalVentas(id: number): Promise<number> {
+  async calcularDeudaTotalVentas(id: number): Promise<MontosPorMoneda> {
     const response = await authenticatedFetch(`${CLIENTS_API_URL}/${id}/deuda-ventas`);
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Error al calcular la deuda total de ventas'));
@@ -77,7 +78,7 @@ export const clientService = {
   },
 
   // Calcular total de ventas pagadas de un cliente
-  async calcularTotalVentasPagadas(id: number): Promise<number> {
+  async calcularTotalVentasPagadas(id: number): Promise<MontosPorMoneda> {
     const response = await authenticatedFetch(`${CLIENTS_API_URL}/${id}/total-ventas-pagadas`);
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Error al calcular el total de ventas pagadas'));
@@ -87,7 +88,7 @@ export const clientService = {
   },
 
   // Calcular deuda total de préstamos de un cliente
-  async calcularDeudaTotalPrestamos(id: number): Promise<number> {
+  async calcularDeudaTotalPrestamos(id: number): Promise<MontosPorMoneda> {
     const response = await authenticatedFetch(`${CLIENTS_API_URL}/${id}/deuda-prestamos`);
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Error al calcular la deuda total de préstamos'));
@@ -96,7 +97,7 @@ export const clientService = {
   },
 
   // Calcular total de préstamos pagados de un cliente
-  async calcularTotalPrestamosPagados(id: number): Promise<number> {
+  async calcularTotalPrestamosPagados(id: number): Promise<MontosPorMoneda> {
     const response = await authenticatedFetch(`${CLIENTS_API_URL}/${id}/total-prestamos-pagados`);
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Error al calcular el total de préstamos pagados'));

@@ -1,3 +1,5 @@
+import type { MontosPorMoneda } from "@/shared/types/money";
+
 export interface Client {
   id: number;
   name: string;
@@ -8,7 +10,8 @@ export interface Client {
   sellerName?: string;
   seller: boolean;
   dni?: string;
-  deudaTotal?: number;
+  /** Deuda por moneda ISO 4217: las monedas distintas nunca se suman entre sí */
+  deudaTotal?: MontosPorMoneda;
 }
 
 

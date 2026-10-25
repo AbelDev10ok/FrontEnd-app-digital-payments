@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/shared/utils/formatCurrency";
+import { formatCurrency, formatMoneyByCurrency } from "@/shared/utils/formatCurrency";
 import type { TopClient } from "@/shared/types/dashboard";
 
 interface TopClientsListProps {
@@ -28,16 +28,16 @@ const TopClientsList: React.FC<TopClientsListProps> = ({ clients }) => {
                 {client.clientName}
               </p>
               <p className="text-xs text-gray-500">
-                {client.totalVentas} ventas
+                {client.totalVentas} {client.totalVentas === 1 ? "venta" : "ventas"}
               </p>
             </div>
           </div>
           <div className="text-right shrink-0">
             <p className="font-semibold text-gray-900 font-mono tabular-nums">
-              {formatCurrency(client.totalVendido)}
+              {formatMoneyByCurrency(client.totalVendido) || formatCurrency(0)}
             </p>
             <p className="text-xs text-gray-500 font-mono tabular-nums">
-              Cobrado: {formatCurrency(client.totalCobrado)}
+              Cobrado: {formatMoneyByCurrency(client.totalCobrado) || formatCurrency(0)}
             </p>
           </div>
         </li>

@@ -5,7 +5,7 @@ import PayFeeModal from '../components/PayFeeModal';
 import type { CuotaItem } from '@/shared/types/business';
 
 vi.mock('@/features/ventas/services/salesServices', () => ({
-  salesService: { markFeeAsPaid: vi.fn() },
+  salesService: { markFeeAsPaid: vi.fn(), getFeePayments: vi.fn().mockResolvedValue([]) },
 }));
 
 const cuota = (overrides: Partial<CuotaItem> = {}): CuotaItem => ({
@@ -38,11 +38,21 @@ describe('PayFeeModal', () => {
     expect(screen.getByText(/Televisor 32 pulgadas/i)).toBeInTheDocument();
   });
 
-  it('muestra la deuda restante y la valida al confirmar', async () => {
+  it('muestra US$ cuando la cuota pertenece a una venta en dólares', () => {
+    renderModal({ cuota: cuota({ currency: 'USD' }) });
+
+    const input = screen.getByLabelText(/Monto cobrado/i);
+    expect(input.parentElement?.querySelector('span')?.textContent).toBe('US$');
+  });
+
+  it('muestra la deuda restante y rechaza al confirmar un monto mayor', async () => {
     const user = userEvent.setup();
     renderModal({ cuota: cuota(), deudaRestante: 10000 });
 
     expect(screen.getByText('Deuda restante:')).toBeInTheDocument();
+    const input = screen.getByLabelText(/Monto cobrado/i);
+    await user.clear(input);
+    await user.type(input, '20000');
     await user.click(screen.getByRole('button', { name: /Registrar cobro/i }));
     expect(screen.getByText('El monto supera la deuda restante')).toBeInTheDocument();
   });
@@ -72,5 +82,53 @@ describe('PayFeeModal', () => {
   it('no renderiza sin cuota', () => {
     renderModal({ cuota: null });
     expect(screen.queryByText(/Cobrar cuota/i)).not.toBeInTheDocument();
+  });
+
+  it('precarga el monto de la cuota', () => {
+    renderModal({ cuota: cuota({ monto: 15000 }) });
+
+    const input = screen.getByLabelText(/Monto cobrado/i) as HTMLInputElement;
+    expect(input.value).toBe('15000');
+  });
+
+  it('precarga lo que se debe cuando la deuda es menor que el monto de la cuota', () => {
+    renderModal({ cuota: cuota({ monto: 20 }), deudaRestante: 10 });
+
+    const input = screen.getByLabelText(/Monto cobrado/i) as HTMLInputElement;
+    expect(input.value).toBe('10');
+  });
+
+  it('precarga el monto de la cuota cuando la deuda es mayor', () => {
+    renderModal({ cuota: cuota({ monto: 20 }), deudaRestante: 500 });
+
+    const input = screen.getByLabelText(/Monto cobrado/i) as HTMLInputElement;
+    expect(input.value).toBe('20');
+  });
+
+  it('permite cobrar más que el monto de la cuota si entra en la deuda restante', async () => {
+    const user = userEvent.setup();
+    const { salesService } = await import('@/features/ventas/services/salesServices');
+    renderModal({ cuota: cuota({ monto: 15000 }), deudaRestante: 60000 });
+
+    const input = screen.getByLabelText(/Monto cobrado/i);
+    await user.clear(input);
+    await user.type(input, '20000');
+    await user.click(screen.getByRole('button', { name: /Registrar cobro/i }));
+
+    expect(salesService.markFeeAsPaid).toHaveBeenCalledWith(1, 20000, expect.any(String), 'EFECTIVO');
+  });
+
+  it('muestra el historial de cobros de la cuota con fecha y hora', async () => {
+    const { salesService } = await import('@/features/ventas/services/salesServices');
+    vi.mocked(salesService.getFeePayments).mockResolvedValueOnce([
+      { id: 1, amount: 5000, paidAt: '2026-11-12T09:15:00', paymentMethod: 'EFECTIVO' },
+      { id: 2, amount: 5000, paidAt: '2026-11-12T15:45:00', paymentMethod: 'TRANSFERENCIA' },
+    ]);
+
+    renderModal({ cuota: cuota({ monto: 15000 }) });
+
+    expect(await screen.findByText('Cobros de esta cuota')).toBeInTheDocument();
+    expect(screen.getByText('12/11/2026 · 09:15')).toBeInTheDocument();
+    expect(screen.getByText('12/11/2026 · 15:45')).toBeInTheDocument();
   });
 });

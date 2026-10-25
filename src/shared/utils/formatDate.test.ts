@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getLocalDateString, toInputDate } from './formatDate';
+import { formatDateHour, getLocalDateString, toInputDate } from './formatDate';
 
 describe('getLocalDateString', () => {
   it('usa la fecha local aunque la hora UTC cambie de día', () => {
@@ -30,5 +30,20 @@ describe('toInputDate', () => {
   it('no altera fechas límite de fin de año', () => {
     expect(toInputDate('2026-12-31')).toBe('2026-12-31');
     expect(toInputDate('2026-01-01')).toBe('2026-01-01');
+  });
+});
+
+describe('formatDateHour', () => {
+  it('muestra la fecha y la hora de un cobro sin corrimiento de zona horaria', () => {
+    // La hora se lee tal cual viene del backend (hora local del servidor)
+    expect(formatDateHour('2026-11-12T15:45:30')).toBe('12/11/2026 · 15:45');
+  });
+
+  it('muestra solo la fecha cuando no hay hora', () => {
+    expect(formatDateHour('2026-11-12')).toBe('12/11/2026');
+  });
+
+  it('no corre la hora en cobros de la madrugada', () => {
+    expect(formatDateHour('2026-11-12T00:05:00')).toBe('12/11/2026 · 00:05');
   });
 });
