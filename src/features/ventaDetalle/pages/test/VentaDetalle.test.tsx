@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import VentaDetalle from '../VentaDetalle';
 import { salesService } from '@/features/ventas/services/salesServices';
+import { useSalesCountsStore } from '@/features/ventas/store/salesCountsStore';
 import type { SaleDocumentDto, SaleResponseDto } from '@/shared/types/sales';
 
 vi.mock('@/features/ventas/services/salesServices', () => ({
@@ -135,6 +136,8 @@ describe('VentaDetalle', () => {
     vi.mocked(salesService.getSaleById).mockResolvedValue(crearTransaccion());
     vi.mocked(salesService.cancelSale).mockResolvedValue(cancelada);
 
+    const tokenAntes = useSalesCountsStore.getState().refreshToken;
+
     renderPagina();
     await screen.findByText('Televisor 32 pulgadas');
 
@@ -149,6 +152,8 @@ describe('VentaDetalle', () => {
 
     await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, false, false, ''));
     await waitFor(() => expect(screen.queryByText('Anular venta')).not.toBeInTheDocument());
+    // El menú vuelve a pedir sus conteos sin recargar la página
+    expect(useSalesCountsStore.getState().refreshToken).toBeGreaterThan(tokenAntes);
   });
 
   it('permite marcar la devolución del monto cobrado y la envía al anular', async () => {
@@ -273,6 +278,8 @@ describe('VentaDetalle', () => {
     vi.mocked(salesService.getSaleById).mockResolvedValue(crearTransaccion());
     vi.mocked(salesService.deleteSale).mockResolvedValue();
 
+    const tokenAntes = useSalesCountsStore.getState().refreshToken;
+
     renderPagina();
     await screen.findByText('Televisor 32 pulgadas');
 
@@ -282,6 +289,8 @@ describe('VentaDetalle', () => {
 
     await waitFor(() => expect(salesService.deleteSale).toHaveBeenCalledWith(10));
     await waitFor(() => expect(navigateState?.pathname).toBe('/dashboard/ventas/todas'));
+    // El menú vuelve a pedir sus conteos sin recargar la página
+    expect(useSalesCountsStore.getState().refreshToken).toBeGreaterThan(tokenAntes);
   });
 
   it('no ofrece Eliminar cuando la venta tiene remito emitido', async () => {

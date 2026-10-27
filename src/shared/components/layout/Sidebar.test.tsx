@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { salesService } from '@/features/ventas/services/salesServices';
+import { useSalesCountsStore } from '@/features/ventas/store/salesCountsStore';
 
 vi.mock('@/features/ventas/services/salesServices', () => ({
   salesService: {
@@ -161,5 +163,19 @@ describe('Sidebar', () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole('link', { name: 'Dashboard' }));
     expect(onNavigate).toHaveBeenCalled();
+  });
+
+  it('vuelve a pedir los conteos cuando una operación los marca viejos', async () => {
+    vi.mocked(salesService.getSalesCounts).mockClear();
+    renderSidebar();
+    await waitFor(() => expect(salesService.getSalesCounts).toHaveBeenCalledTimes(2));
+
+    // Anular o eliminar una venta avisa por el store: sin recargar, el menú
+    // vuelve a pedir los conteos de ventas y préstamos.
+    act(() => {
+      useSalesCountsStore.getState().refresh();
+    });
+
+    await waitFor(() => expect(salesService.getSalesCounts).toHaveBeenCalledTimes(4));
   });
 });

@@ -14,6 +14,7 @@ import SaleTable from "@features/ventas/components/SaleTable";
 import RemitoEmitModal from "@features/ventas/components/RemitoEmitModal";
 import CancelSaleModal from "@features/ventas/components/CancelSaleModal";
 import DeleteSaleModal from "@features/ventas/components/DeleteSaleModal";
+import { useSalesCountsStore } from "@features/ventas/store/salesCountsStore";
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -174,16 +175,21 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     navigate(`/dashboard/ventas/editar/${sale.id}`);
   };
 
+  // El menú muestra conteos por estado: anular o eliminar los mueve.
+  const refreshSalesCounts = useSalesCountsStore((state) => state.refresh);
+
   // Anular y eliminar usan los mismos modales que el detalle: la lista queda
   // operativa sin obligar a entrar a cada venta.
   const handleCanceled = () => {
     setSaleToCancel(null);
     refresh();
+    refreshSalesCounts();
   };
 
   const handleDeleted = () => {
     setSaleToDelete(null);
     refresh();
+    refreshSalesCounts();
   };
 
   const handleRemitoEmitted = (

@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import CrearTransaccion from '../CrearTransaccion';
+import { useSalesCountsStore } from '@/features/ventas/store/salesCountsStore';
 
 vi.mock('@/shared/components/layout/DashboardLayout', () => ({
   default: ({ children }: { children: React.ReactNode }) => <main>{children}</main>,
@@ -12,7 +13,8 @@ vi.mock('@features/crearVentas/hooks/useSaleForm', () => ({
     formData: { tipo: type },
     setFormData: vi.fn(),
     handleInputChange: vi.fn(),
-    handleSubmit: vi.fn(),
+    // El alta "existe" para que el wrapper navegue y avise a los conteos
+    handleSubmit: vi.fn().mockResolvedValue({ id: 1 }),
     errors: {},
     visibleErrors: {},
     isSubmittingDisabled: false,
@@ -36,10 +38,24 @@ vi.mock('@features/crearVentas/components/ProductPicker', () => ({
 }));
 
 vi.mock('@features/crearVentas/components/CreateSaleForm', () => ({
-  default: ({ formData, cancelTo }: { formData: { tipo: string }; cancelTo?: string }) => (
+  default: ({
+    formData,
+    cancelTo,
+    onSubmit,
+  }: {
+    formData: { tipo: string };
+    cancelTo?: string;
+    onSubmit?: (e: React.FormEvent) => void;
+  }) => (
     <div>
       <span>{formData.tipo === 'PRESTAMO' ? 'Formulario de préstamo' : 'Formulario de venta'}</span>
       <span data-testid="cancel-to">{cancelTo}</span>
+      <button
+        type="button"
+        onClick={() => onSubmit?.({ preventDefault: vi.fn() } as unknown as React.FormEvent)}
+      >
+        Enviar
+      </button>
     </div>
   ),
 }));
@@ -97,5 +113,23 @@ describe('CrearTransaccion', () => {
     fireEvent.click(screen.getByText('Elegir producto'));
 
     expect(screen.getByTestId('cancel-to').textContent).toBe('/dashboard/ventas/todas');
+  });
+
+  it('avisa a los conteos del menú cuando la transacción se crea', async () => {
+    const tokenAntes = useSalesCountsStore.getState().refreshToken;
+
+    render(
+      <MemoryRouter>
+        <CrearTransaccion type="VENTA" {...props} />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByText('Elegir producto'));
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }));
+
+    // El menú vuelve a pedir sus conteos sin recargar la página
+    await waitFor(() =>
+      expect(useSalesCountsStore.getState().refreshToken).toBeGreaterThan(tokenAntes),
+    );
   });
 });

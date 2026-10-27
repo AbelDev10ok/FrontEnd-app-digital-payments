@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Calendar, Trash2 } from "lucide-react";
 import { salesService } from "@/features/ventas/services/salesServices";
+import { useSalesCountsStore } from "@/features/ventas/store/salesCountsStore";
 import { Button, Input } from "@/shared/components/ui";
 import { formatCurrency, getCurrencySymbol } from "@/shared/utils/formatCurrency";
 import { toInputDate } from "@/shared/utils/formatDate";
@@ -44,6 +45,9 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
+  // Editar o eliminar una cuota mueve los conteos del menú (A Cobrar / Activas).
+  const refreshSalesCounts = useSalesCountsStore((state) => state.refresh);
+
   if (!isOpen) return null;
 
   // '$' en ARS, 'US$' en USD: el monto ya pertenece a la moneda de la venta.
@@ -78,6 +82,7 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
         amountVal,
         newPaymentDate || undefined,
       );
+      refreshSalesCounts();
       onSuccess();
       onClose();
     } catch (err) {
@@ -100,6 +105,7 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
 
     try {
       await salesService.deleteFee(feeId);
+      refreshSalesCounts();
       onSuccess();
       onClose();
     } catch (err) {

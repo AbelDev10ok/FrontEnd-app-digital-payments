@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PayFeeModal from '../components/PayFeeModal';
+import { useSalesCountsStore } from '@/features/ventas/store/salesCountsStore';
 import type { CuotaItem } from '@/shared/types/business';
 
 vi.mock('@/features/ventas/services/salesServices', () => ({
@@ -67,6 +68,7 @@ describe('PayFeeModal', () => {
     const user = userEvent.setup();
     const onPaid = vi.fn();
     const onClose = vi.fn();
+    const tokenAntes = useSalesCountsStore.getState().refreshToken;
     const { salesService } = await import('@/features/ventas/services/salesServices');
     render(
       <PayFeeModal cuota={cuota()} onClose={onClose} onPaid={onPaid} deudaRestante={60000} />,
@@ -77,6 +79,8 @@ describe('PayFeeModal', () => {
     expect(salesService.markFeeAsPaid).toHaveBeenCalledWith(1, 15000, expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), 'EFECTIVO');
     expect(onPaid).toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();
+    // Un cobro puede completar la venta: el menú vuelve a pedir sus conteos
+    expect(useSalesCountsStore.getState().refreshToken).toBeGreaterThan(tokenAntes);
   });
 
   it('no renderiza sin cuota', () => {

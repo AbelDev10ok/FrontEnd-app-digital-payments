@@ -6,6 +6,7 @@ import Select from '@/shared/components/ui/Select';
 import Field from '@/shared/components/ui/Field';
 import { Banknote, Building2, History } from 'lucide-react';
 import { salesService } from '@/features/ventas/services/salesServices';
+import { useSalesCountsStore } from '@/features/ventas/store/salesCountsStore';
 import { formatCurrency, getCurrencySymbol } from '@/shared/utils/formatCurrency';
 import { formatDateHour, getLocalDateString } from '@/shared/utils/formatDate';
 import { montoCobrable } from '@/features/cobros/utils/montoCobrable';
@@ -40,6 +41,9 @@ export default function PayFeeModal({ cuota, onClose, onPaid, deudaRestante, fec
   const [saving, setSaving] = useState(false);
   const [historial, setHistorial] = useState<PaymentDto[]>([]);
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
+
+  // Un cobro puede completar la venta: los conteos del menú se vuelven a pedir.
+  const refreshSalesCounts = useSalesCountsStore((state) => state.refresh);
 
   // Monto de la cuota: es lo que se precarga en el cobro (acotado por la deuda).
   const total = cuota?.monto ?? null;
@@ -93,6 +97,7 @@ export default function PayFeeModal({ cuota, onClose, onPaid, deudaRestante, fec
     setError(null);
     try {
       await salesService.markFeeAsPaid(cuota.id, montoNumero, fecha, paymentMethod);
+      refreshSalesCounts();
       onPaid();
       onClose();
     } catch (err) {

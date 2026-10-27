@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { salesService } from "@/features/ventas/services/salesServices";
 import { ProductTypeDto, SalesCountsDto } from "@/shared/types/sales";
+import { useSalesCountsStore } from "@/features/ventas/store/salesCountsStore";
 import { eyebrow, radius } from "@/shared/theme";
 import type { LucideIcon } from "lucide-react";
 
@@ -112,12 +113,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
     prestamos?: SalesCountsDto;
   }>({});
 
+  // Los conteos se mueven con cada alta, cobro, anulación o borrado: el store
+  // compartido los marca como viejos y este efecto los vuelve a pedir.
+  const countsRefreshToken = useSalesCountsStore((state) => state.refreshToken);
+
+  // Los tipos de producto del menú cambian poco: se piden una vez al montar.
   useEffect(() => {
-    let mounted = true;
     salesService
       .getProductTypes()
       .then(setProductTypes)
       .catch((err) => console.error("Error fetching product types:", err));
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
     salesService
       .getSalesCounts("VENTA")
       .then((c) => mounted && setCounts((prev) => ({ ...prev, ventas: c })))
@@ -129,7 +138,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [countsRefreshToken]);
 
   // Mantiene abierta la sección correspondiente al navegar; cierra la contraria
   useEffect(() => {

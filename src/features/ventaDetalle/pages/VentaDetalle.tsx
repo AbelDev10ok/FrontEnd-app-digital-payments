@@ -17,6 +17,7 @@ import RemitoEmitModal from '@/features/ventas/components/RemitoEmitModal';
 import CancelSaleModal from '@/features/ventas/components/CancelSaleModal';
 import DeleteSaleModal from '@/features/ventas/components/DeleteSaleModal';
 import { SaleDocumentDto, SaleResponseDto } from '@/shared/types/sales';
+import { useSalesCountsStore } from '@/features/ventas/store/salesCountsStore';
 
 interface PageProps {
   user: { email?: string; role?: string } | null;
@@ -26,6 +27,7 @@ interface PageProps {
 const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const refreshSalesCounts = useSalesCountsStore((state) => state.refresh);
   const [transaction, setTransaction] = useState<SaleResponseDto>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +56,8 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
 
   const handleDeleted = () => {
     setIsDeleteModalOpen(false);
+    // El menú muestra conteos por estado: eliminarla los mueve.
+    refreshSalesCounts();
     navigate('/dashboard/ventas/todas');
   };
 
@@ -64,6 +68,7 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
   const handleCanceled = (actualizada: SaleResponseDto) => {
     setTransaction(actualizada);
     setIsCancelModalOpen(false);
+    refreshSalesCounts();
   };
 
   const handleOpenRemito = () => {

@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PostponeFeeModal from '../PosponedFeeModal';
 import { salesService } from '@/features/ventas/services/salesServices';
+import { useSalesCountsStore } from '@/features/ventas/store/salesCountsStore';
 
 vi.mock('@/features/ventas/services/salesServices', () => ({
   salesService: { postponeFee: vi.fn(), deleteFee: vi.fn() },
@@ -78,6 +79,7 @@ describe('PostponeFeeModal', () => {
     const { onSuccess, onClose } = renderModal();
     vi.mocked(salesService.postponeFee).mockResolvedValue(undefined);
 
+    const tokenAntes = useSalesCountsStore.getState().refreshToken;
     const montoInput = screen.getByRole('spinbutton');
     await user.clear(montoInput);
     await user.type(montoInput, '20000');
@@ -87,6 +89,8 @@ describe('PostponeFeeModal', () => {
     expect(salesService.postponeFee).toHaveBeenCalledWith(10, 5, '2026-10-01', 20000, expect.any(String));
     expect(onSuccess).toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();
+    // Editar el monto de una cuota cobrada mueve los conteos del menú
+    expect(useSalesCountsStore.getState().refreshToken).toBeGreaterThan(tokenAntes);
   });
 
   it('no renderiza el campo de monto para una cuota impaga (solo pospone vencimiento)', () => {
@@ -98,6 +102,7 @@ describe('PostponeFeeModal', () => {
   it('elimina la cuota tras confirmar, llamando al servicio y refrescando', async () => {
     const user = userEvent.setup();
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const tokenAntes = useSalesCountsStore.getState().refreshToken;
     const { onSuccess, onClose } = renderModal();
     vi.mocked(salesService.deleteFee).mockResolvedValue(undefined);
 
@@ -106,6 +111,8 @@ describe('PostponeFeeModal', () => {
     await waitFor(() => expect(salesService.deleteFee).toHaveBeenCalledWith(5));
     expect(onSuccess).toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();
+    // Eliminar la cuota mueve los conteos del menú
+    expect(useSalesCountsStore.getState().refreshToken).toBeGreaterThan(tokenAntes);
     confirmSpy.mockRestore();
   });
 

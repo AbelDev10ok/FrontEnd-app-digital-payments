@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import TodasVentas from '../TodasVentas';
 import { salesService } from '@/features/ventas/services/salesServices';
+import { useSalesCountsStore } from '@/features/ventas/store/salesCountsStore';
 import type { SaleDocumentDto, SaleResponseDto } from '@/shared/types/sales';
 
 vi.mock('@/features/ventas/services/salesServices', () => ({
@@ -287,6 +288,8 @@ describe('TodasVentas', () => {
     });
     vi.mocked(salesService.cancelSale).mockResolvedValue({ ...venta, status: 'CANCELED' });
 
+    const tokenAntes = useSalesCountsStore.getState().refreshToken;
+
     renderPage();
     await screen.findByText('Televisor 32 pulgadas');
 
@@ -300,6 +303,8 @@ describe('TodasVentas', () => {
     await waitFor(() =>
       expect(vi.mocked(salesService.getAllSalesPaginated).mock.calls.length).toBeGreaterThanOrEqual(2),
     );
+    // El menú vuelve a pedir sus conteos sin recargar la página
+    expect(useSalesCountsStore.getState().refreshToken).toBeGreaterThan(tokenAntes);
   });
 
   it('elimina una venta desde la fila y recarga el listado', async () => {
@@ -311,6 +316,8 @@ describe('TodasVentas', () => {
       empty: false,
     });
     vi.mocked(salesService.deleteSale).mockResolvedValue(undefined);
+
+    const tokenAntes = useSalesCountsStore.getState().refreshToken;
 
     renderPage();
     await screen.findByText('Televisor 32 pulgadas');
@@ -325,5 +332,7 @@ describe('TodasVentas', () => {
     await waitFor(() =>
       expect(vi.mocked(salesService.getAllSalesPaginated).mock.calls.length).toBeGreaterThanOrEqual(2),
     );
+    // El menú vuelve a pedir sus conteos sin recargar la página
+    expect(useSalesCountsStore.getState().refreshToken).toBeGreaterThan(tokenAntes);
   });
 });

@@ -6,6 +6,7 @@ import TransactionHeader from "@features/crearVentas/components/TransactionHeade
 import CreateSaleForm from "@features/crearVentas/components/CreateSaleForm";
 import ProductPicker from "@features/crearVentas/components/ProductPicker";
 import type { ProductDto } from "@/shared/types/sales";
+import { useSalesCountsStore } from "@/features/ventas/store/salesCountsStore";
 
 interface CrearTransaccionProps {
   type: "VENTA" | "PRESTAMO";
@@ -15,6 +16,7 @@ interface CrearTransaccionProps {
 
 const CrearTransaccionInner = ({ type, user, onLogout }: CrearTransaccionProps) => {
   const navigate = useNavigate();
+  const refreshSalesCounts = useSalesCountsStore((state) => state.refresh);
 
   const [step, setStep] = useState<"producto" | "detalle">("producto");
   const currentStep = type === "PRESTAMO" ? "detalle" : step;
@@ -48,6 +50,8 @@ const CrearTransaccionInner = ({ type, user, onLogout }: CrearTransaccionProps) 
   const submitWrapper = async (e: React.FormEvent) => {
     const result = await handleSubmit(e);
     if (result) {
+      // El alta mueve los conteos del menú (Todas / A Cobrar / Activas)
+      refreshSalesCounts();
       navigate(type === 'PRESTAMO' ? '/dashboard/ventas/todas?kind=PRESTAMO' : '/dashboard/ventas/todas');
     }
   };
