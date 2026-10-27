@@ -249,14 +249,14 @@ describe('salesService.cancelSale', () => {
     vi.mocked(authenticatedFetch).mockReset();
   });
 
-  it('hace PUT a /api/loans/cancel/{id} con refund=true por defecto y desenvuelve la venta anulada', async () => {
+  it('hace PUT a /api/loans/cancel/{id} con refund y restock por defecto y desenvuelve la venta anulada', async () => {
     const anulada = { id: 168, status: 'CANCELED', collectedAmount: 100, refundAmount: 100 };
     vi.mocked(authenticatedFetch).mockResolvedValue(okEnvelope(anulada));
 
     const result = await salesService.cancelSale(168);
 
     const [url, init] = vi.mocked(authenticatedFetch).mock.calls[0];
-    expect(url).toBe(`${LOANS_API_URL}/cancel/168?refund=true`);
+    expect(url).toBe(`${LOANS_API_URL}/cancel/168?refund=true&restock=true`);
     expect(init?.method).toBe('PUT');
     expect(result).toMatchObject(anulada);
   });
@@ -265,11 +265,21 @@ describe('salesService.cancelSale', () => {
     const anulada = { id: 168, status: 'CANCELED', collectedAmount: 100, refundAmount: 0 };
     vi.mocked(authenticatedFetch).mockResolvedValue(okEnvelope(anulada));
 
-    const result = await salesService.cancelSale(168, false);
+    const result = await salesService.cancelSale(168, false, false);
 
     const [url] = vi.mocked(authenticatedFetch).mock.calls[0];
-    expect(url).toBe(`${LOANS_API_URL}/cancel/168?refund=false`);
+    expect(url).toBe(`${LOANS_API_URL}/cancel/168?refund=false&restock=false`);
     expect(result).toMatchObject(anulada);
+  });
+
+  it('envía restock=false cuando el producto no volvió al stock', async () => {
+    const anulada = { id: 168, status: 'CANCELED' };
+    vi.mocked(authenticatedFetch).mockResolvedValue(okEnvelope(anulada));
+
+    await salesService.cancelSale(168, true, false);
+
+    const [url] = vi.mocked(authenticatedFetch).mock.calls[0];
+    expect(url).toBe(`${LOANS_API_URL}/cancel/168?refund=true&restock=false`);
   });
 
   it('propaga el mensaje de error del backend en una respuesta 4xx', async () => {

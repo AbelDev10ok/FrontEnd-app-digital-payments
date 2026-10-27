@@ -130,7 +130,7 @@ describe('VentaDetalle', () => {
     vi.restoreAllMocks();
   });
 
-  it('anula la venta y actualiza la transacción con la respuesta del backend', async () => {
+  it('anula la venta sin restock ni devolución por defecto', async () => {
     const cancelada = crearTransaccion({ status: 'CANCELED' });
     vi.mocked(salesService.getSaleById).mockResolvedValue(crearTransaccion());
     vi.mocked(salesService.cancelSale).mockResolvedValue(cancelada);
@@ -141,15 +141,17 @@ describe('VentaDetalle', () => {
     abrirMenu();
     fireEvent.click(screen.getByText('Anular venta'));
 
-    expect(screen.getByText(/se repondrá el stock/)).toBeInTheDocument();
+    // Los dos efectos arrancan sin marcar: no se repone stock ni se registra
+    // una devolución sin una decisión explícita.
+    expect(screen.getByText('No hay cobros registrados que devolver.')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Anular' }));
 
-    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, true));
+    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, false, false));
     await waitFor(() => expect(screen.queryByText('Anular venta')).not.toBeInTheDocument());
   });
 
-  it('muestra el selector Devolver/Conservar cuando hay monto cobrado y devuelve por defecto', async () => {
+  it('permite marcar la devolución del monto cobrado y la envía al anular', async () => {
     vi.mocked(salesService.getSaleById).mockResolvedValue(
       crearTransaccion({ collectedAmount: 100, refundAmount: 0 }),
     );
@@ -163,22 +165,24 @@ describe('VentaDetalle', () => {
     abrirMenu();
     fireEvent.click(screen.getByText('Anular venta'));
 
-    expect(
-      screen.getByLabelText('Manejo del monto cobrado al anular'),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/Monto ya cobrado/)).toBeInTheDocument();
+    const devolucion = screen.getByRole('checkbox', { name: /Registrar devolución/ });
+    expect(devolucion).not.toBeChecked();
+    fireEvent.click(devolucion);
 
     fireEvent.click(screen.getByRole('button', { name: 'Anular' }));
 
-    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, true));
+    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, true, false));
   });
 
-  it('conserva el monto cobrado cuando se elige esa opción en la anulación', async () => {
+  it('permite marcar reponer el stock al anular una venta con producto', async () => {
     vi.mocked(salesService.getSaleById).mockResolvedValue(
-      crearTransaccion({ collectedAmount: 100, refundAmount: 0 }),
+      crearTransaccion({
+        quantity: 2,
+        product: { id: 3, name: 'Televisor 32', variantId: 9 },
+      }),
     );
     vi.mocked(salesService.cancelSale).mockResolvedValue(
-      crearTransaccion({ status: 'CANCELED', collectedAmount: 100, refundAmount: 0 }),
+      crearTransaccion({ status: 'CANCELED' }),
     );
 
     renderPagina();
@@ -187,16 +191,16 @@ describe('VentaDetalle', () => {
     abrirMenu();
     fireEvent.click(screen.getByText('Anular venta'));
 
-    fireEvent.change(screen.getByLabelText('Manejo del monto cobrado al anular'), {
-      target: { value: 'retain' },
-    });
+    const reponer = screen.getByRole('checkbox', { name: /Reponer 2 unidades al stock/ });
+    expect(reponer).not.toBeChecked();
+    fireEvent.click(reponer);
 
     fireEvent.click(screen.getByRole('button', { name: 'Anular' }));
 
-    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, false));
+    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, false, true));
   });
 
-  it('no muestra el selector de devolución cuando no hay monto cobrado', async () => {
+  it('no ofrece devolución cuando no hay monto cobrado y lo aclara', async () => {
     vi.mocked(salesService.getSaleById).mockResolvedValue(crearTransaccion({ collectedAmount: 0 }));
 
     renderPagina();
@@ -205,13 +209,14 @@ describe('VentaDetalle', () => {
     abrirMenu();
     fireEvent.click(screen.getByText('Anular venta'));
 
-    expect(
-      screen.queryByLabelText('Manejo del monto cobrado al anular'),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /devolución/ })).not.toBeInTheDocument();
+    expect(screen.getByText('No hay cobros registrados que devolver.')).toBeInTheDocument();
   });
 
-  it('no muestra la opción Eliminar cuando la venta tiene cuotas pagadas', async () => {
-    vi.mocked(salesService.getSaleById).mockResolvedValue(crearTransaccion({ paidFeesCount: 1 }));
+  it('no muestra la opción Eliminar cuando la venta ya tiene cobros', async () => {
+    vi.mocked(salesService.getSaleById).mockResolvedValue(
+      crearTransaccion({ paidFeesCount: 1, collectedAmount: 15000 }),
+    );
 
     renderPagina();
     await screen.findByText('Televisor 32 pulgadas');
@@ -222,7 +227,7 @@ describe('VentaDetalle', () => {
     expect(screen.getByText('Anular venta')).toBeInTheDocument();
   });
 
-  it('oculta Anular venta si la transacción ya está CANCELADA', async () => {
+  it('oculta Anular venta y Editar si la transacción ya está CANCELADA', async () => {
     vi.mocked(salesService.getSaleById).mockResolvedValue(crearTransaccion({ status: 'CANCELED' }));
 
     renderPagina();
@@ -231,6 +236,7 @@ describe('VentaDetalle', () => {
     abrirMenu();
 
     expect(screen.queryByText('Anular venta')).not.toBeInTheDocument();
+    expect(screen.queryByText('Editar')).not.toBeInTheDocument();
   });
 
   it('Recrear venta no aparece en el menú', async () => {

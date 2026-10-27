@@ -74,6 +74,9 @@ export default function CronogramaFees({
   } | null>(null);
 
   const estados = getFeeListStates(transaction.fees);
+  // Una venta anulada es terminal: el cronograma queda como historial, sin
+  // acciones de cobro ni edicion de cuotas.
+  const anulada = transaction.status === 'CANCELED';
 
   const feeToCuota = (fee: FeeDto, estadoVisual: FeeVisualState): CuotaItem =>
     ({
@@ -199,7 +202,7 @@ export default function CronogramaFees({
                       >
                         {config.label}
                       </span>
-                      {!fee.paid && (
+                      {!fee.paid && !anulada && (
                         <Button
                           size="sm"
                           leftIcon={<HandCoins className="w-4 h-4" />}
@@ -208,22 +211,24 @@ export default function CronogramaFees({
                           Cobrar
                         </Button>
                       )}
-                      <button
-                        onClick={() =>
-                          setEditingFee({
-                            id: fee.id,
-                            date: fee.expirationDate,
-                            amount: fee.amount,
-                            paymentDate: fee.paymentDate,
-                            isPaid: fee.paid,
-                          })
-                        }
-                        aria-label={`Posponer cuota ${fee.numberFee}`}
-                        title="Posponer vencimiento"
-                        className={`rounded-lg p-2 ${neutral.muted} transition-colors ${neutralBg.hover} hover:text-brand-600`}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
+                      {!anulada && (
+                        <button
+                          onClick={() =>
+                            setEditingFee({
+                              id: fee.id,
+                              date: fee.expirationDate,
+                              amount: fee.amount,
+                              paymentDate: fee.paymentDate,
+                              isPaid: fee.paid,
+                            })
+                          }
+                          aria-label={`Posponer cuota ${fee.numberFee}`}
+                          title="Posponer vencimiento"
+                          className={`rounded-lg p-2 ${neutral.muted} transition-colors ${neutralBg.hover} hover:text-brand-600`}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
 

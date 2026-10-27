@@ -138,6 +138,9 @@ export default function ActionsMenu({ label, items, align = 'end' }: ActionsMenu
     }
   };
 
+  // Sin acciones no hay nada que ofrecer: mejor no mostrar el disparador.
+  if (items.length === 0) return null;
+
   return (
     <div className="relative">
       <button

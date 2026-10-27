@@ -77,6 +77,8 @@ describe('HeaderDetalleTransaction', () => {
     abrirMenu();
 
     expect(screen.queryByText('Anular venta')).not.toBeInTheDocument();
+    // Una venta anulada es terminal: tampoco se edita
+    expect(screen.queryByText('Editar')).not.toBeInTheDocument();
     expect(screen.getByText('Eliminar')).toBeInTheDocument();
   });
 

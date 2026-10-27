@@ -25,9 +25,10 @@ export default function HeaderDetalleTransaction({
     const esPrestamo = transaction.kind === 'PRESTAMO';
 
     // Mismo menú que la fila del listado: el detalle y la lista ofrecen las
-    // mismas acciones y las reglas quedan en un solo lugar por pantalla.
+    // mismas acciones y las reglas quedan en un solo lugar por pantalla. Una
+    // venta anulada es terminal: no se edita ni se anula de nuevo.
     const acciones: ActionMenuItem[] = [
-        { label: 'Editar', icon: Pencil, onSelect: onEdit },
+        ...(isCanceled ? [] : [{ label: 'Editar', icon: Pencil, onSelect: onEdit }]),
         ...(transaction.kind === 'VENTA'
             && onPrintRemito
             && (!isCanceled || transaction.remito)

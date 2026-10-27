@@ -105,11 +105,13 @@ describe('SaleRow', () => {
     expect(screen.getByRole('menuitem', { name: 'Anular préstamo' })).toBeInTheDocument();
   });
 
-  it('no ofrece emitir remito de una venta anulada sin remito', () => {
+  it('no ofrece editar ni emitir remito de una venta anulada sin remito', () => {
     renderFila(crearVenta({ status: 'CANCELED' }));
 
     abrirMenu();
 
+    // Una venta anulada es terminal: no se edita ni se anula de nuevo
+    expect(screen.queryByRole('menuitem', { name: 'Editar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /remito/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /anular/i })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Eliminar' })).toBeInTheDocument();
@@ -130,8 +132,10 @@ describe('SaleRow', () => {
     ).toBeInTheDocument();
   });
 
-  it('oculta Eliminar cuando la venta ya tiene cuotas pagadas', () => {
-    renderFila(crearVenta({ paidFeesCount: 2 }));
+  it('oculta Eliminar cuando la venta ya tiene cobros, aunque sean parciales', () => {
+    // Una cuota con pago parcial no suma a paidFeesCount, pero sí a lo cobrado:
+    // el backend rechaza eliminar cualquier venta con pagos registrados.
+    renderFila(crearVenta({ paidFeesCount: 0, collectedAmount: 5000 }));
 
     abrirMenu();
 

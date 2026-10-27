@@ -404,10 +404,22 @@ export const salesService = {
     }
   },
 
-  async cancelSale(id: number, refund: boolean = true): Promise<SaleResponseDto> {
-    const response = await authenticatedFetch(`${LOANS_API_URL}/cancel/${id}?refund=${refund}`, {
-      method: "PUT",
-    });
+  /**
+   * Anula una venta o préstamo. `refund` asienta la devolución del monto ya
+   * cobrado y `restock` devuelve las unidades al stock; son efectos
+   * independientes y se eligen en el modal de anulación.
+   */
+  async cancelSale(
+    id: number,
+    refund: boolean = true,
+    restock: boolean = true,
+  ): Promise<SaleResponseDto> {
+    const response = await authenticatedFetch(
+      `${LOANS_API_URL}/cancel/${id}?refund=${refund}&restock=${restock}`,
+      {
+        method: "PUT",
+      },
+    );
 
     if (!response.ok) {
       try {

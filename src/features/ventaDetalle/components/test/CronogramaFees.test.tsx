@@ -226,6 +226,26 @@ describe('CronogramaFees', () => {
     expect(screen.getAllByRole('button', { name: /^Cobrar$/ })).toHaveLength(3);
   });
 
+  it('no ofrece cobrar ni editar cuotas de una venta anulada', () => {
+    render(
+      <CronogramaFees
+        transaction={crearTransaccion({
+          status: 'CANCELED',
+          fees: [crearCuota({ id: 2 })],
+        })}
+        formatDate={formatDate}
+        formatCurrency={formatCurrency}
+        refreshTransaction={refreshTransaction}
+      />,
+    );
+
+    // El cronograma queda como historial: sin cobro ni edición de cuotas
+    expect(screen.queryByRole('button', { name: /^Cobrar$/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Posponer cuota 2' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('abre el modal de cobro al tocar Cobrar en una cuota impaga', () => {
     render(
       <CronogramaFees

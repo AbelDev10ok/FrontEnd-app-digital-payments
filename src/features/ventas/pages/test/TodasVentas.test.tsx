@@ -296,7 +296,7 @@ describe('TodasVentas', () => {
     const dialogo = await screen.findByRole('dialog');
     fireEvent.click(within(dialogo).getByRole('button', { name: 'Anular' }));
 
-    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, true));
+    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, false, false));
     await waitFor(() =>
       expect(vi.mocked(salesService.getAllSalesPaginated).mock.calls.length).toBeGreaterThanOrEqual(2),
     );
