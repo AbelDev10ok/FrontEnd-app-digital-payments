@@ -1,4 +1,6 @@
-import { AlertCircle, Users, DollarSign } from 'lucide-react';
+import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { AlertCircle, DollarSign, Users } from 'lucide-react';
 
 import Load from '@/shared/components/feedback/Load.tsx';
 import { formatMoneyByCurrency, hasMoney, mergeMoney } from '@/shared/utils/formatCurrency';
@@ -26,6 +28,21 @@ const Clientes: React.FC<PageProps> = ({ user, onLogout }) => {
         setSelectedVendedorId,
         setShowFilters
       } = useClientsFilters();
+
+  // La lista acepta el vendedor por URL (?vendedor=ID o ?sinVendedor=true):
+  // así se entra filtrado desde la página de Vendedores sin tocar el buscador.
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get('sinVendedor') === 'true') {
+      setSelectedVendedorId(-1);
+      return;
+    }
+    const vendedorParam = searchParams.get('vendedor');
+    if (vendedorParam) {
+      const id = Number(vendedorParam);
+      if (!isNaN(id)) setSelectedVendedorId(id);
+    }
+  }, [searchParams, setSelectedVendedorId]);
 
   const fetcher = async ({ page, size }: { page: number; size: number }) => {
     const params: FetchParamsClients = { page, size };

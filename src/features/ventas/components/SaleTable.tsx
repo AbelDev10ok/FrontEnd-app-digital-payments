@@ -39,6 +39,9 @@ const SaleTable: React.FC<Props> = ({
                 Cliente
               </th>
               <th className={`px-6 py-3 text-left ${eyebrow.table}`}>
+                Vendedor
+              </th>
+              <th className={`px-6 py-3 text-left ${eyebrow.table}`}>
                 Monto de cuota
               </th>
               <th className={`px-6 py-3 text-left ${eyebrow.table}`}>
@@ -52,7 +55,7 @@ const SaleTable: React.FC<Props> = ({
           <tbody className="divide-y divide-gray-100">
             {sales.length === 0 ? (
               <tr>
-                <td colSpan={5} className={`px-6 py-8 text-center ${neutral.muted}`}>
+                <td colSpan={6} className={`px-6 py-8 text-center ${neutral.muted}`}>
                   {emptyMessage ?? "No hay ventas registradas"}
                 </td>
               </tr>

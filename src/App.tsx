@@ -50,6 +50,7 @@ const Suscripcion = lazy(
   () => import("@/features/negocio/pages/Suscripcion"),
 );
 const Productos = lazy(() => import("@/features/catalogo/pages/Productos"));
+const Vendedores = lazy(() => import("@/features/vendedores/pages/Vendedores"));
 
 function App() {
   return (
@@ -124,6 +125,16 @@ function App() {
                 <ProtectedRoute
                   requiredRole="ROLE_USER"
                   component={Productos}
+                />
+              }
+            />
+
+            <Route
+              path="/dashboard/vendedores"
+              element={
+                <ProtectedRoute
+                  requiredRole="ROLE_USER"
+                  component={Vendedores}
                 />
               }
             />

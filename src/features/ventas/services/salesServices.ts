@@ -298,6 +298,10 @@ export const salesService = {
     minAmount?: number;
     maxAmount?: number;
     sort?: string;
+    /** Vendedor sellado de la operación; sin vendedor = sin atribuir */
+    sellerId?: number;
+    /** Solo operaciones sin vendedor (ventas directas y registros viejos) */
+    withoutSeller?: boolean;
   }): Promise<Page<SaleResponseDto>> {
     const url = new URL(SALES_API_URL);
     url.searchParams.append("page", params.page.toString());
@@ -321,6 +325,8 @@ export const salesService = {
     if (params.maxAmount !== undefined)
       url.searchParams.append("maxAmount", params.maxAmount.toString());
     if (params.sort) url.searchParams.append("sort", params.sort);
+    if (params.sellerId) url.searchParams.append("sellerId", params.sellerId.toString());
+    if (params.withoutSeller) url.searchParams.append("withoutSeller", "true");
 
     const response = await authenticatedFetch(url.toString());
     return handleResponse<Page<SaleResponseDto>>(response);

@@ -27,7 +27,7 @@ const getInterestRateNumber = (formData: SaleFormData): number => {
   return formData.interestRate !== '' && !isNaN(rate) ? rate : NaN;
 };
 
-const validateForm = (formData: SaleFormData, displayedClients: Client[], moneda: string): Record<string, string> => {
+const validateForm = (formData: SaleFormData, moneda: string): Record<string, string> => {
   const newErrors: Record<string, string> = {};
 
   if (!formData.cliente || Number(formData.cliente) === 0) newErrors.cliente = formData.sellerId ? 'Selecciona un cliente del vendedor seleccionado' : 'Selecciona un cliente';
@@ -61,11 +61,6 @@ const validateForm = (formData: SaleFormData, displayedClients: Client[], moneda
   if (formData.payFirstFee) {
     if (!formData.firstFeeAmount || Number(formData.firstFeeAmount) <= 0) newErrors.firstFeeAmount = 'Ingresa monto de la primera cuota';
     if (formData.firstFeeDate !== formData.fecha) newErrors.firstFeeDate = 'Para pagar ahora, la primera cuota debe coincidir con la fecha de venta';
-  }
-
-  if (formData.sellerId && formData.cliente) {
-    const belongs = displayedClients.some(c => c.id === Number(formData.cliente));
-    if (!belongs) newErrors.cliente = 'El cliente no pertenece al vendedor seleccionado';
   }
 
   if (formData.tipo === 'PRESTAMO') {
@@ -160,8 +155,8 @@ export default function useSaleForm(initialType: SaleType) {
   const moneda = monedaDeLaOperacion(formData.tipo, formData.currency, selectedProduct);
 
   const errors = useMemo(
-    () => validateForm(formData, displayedClients, moneda),
-    [formData, displayedClients, moneda],
+    () => validateForm(formData, moneda),
+    [formData, moneda],
   );
   // Errores que se pintan en los campos. `handleSubmit` sigue usando `errors`
   // (el conjunto completo) para decidir si hay envío.
@@ -317,51 +312,33 @@ export default function useSaleForm(initialType: SaleType) {
     }) as unknown as SaleFormData);
   }, [formData.productId, formData.cantidad, products]);
 
-  // fetch clients for seller or all clients
+  // La cartera ya no filtra el listado: se buscan clientes de todo el negocio y
+  // el vendedor de la operación se precarga al elegir el cliente (ver abajo).
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        if (!formData.sellerId) {
-          const response = await clientService.getClientsPaginated({ page: 0, size: 1000 });
-          setDisplayedClients(response.content);
-          return;
-        }
-        const sellerIdNum = Number(formData.sellerId);
-        const clientsOfSeller = await salesService.getClientsBySeller(sellerIdNum);
-        setDisplayedClients(clientsOfSeller);
+        const response = await clientService.getClientsPaginated({ page: 0, size: 1000 });
+        setDisplayedClients(response.content);
       } catch (err) {
         console.error('Error fetching clients', err);
       }
     };
     fetchClients();
-  }, [formData.sellerId]);
+  }, []);
 
-  // Auto-completar vendedor cuando se selecciona un cliente
+  // Al elegir un cliente se precarga su vendedor de cartera; si no tiene, la
+  // operación queda sin atribuir. El ajuste manual posterior no se pisa: sólo
+  // se recalcula cuando cambia el cliente o termina de llegar la lista.
   useEffect(() => {
     const clientId = Number(formData.cliente);
-
-    if (clientId && clientId !== 0) {
-      const selectedClient = displayedClients.find(c => c.id === clientId);
-      
-      if (selectedClient) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const clientData = selectedClient as any;
-        
-        // Búsqueda robusta del nombre del vendedor 
-        let extractedSellerId = null;
-
-        if (!extractedSellerId && clientData?.sellerName) {
-          const foundSeller = sellers.find(s => s.name.toLowerCase() === clientData.sellerName.toLowerCase());
-          if (foundSeller) extractedSellerId = foundSeller.id;
-        }
-
-        // Si encontramos un ID y es diferente al actual, actualizamos
-        if (extractedSellerId && Number(formData.sellerId) !== Number(extractedSellerId)) {
-          setFormData(prev => ({ ...prev, sellerId: Number(extractedSellerId) }) as unknown as SaleFormData);
-        }
-      }
-    }
-  }, [formData.cliente, formData.sellerId, displayedClients, sellers]);
+    if (!clientId) return;
+    const selectedClient = displayedClients.find(c => c.id === clientId);
+    setFormData(prev => {
+      const sellerId = selectedClient?.sellerId != null ? String(selectedClient.sellerId) : '';
+      if (prev.sellerId === sellerId) return prev;
+      return { ...prev, sellerId };
+    });
+  }, [formData.cliente, displayedClients]);
 
   // sync first fee date with sale date rules
   useEffect(() => {

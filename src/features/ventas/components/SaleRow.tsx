@@ -115,6 +115,15 @@ const SaleRow: React.FC<Props> = ({
         <div className="text-sm text-gray-500">{sale.client.telefono}</div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
+        {sale.sellerName ? (
+          <div className="text-sm text-gray-900 max-w-[10rem] truncate" title={sale.sellerName}>
+            {sale.sellerName}
+          </div>
+        ) : (
+          <span className="text-sm text-gray-400">Sin vendedor</span>
+        )}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
         <div className="text-sm font-medium text-gray-900 font-mono tabular-nums">
           {formatCurrency(sale.amountFee, sale.currency ?? undefined)}
         </div>

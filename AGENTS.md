@@ -46,6 +46,13 @@ SPA de cobros/ventas en React 18 + TypeScript + Vite. Consume un backend Spring 
 - Vista imprimible: ruta lazy `/dashboard/ventas/:id/remito` **fuera de `DashboardLayout`** y declarada antes de `/dashboard/ventas/:id`. Se genera en el navegador (A4 con `@media print`/`@page` en `src/index.css`), sin PDF server-side; el botón «Imprimir» llama a `window.print()` y no abre el diálogo automáticamente.
 - Mi Negocio suma `cuit`, `address` y `phone` opcionales (se imprimen en el remito). El CUIT se valida como vacío u 11 dígitos; enviar `''` borra el dato. Nunca bloquean la emisión.
 
+## Vendedores (cartera y atribución)
+
+- Un vendedor es un `Client` con `seller: true`; `Client.sellerId/sellerName` es su **cartera** (un cliente tiene un vendedor o ninguno). Se habilita/deshabilita desde la ficha del cliente; reasignar se hace **sólo desde la edición del cliente**. `/dashboard/clientes?vendedor=ID` y `?sinVendedor=true` preseleccionan el filtro por URL.
+- `SaleResponseDto.sellerId/sellerName` es la **autoría sellada** de la operación: el alta la precarga desde la cartera del cliente (`useSaleForm` usa `client.sellerId`, ya no compara por nombre) y se puede ajustar; la lista de clientes del alta es completa (la cartera **no** filtra ni bloquea ventas) y cada opción muestra de quién es el cliente. La corrección puntual vive en la edición de la operación (`SaleForm` con `sellers`; vacío = sin atribuir). Reasignar la cartera del cliente no reescribe el historial.
+- Lista de ventas/préstamos: columna **Vendedor** y filtro (`SIN vendedor` incluido), alimentado por `salesService.getSellers()`; acepta `?sellerId=` y `?withoutSeller=true` en la URL.
+- Página `/dashboard/vendedores` (`src/features/vendedores`, `sellerService.getSellerMetrics`): tabla ordenable con conmutador Ventas/Préstamos, período y moneda como el tablero, fila "Sin vendedor" y enlaces a las listas filtradas. **Vendido/cobrado = actividad sellada por operación; deuda = cartera actual** (por eso pueden no coincidir).
+
 ## Auth & roles
 
 - JWT access/refresh tokens; role is decoded from the JWT `authorities` claim in `authStore.ts`.

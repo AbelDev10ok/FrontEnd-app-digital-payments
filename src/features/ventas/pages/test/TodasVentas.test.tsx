@@ -11,6 +11,7 @@ vi.mock('@/features/ventas/services/salesServices', () => ({
   salesService: {
     getProductTypes: vi.fn(),
     getSalesCounts: vi.fn(),
+    getSellers: vi.fn(),
     getAllSalesPaginated: vi.fn(),
     emitirRemito: vi.fn(),
     cancelSale: vi.fn(),
@@ -109,6 +110,8 @@ describe('TodasVentas', () => {
     vi.mocked(salesService.emitirRemito).mockReset();
     vi.mocked(salesService.cancelSale).mockReset();
     vi.mocked(salesService.deleteSale).mockReset();
+    vi.mocked(salesService.getSellers).mockReset();
+    vi.mocked(salesService.getSellers).mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -159,6 +162,26 @@ describe('TodasVentas', () => {
 
     expect(salesService.getAllSalesPaginated).toHaveBeenLastCalledWith(
       expect.objectContaining({ aCobrar: true }),
+    );
+  });
+
+  it('filtra por vendedor desde la URL', async () => {
+    renderPage('/dashboard/ventas/todas?sellerId=5');
+
+    await waitFor(() =>
+      expect(salesService.getAllSalesPaginated).toHaveBeenLastCalledWith(
+        expect.objectContaining({ sellerId: 5 }),
+      ),
+    );
+  });
+
+  it('traduce "sin vendedor" de la URL al parámetro withoutSeller', async () => {
+    renderPage('/dashboard/ventas/todas?withoutSeller=true');
+
+    await waitFor(() =>
+      expect(salesService.getAllSalesPaginated).toHaveBeenLastCalledWith(
+        expect.objectContaining({ withoutSeller: true }),
+      ),
     );
   });
 

@@ -261,7 +261,7 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
               <AutocompleteSeller
                 value={formData.sellerId}
                 sellers={sellers}
-                onChange={(id: string | number) => setFormData((prev: any) => ({ ...prev, sellerId: Number(id), cliente: 0 }))}
+                onChange={(id: string | number) => setFormData((prev: any) => ({ ...prev, sellerId: String(id) }))}
                 error={visibleErrors.sellerId}
               />
             </div>

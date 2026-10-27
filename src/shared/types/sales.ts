@@ -17,6 +17,10 @@ import { Client } from "./client";
     minAmount?: number;
     maxAmount?: number;
     sort?: string;
+    /** Vendedor sellado de la operación; sin vendedor = sin atribuir */
+    sellerId?: number;
+    /** Solo operaciones sin vendedor (ventas directas y registros viejos) */
+    withoutSeller?: boolean;
   };
 
   export type SaleKind = 'VENTA' | 'PRESTAMO';
@@ -74,6 +78,11 @@ export interface CreateSaleRequest {
   firstFeeDate?: string;
   payFirstFee?: boolean;
   firstFeeAmount?: number;
+  /**
+   * Vendedor de la operación (opcional): el alta lo precarga desde el cliente
+   * y puede ajustarlo o dejarlo vacío (venta directa).
+   */
+  sellerId?: number | null;
 }
 
 export interface ProductTypeDto {
@@ -177,6 +186,11 @@ export interface UpdateSaleRequest {
   /** Variante/SKU vendida (opcional) */
   variant?: number | null;
   kind: SaleKind;
+  /**
+   * Corrección deliberada del vendedor sellado en la operación. `null` = sin
+   * atribuir; las reasignaciones del cliente no pasan por acá.
+   */
+  sellerId?: number | null;
 
 }
 
@@ -253,6 +267,9 @@ export interface SaleResponseDto {
   currency?: string | null;
   /** Remito emitido (si existe). */
   remito?: RemitoResumenDto | null;
+  /** Vendedor sellado en la operación (autoría comercial). Null = sin atribuir. */
+  sellerId?: number | null;
+  sellerName?: string | null;
 }
 
 export interface FeeDto {

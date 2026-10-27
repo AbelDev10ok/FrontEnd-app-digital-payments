@@ -76,7 +76,7 @@ const InfoCliente: React.FC<InfoClienteProps> = ({ client }) => {
                 </div>
                 <div>
                   <p className="font-semibold text-brand-800">Este cliente también es vendedor</p>
-                  <p className="text-sm text-gray-600">Tiene acceso a funciones de venta en la plataforma.</p>
+                  <p className="text-sm text-gray-600">Vende por cuenta del negocio y puede recibir clientes en cartera.</p>
                 </div>
               </div>
             )}

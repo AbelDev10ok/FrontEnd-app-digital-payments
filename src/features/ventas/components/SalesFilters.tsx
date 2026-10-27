@@ -15,6 +15,10 @@ interface SalesFiltersProps {
   setMonth: (value: string) => void;
   specificDate: string;
   setSpecificDate: (value: string) => void;
+  /** Filtro por vendedor sellado en la operación ("-1" = sin vendedor) */
+  sellerOptions?: { id: number; name: string }[];
+  selectedSellerId?: string;
+  onSellerChange?: (value: string) => void;
   onClearFilters?: () => void;
 }
 
@@ -30,6 +34,9 @@ const SalesFilters = ({
   setMonth,
   specificDate,
   setSpecificDate,
+  sellerOptions,
+  selectedSellerId = "",
+  onSellerChange,
   onClearFilters,
 }: SalesFiltersProps) => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -90,6 +97,24 @@ const SalesFilters = ({
             className="pl-10 pr-4"
           />
         </div>
+      )}
+
+      {/* Filtro por vendedor sellado en la operación */}
+      {onSellerChange && (
+        <Select
+          value={selectedSellerId}
+          onChange={(e) => onSellerChange(e.target.value)}
+          className="sm:w-auto"
+          aria-label="Vendedor"
+        >
+          <option value="">Vendedor: todos</option>
+          {(sellerOptions ?? []).map((s) => (
+            <option key={s.id} value={String(s.id)}>
+              {s.name}
+            </option>
+          ))}
+          <option value="-1">Sin vendedor</option>
+        </Select>
       )}
 
       {/* Filtro por año */}

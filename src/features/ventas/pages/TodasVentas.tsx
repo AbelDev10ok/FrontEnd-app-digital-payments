@@ -29,6 +29,8 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     setSearchClientName,
     selectedStatus,
     setSelectedStatus,
+    selectedSellerId,
+    setSelectedSellerId,
     selectedProductType,
     setSelectedProductType,
     year,
@@ -41,12 +43,24 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
   } = useSalesFilters();
 
   const [selectedKind, setSelectedKind] = useState<SaleKind | "">("");
+  // Opciones del filtro por vendedor: activos del negocio + "Sin vendedor"
+  const [sellerOptions, setSellerOptions] = useState<{ id: number; name: string }[]>([]);
   const [remitoSale, setRemitoSale] = useState<SaleResponseDto | null>(null);
   const [saleToCancel, setSaleToCancel] = useState<SaleResponseDto | null>(null);
   const [saleToDelete, setSaleToDelete] = useState<SaleResponseDto | null>(null);
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Opciones del filtro por vendedor (se piden una vez)
+  useEffect(() => {
+    salesService
+      .getSellers()
+      .then((vendedores) =>
+        setSellerOptions(vendedores.map((v) => ({ id: v.id, name: v.name }))),
+      )
+      .catch((err) => console.error("Error fetching sellers:", err));
+  }, []);
 
   useEffect(() => {
     const clientNameParam = searchParams.get("clientName");
@@ -67,6 +81,16 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     } else {
       setSelectedProductType("");
     }
+    // Vendedor por URL (desde la página de Vendedores): "-1" = sin vendedor
+    const sellerParam = searchParams.get("sellerId");
+    const sinVendedorParam = searchParams.get("withoutSeller");
+    if (sinVendedorParam === "true") {
+      setSelectedSellerId("-1");
+    } else if (sellerParam) {
+      setSelectedSellerId(sellerParam);
+    } else {
+      setSelectedSellerId("");
+    }
     const kindParam = searchParams.get("kind");
     if (kindParam === "VENTA" || kindParam === "PRESTAMO") {
       setSelectedKind(kindParam);
@@ -77,6 +101,7 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     searchParams,
     setSearchClientName,
     setSelectedStatus,
+    setSelectedSellerId,
     setSelectedProductType,
   ]);
 
@@ -93,6 +118,12 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
       }
     }
     if (selectedProductType) params.productType = selectedProductType;
+    if (selectedSellerId === "-1") {
+      params.withoutSeller = true;
+    } else if (selectedSellerId) {
+      const sellerIdNum = Number(selectedSellerId);
+      if (!isNaN(sellerIdNum)) params.sellerId = sellerIdNum;
+    }
     if (selectedKind) params.kind = selectedKind;
     if (specificDate) {
       const [y, m, d] = specificDate.split("-").map(Number);
@@ -122,6 +153,7 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     searchClientName,
     selectedStatus,
     selectedProductType,
+    selectedSellerId,
     selectedKind,
     year,
     month,
@@ -140,6 +172,7 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     setSearchDescription("");
     setSearchClientName("");
     setSelectedStatus("Todos");
+    setSelectedSellerId("");
     setSelectedProductType("");
     setSpecificDate("");
     setYear("");
@@ -153,6 +186,7 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
     searchDescription ||
     searchClientName ||
     selectedStatus !== "Todos" ||
+    selectedSellerId ||
     selectedProductType ||
     date,
   );
@@ -218,6 +252,9 @@ const TodasVentas: React.FC<PageProps> = ({ user, onLogout }) => {
           isLoan={selectedKind === "PRESTAMO"}
           searchClientName={searchClientName}
           onClientNameChange={setSearchClientName}
+          sellerOptions={sellerOptions}
+          selectedSellerId={selectedSellerId}
+          onSellerChange={setSelectedSellerId}
           year={year}
           setYear={setYear}
           month={month}

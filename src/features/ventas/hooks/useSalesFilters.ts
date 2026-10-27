@@ -12,6 +12,7 @@ export const useSalesFilters = () => {
   const [searchDescription, setSearchDescription] = useState("");
   const [searchClientName, setSearchClientName] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("Todos");
+  const [selectedSellerId, setSelectedSellerId] = useState("");
   const [selectedProductType, setSelectedProductType] = useState("");
   const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
   const [specificDate, setSpecificDate] = useState("");
@@ -50,6 +51,8 @@ export const useSalesFilters = () => {
     setSearchClientName,
     selectedStatus,
     setSelectedStatus,
+    selectedSellerId,
+    setSelectedSellerId,
     selectedProductType,
     setSelectedProductType,
     productTypes,

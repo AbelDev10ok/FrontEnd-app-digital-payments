@@ -117,6 +117,9 @@ const AutocompleteClient: React.FC<Props> = ({ value, clients, onChange, placeho
                 onMouseEnter={() => setActiveIndex(index)}
               >
                 {c.name}
+                {c.sellerName && (
+                  <span className="ml-2 text-xs text-gray-400">· {c.sellerName}</span>
+                )}
               </li>
             ))}
           </ul>

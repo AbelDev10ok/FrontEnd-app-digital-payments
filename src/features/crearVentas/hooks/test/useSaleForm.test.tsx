@@ -284,22 +284,8 @@ describe('useSaleForm', () => {
     expect(submitted).toBe(false);
   });
 
-  it('valida que el cliente pertenezca al vendedor seleccionado', async () => {
-    vi.mocked(salesService.getClientsBySeller).mockResolvedValue([client1] as never);
-    const { result } = renderHook(() => useSaleForm('VENTA'));
-    await waitFor(() => expect(result.current.displayedClients.length).toBeGreaterThan(0));
-
-    await act(async () => {
-      result.current.setFormData((prev) => ({ ...prev, sellerId: '5', cliente: 999 }));
-    });
-
-    expect(result.current.errors.cliente).toBe(
-      'El cliente no pertenece al vendedor seleccionado',
-    );
-  });
-
-  it('autocompleta el vendedor al seleccionar un cliente con sellerName', async () => {
-    const clientConVendedor = { ...client1, id: 2, sellerName: 'Vendedor Ana' };
+  it('precarga el vendedor del cliente y ya no bloquea clientes de otra cartera', async () => {
+    const clientConVendedor = { ...client1, id: 2, sellerId: 5, sellerName: 'Vendedor Ana' };
     vi.mocked(clientService.getClientsPaginated).mockResolvedValue({
       content: [clientConVendedor],
     } as never);
@@ -310,7 +296,24 @@ describe('useSaleForm', () => {
       result.current.setFormData((prev) => ({ ...prev, cliente: 2 }));
     });
 
-    await waitFor(() => expect(result.current.formData.sellerId).toBe(5));
+    await waitFor(() => expect(result.current.formData.sellerId).toBe('5'));
+    // La cartera no bloquea la venta: la atribución es una decisión por operación
+    expect(result.current.errors.cliente).toBeUndefined();
+  });
+
+  it('autocompleta el vendedor al seleccionar un cliente con cartera asignada', async () => {
+    const clientConVendedor = { ...client1, id: 2, sellerId: 7, sellerName: 'Vendedor Ana' };
+    vi.mocked(clientService.getClientsPaginated).mockResolvedValue({
+      content: [clientConVendedor],
+    } as never);
+    const { result } = renderHook(() => useSaleForm('VENTA'));
+    await waitFor(() => expect(result.current.displayedClients.length).toBeGreaterThan(0));
+
+    await act(async () => {
+      result.current.setFormData((prev) => ({ ...prev, cliente: 2 }));
+    });
+
+    await waitFor(() => expect(result.current.formData.sellerId).toBe('7'));
   });
 
   it('seleccionar una variante autocompleta descripcion, costo, precio y categoría', async () => {

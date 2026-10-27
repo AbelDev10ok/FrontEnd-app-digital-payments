@@ -15,6 +15,7 @@ import {
   ListChecks,
   Building2,
   BadgeCheck,
+  TrendingUp,
 } from "lucide-react";
 import { salesService } from "@/features/ventas/services/salesServices";
 import { ProductTypeDto, SalesCountsDto } from "@/shared/types/sales";
@@ -475,6 +476,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
           >
             <Package strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
             <span>Productos</span>
+          </NavLink>
+
+          <NavLink
+            to="/dashboard/vendedores"
+            onClick={onNavigate}
+            className={({ isActive }) => navLinkClass(isActive)}
+          >
+            <TrendingUp strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
+            <span>Vendedores</span>
           </NavLink>
 
           <SectionLabel>Acciones rápidas</SectionLabel>

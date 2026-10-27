@@ -7,6 +7,7 @@ import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
 import { Alert } from '@/shared/components/ui';
 import { salesService } from '@/features/ventas/services/salesServices';
 import { ProductTypeDto, SaleResponseDto, UpdateSaleRequest } from '@/shared/types/sales';
+import type { Client } from '@/shared/types/client';
 import SaleForm, { SaleFormData } from '@/features/ventas/components/SaleForm';
 
 interface PageProps {
@@ -20,6 +21,8 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
 
   const [sale, setSale] = useState<SaleResponseDto | null>(null);
   const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
+  // Vendedores para corregir la atribución sellada de la operación
+  const [sellers, setSellers] = useState<Client[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -37,13 +40,15 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
       }
       try {
         setLoading(true);
-        const [saleData, productTypesData] = await Promise.all([
+        const [saleData, productTypesData, sellersData] = await Promise.all([
           salesService.getSaleById(parseInt(id)),
           salesService.getProductTypes(),
+          salesService.getSellers(),
         ]);
 
         setSale(saleData);
         setProductTypes(productTypesData);
+        setSellers(sellersData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al cargar los datos para la edición.');
       } finally {
@@ -62,6 +67,8 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
       variant: sale.kind === 'VENTA' ? (sale.product?.variantId ?? null) : null,
       descriptionProduct: data.descriptionProduct,
       kind: sale.kind,
+      // Corrección deliberada de la autoría; vacío = operación sin atribuir
+      sellerId: data.sellerId ?? null,
     };
 
     try {
@@ -114,6 +121,7 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
           cancelTo={`/dashboard/ventas/${id}`}
           onSubmit={handleFormSubmit}
           showFinancialFields={false}
+          sellers={sellers}
           productTypeLocked={sale.kind === 'VENTA' && !!sale.product}
           descriptionProductLocked={sale.kind === 'VENTA' && !!sale.product}
         />
