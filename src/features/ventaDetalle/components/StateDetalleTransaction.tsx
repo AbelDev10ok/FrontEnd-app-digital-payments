@@ -1,6 +1,7 @@
 import { DollarSign, CreditCard, CheckCircle, Hash, TrendingUp, Receipt } from 'lucide-react';
 import type { SaleResponseDto } from '@/shared/types/sales';
 import { StatCard } from '@/shared/components/ui';
+import { formatDateHour } from '@/shared/utils/formatDate';
 
 interface InfoDetalleTransactionProps {
     transaction: SaleResponseDto
@@ -72,6 +73,17 @@ export default function StateDetalleTransaction({transaction, formatCurrency, sh
                     icon={<CheckCircle className="w-6 h-6" />}
                     tone="success"
                 />
+
+                {/* Auditoría de la anulación: quién y cuándo, con el motivo si hay */}
+                {(transaction.canceledAt || transaction.canceledBy || transaction.cancelReason) && (
+                    <p className="text-sm text-gray-500 sm:col-span-2 lg:col-span-3">
+                        {transaction.canceledAt
+                            ? `Anulada el ${formatDateHour(transaction.canceledAt)}`
+                            : 'Anulación registrada'}
+                        {transaction.canceledBy ? ` por ${transaction.canceledBy}` : ''}
+                        {transaction.cancelReason ? ` — Motivo: ${transaction.cancelReason}` : ''}
+                    </p>
+                )}
             </div>
         );
     }

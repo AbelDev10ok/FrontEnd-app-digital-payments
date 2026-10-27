@@ -14,7 +14,8 @@ interface DeleteSaleModalProps {
 
 /**
  * Eliminación definitiva de una venta o préstamo, compartida por el listado y
- * el detalle. Avisa que los remitos emitidos se eliminan en cascada.
+ * el detalle. Solo se ofrece para ventas sin cobros y sin remito emitido: el
+ * backend rechaza el borrado en ambos casos y esa venta se anula.
  */
 export default function DeleteSaleModal({
   isOpen,
@@ -55,11 +56,6 @@ export default function DeleteSaleModal({
           ¿Estás seguro de que quieres eliminar {esPrestamo ? 'este préstamo' : 'esta venta'}?
           Esta acción no se puede deshacer.
         </p>
-        {sale?.remito && (
-          <p className="mt-3 text-sm font-medium text-red-700">
-            También se eliminará el remito N° {sale.remito.numberLabel}.
-          </p>
-        )}
         {error && (
           <p className="mt-2 text-sm text-red-600" role="alert">
             {error}

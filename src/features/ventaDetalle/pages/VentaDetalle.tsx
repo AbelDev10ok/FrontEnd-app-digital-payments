@@ -151,9 +151,9 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
 
 
   const isLoan = transaction.kind === 'PRESTAMO';
-  // Eliminar solo aplica si nunca entro dinero (ni cobros parciales): el
-  // backend rechaza borrar cualquier venta con pagos registrados.
-  const sinCobros = (transaction.collectedAmount ?? 0) === 0;
+  // Eliminar solo aplica si nunca entro dinero (ni cobros parciales) y la
+  // venta no tiene remito emitido: el backend rechaza el borrado en ambos casos.
+  const puedeEliminar = (transaction.collectedAmount ?? 0) === 0 && !transaction.remito;
 
   return (
     <DashboardLayout title={`${isLoan ? 'Préstamo' : 'Venta'} #${transaction.id}`} user={user} onLogout={onLogout}>
@@ -165,7 +165,7 @@ const VentaDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
           onDelete={handleDelete}
           onCancel={handleOpenCancel}
           onPrintRemito={handleOpenRemito}
-          canDelete={sinCobros}
+          canDelete={puedeEliminar}
         />
         
         {/* Transaction state */}

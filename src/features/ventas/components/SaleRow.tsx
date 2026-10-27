@@ -38,9 +38,9 @@ const SaleRow: React.FC<Props> = ({
   const esPrestamo = sale.kind === "PRESTAMO";
   const tipo = esPrestamo ? "préstamo" : "venta";
   const anulada = sale.status === "CANCELED";
-  // Eliminar es solo para errores de carga: sin cobros (ni parciales). El
-  // backend rechaza borrar cualquier venta con pagos registrados.
-  const puedeEliminar = (sale.collectedAmount ?? 0) === 0;
+  // Eliminar es solo para errores de carga: sin cobros (ni parciales) y sin
+  // remito emitido. El backend rechaza el borrado en ambos casos.
+  const puedeEliminar = (sale.collectedAmount ?? 0) === 0 && !sale.remito;
 
   // Mismas reglas que el detalle: una venta anulada es terminal (no se edita
   // ni se anula de nuevo), remito solo de ventas emitibles o ya emitidas y

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Modal from '@/shared/components/ui/Modal';
 import Button from '@/shared/components/ui/Button';
+import Input from '@/shared/components/ui/Input';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
 import { salesService } from '@/features/ventas/services/salesServices';
 import type { SaleResponseDto } from '@/shared/types/sales';
@@ -18,7 +19,8 @@ interface CancelSaleModalProps {
  * El registro se conserva como anulado y la deuda pendiente queda en cero.
  * Dos efectos se eligen por separado, y ambos arrancan sin marcar: reponer el
  * producto al stock (solo ventas con producto) y asentar la devolución del
- * monto cobrado (solo si hubo cobros). Los remitos emitidos se conservan.
+ * monto cobrado (solo si hubo cobros). El motivo, opcional, queda en la
+ * auditoría de la anulación. Los remitos emitidos se conservan.
  */
 export default function CancelSaleModal({
   isOpen,
@@ -28,6 +30,7 @@ export default function CancelSaleModal({
 }: CancelSaleModalProps) {
   const [refund, setRefund] = useState(false);
   const [restock, setRestock] = useState(false);
+  const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -37,6 +40,7 @@ export default function CancelSaleModal({
     if (isOpen) {
       setRefund(false);
       setRestock(false);
+      setReason('');
       setError(null);
       setIsLoading(false);
     }
@@ -47,7 +51,7 @@ export default function CancelSaleModal({
     setIsLoading(true);
     setError(null);
     try {
-      const actualizada = await salesService.cancelSale(sale.id, refund, restock);
+      const actualizada = await salesService.cancelSale(sale.id, refund, restock, reason);
       onCanceled(actualizada);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al anular la operación');
@@ -149,6 +153,24 @@ export default function CancelSaleModal({
             No hay cobros registrados que devolver.
           </p>
         )}
+
+        {/* Motivo opcional: queda guardado en la auditoría de la anulación. */}
+        <div className="mt-4">
+          <label
+            htmlFor="cancel-reason"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Motivo (opcional)
+          </label>
+          <Input
+            id="cancel-reason"
+            value={reason}
+            maxLength={300}
+            placeholder="Ej.: el cliente devolvió el producto"
+            onChange={(e) => setReason(e.target.value)}
+            className="mt-1"
+          />
+        </div>
 
         {sale?.remito && (
           <p className="mt-2 text-sm text-gray-500">

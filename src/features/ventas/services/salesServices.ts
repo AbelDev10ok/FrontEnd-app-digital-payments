@@ -406,16 +406,21 @@ export const salesService = {
 
   /**
    * Anula una venta o préstamo. `refund` asienta la devolución del monto ya
-   * cobrado y `restock` devuelve las unidades al stock; son efectos
-   * independientes y se eligen en el modal de anulación.
+   * cobrado, `restock` devuelve las unidades al stock y `reason` deja el motivo
+   * en la auditoría; son independientes y se eligen en el modal de anulación.
    */
   async cancelSale(
     id: number,
     refund: boolean = true,
     restock: boolean = true,
+    reason?: string,
   ): Promise<SaleResponseDto> {
+    const motivo = reason?.trim();
+    const query = `refund=${refund}&restock=${restock}${
+      motivo ? `&reason=${encodeURIComponent(motivo)}` : ""
+    }`;
     const response = await authenticatedFetch(
-      `${LOANS_API_URL}/cancel/${id}?refund=${refund}&restock=${restock}`,
+      `${LOANS_API_URL}/cancel/${id}?${query}`,
       {
         method: "PUT",
       },

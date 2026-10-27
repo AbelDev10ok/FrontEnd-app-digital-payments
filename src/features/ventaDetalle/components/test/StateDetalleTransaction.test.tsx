@@ -71,6 +71,47 @@ describe('StateDetalleTransaction', () => {
     expect(screen.getByText('$0')).toBeInTheDocument();
   });
 
+  it('muestra la auditoría de la anulación cuando está registrada', () => {
+    render(
+      <StateDetalleTransaction
+        transaction={crearTransaccion({
+          status: 'CANCELED',
+          remainingAmount: 0,
+          collectedAmount: 100,
+          refundAmount: 100,
+          canceledAt: '2026-10-27T18:30:00',
+          canceledBy: 'duena@negocio.com',
+          cancelReason: 'El cliente devolvió el producto',
+        })}
+        formatCurrency={formatCurrency}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        /Anulada el 27\/10\/2026 · 18:30 por duena@negocio\.com — Motivo: El cliente devolvió el producto/,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('no muestra la línea de auditoría en una anulación sin datos registrados', () => {
+    render(
+      <StateDetalleTransaction
+        transaction={crearTransaccion({
+          status: 'CANCELED',
+          remainingAmount: 0,
+          collectedAmount: 100,
+          refundAmount: 100,
+        })}
+        formatCurrency={formatCurrency}
+      />,
+    );
+
+    expect(
+      screen.queryByText(/Anulada el|Anulación registrada/),
+    ).not.toBeInTheDocument();
+  });
+
   it('no muestra Ganancia Esperada ni Monto Pendiente en una anulación', () => {
     render(
       <StateDetalleTransaction

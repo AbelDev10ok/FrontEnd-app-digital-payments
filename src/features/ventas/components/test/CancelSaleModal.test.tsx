@@ -69,7 +69,7 @@ describe('CancelSaleModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Anular' }));
 
     await waitFor(() =>
-      expect(salesService.cancelSale).toHaveBeenCalledWith(7, false, false),
+      expect(salesService.cancelSale).toHaveBeenCalledWith(7, false, false, ''),
     );
   });
 
@@ -81,7 +81,7 @@ describe('CancelSaleModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Anular' }));
 
     await waitFor(() =>
-      expect(salesService.cancelSale).toHaveBeenCalledWith(7, true, true),
+      expect(salesService.cancelSale).toHaveBeenCalledWith(7, true, true, ''),
     );
   });
 
@@ -104,6 +104,19 @@ describe('CancelSaleModal', () => {
       screen.queryByRole('checkbox', { name: /devolución/ }),
     ).not.toBeInTheDocument();
     expect(screen.getByText('No hay cobros registrados que devolver.')).toBeInTheDocument();
+  });
+
+  it('incluye el motivo escrito en la anulación', async () => {
+    renderModal(crearVenta());
+
+    fireEvent.change(screen.getByLabelText('Motivo (opcional)'), {
+      target: { value: 'Producto roto' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Anular' }));
+
+    await waitFor(() =>
+      expect(salesService.cancelSale).toHaveBeenCalledWith(7, false, false, 'Producto roto'),
+    );
   });
 
   it('muestra el error del backend sin cerrar el modal', async () => {

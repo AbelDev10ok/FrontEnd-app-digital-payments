@@ -142,4 +142,18 @@ describe('SaleRow', () => {
     expect(screen.queryByRole('menuitem', { name: 'Eliminar' })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Anular venta' })).toBeInTheDocument();
   });
+
+  it('oculta Eliminar cuando la venta ya tiene remito emitido', () => {
+    renderFila(
+      crearVenta({
+        remito: { id: 1, number: 1, numberLabel: '000001', issuedAt: '2026-06-02T10:00:00' },
+      }),
+    );
+
+    abrirMenu();
+
+    // El remito emitido conserva la venta: se anula, no se borra
+    expect(screen.queryByRole('menuitem', { name: 'Eliminar' })).not.toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Ver remito N° 000001' })).toBeInTheDocument();
+  });
 });

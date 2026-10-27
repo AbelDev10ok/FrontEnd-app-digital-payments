@@ -137,6 +137,20 @@ export default function RemitoVenta() {
         </div>
 
         <article className="mx-auto bg-white p-10 shadow-card print:max-w-none print:p-0 print:shadow-none">
+          {/* La venta anulada deja el remito como historial: se marca para que
+              nadie lo confunda con un comprobante vigente. */}
+          {documento.saleStatus === 'CANCELED' && (
+            <div className="mb-8 border-2 border-red-600 px-4 py-3 text-center">
+              <p className="font-display text-2xl font-bold uppercase tracking-[0.35em] text-red-600">
+                Anulado
+              </p>
+              <p className="mt-1 text-sm text-red-700">
+                Esta venta fue anulada. El remito se conserva como historial y no
+                debe usarse como comprobante vigente.
+              </p>
+            </div>
+          )}
+
           <header className="flex flex-wrap items-start justify-between gap-8 border-b-2 border-brand-900 pb-6">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">

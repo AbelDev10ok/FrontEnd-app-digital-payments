@@ -147,7 +147,7 @@ describe('VentaDetalle', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Anular' }));
 
-    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, false, false));
+    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, false, false, ''));
     await waitFor(() => expect(screen.queryByText('Anular venta')).not.toBeInTheDocument());
   });
 
@@ -171,7 +171,7 @@ describe('VentaDetalle', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Anular' }));
 
-    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, true, false));
+    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, true, false, ''));
   });
 
   it('permite marcar reponer el stock al anular una venta con producto', async () => {
@@ -197,7 +197,7 @@ describe('VentaDetalle', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Anular' }));
 
-    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, false, true));
+    await waitFor(() => expect(salesService.cancelSale).toHaveBeenCalledWith(10, false, true, ''));
   });
 
   it('no ofrece devolución cuando no hay monto cobrado y lo aclara', async () => {
@@ -284,7 +284,7 @@ describe('VentaDetalle', () => {
     await waitFor(() => expect(navigateState?.pathname).toBe('/dashboard/ventas/todas'));
   });
 
-  it('avisa que el remito se elimina junto con la venta', async () => {
+  it('no ofrece Eliminar cuando la venta tiene remito emitido', async () => {
     vi.mocked(salesService.getSaleById).mockResolvedValue(
       crearTransaccion({
         remito: { id: 1, number: 1, numberLabel: '000001', issuedAt: '2026-06-02T10:00:00' },
@@ -295,11 +295,10 @@ describe('VentaDetalle', () => {
     await screen.findByText('Televisor 32 pulgadas');
 
     abrirMenu();
-    fireEvent.click(screen.getByText('Eliminar'));
 
-    expect(
-      screen.getByText('También se eliminará el remito N° 000001.'),
-    ).toBeInTheDocument();
+    // El remito emitido conserva la venta: se anula, no se borra
+    expect(screen.queryByText('Eliminar')).not.toBeInTheDocument();
+    expect(screen.getByText('Anular venta')).toBeInTheDocument();
   });
 
   it('avisa que anular la venta conserva el remito emitido', async () => {

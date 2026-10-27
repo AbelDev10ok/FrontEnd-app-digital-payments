@@ -282,6 +282,18 @@ describe('salesService.cancelSale', () => {
     expect(url).toBe(`${LOANS_API_URL}/cancel/168?refund=true&restock=false`);
   });
 
+  it('agrega el motivo codificado cuando se envía la anulación', async () => {
+    const anulada = { id: 168, status: 'CANCELED' };
+    vi.mocked(authenticatedFetch).mockResolvedValue(okEnvelope(anulada));
+
+    await salesService.cancelSale(168, false, true, '  producto roto  ');
+
+    const [url] = vi.mocked(authenticatedFetch).mock.calls[0];
+    expect(url).toBe(
+      `${LOANS_API_URL}/cancel/168?refund=false&restock=true&reason=producto%20roto`,
+    );
+  });
+
   it('propaga el mensaje de error del backend en una respuesta 4xx', async () => {
     vi.mocked(authenticatedFetch).mockResolvedValue(failEnvelope('La venta ya fue anulada'));
     await expect(salesService.cancelSale(168)).rejects.toThrow('La venta ya fue anulada');

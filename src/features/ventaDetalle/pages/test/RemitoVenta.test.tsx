@@ -91,6 +91,32 @@ describe('RemitoVenta', () => {
     expect(window.print).toHaveBeenCalledTimes(1);
   });
 
+  it('marca ANULADO el remito de una venta anulada', async () => {
+    vi.mocked(salesService.getRemito).mockResolvedValue({
+      ...documento,
+      saleStatus: 'CANCELED',
+    });
+
+    renderPagina();
+
+    expect(await screen.findByText('Anulado')).toBeInTheDocument();
+    expect(
+      screen.getByText(/no debe usarse como comprobante vigente/),
+    ).toBeInTheDocument();
+  });
+
+  it('no marca ANULADO el remito de una venta vigente', async () => {
+    vi.mocked(salesService.getRemito).mockResolvedValue({
+      ...documento,
+      saleStatus: 'COMPLETED',
+    });
+
+    renderPagina();
+    await screen.findByText('REMITO');
+
+    expect(screen.queryByText('Anulado')).not.toBeInTheDocument();
+  });
+
   it('explica cómo emitir el remito cuando la venta todavía no tiene uno', async () => {
     vi.mocked(salesService.getRemito).mockResolvedValue(null);
 

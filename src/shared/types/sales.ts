@@ -216,6 +216,8 @@ export interface SaleDocumentDto {
   total: number;
   currency?: string | null;
   notes?: string | null;
+  /** Estado vivo de la venta ("CANCELED" si está anulada); no es parte del snapshot. */
+  saleStatus?: string | null;
 }
 
 export interface SaleResponseDto {
@@ -240,6 +242,10 @@ export interface SaleResponseDto {
   remainingAmount: number;
   collectedAmount?: number;
   refundAmount?: number;
+  /** Auditoría de la anulación: fecha ISO, usuario y motivo. */
+  canceledAt?: string | null;
+  canceledBy?: string | null;
+  cancelReason?: string | null;
   totalFees: number;
   status?: string;
   kind: SaleKind;
