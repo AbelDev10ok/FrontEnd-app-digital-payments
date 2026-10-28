@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import MiNegocio from '../pages/MiNegocio';
 import { businessService } from '@/features/negocio/services/businessService';
+import { useAuthStore } from '@features/auth/store/authStore';
 
 vi.mock('@/features/ventas/services/salesServices', () => ({
   salesService: {
@@ -54,6 +55,7 @@ describe('MiNegocio', () => {
     vi.mocked(businessService.updateMyBusiness).mockReset();
     vi.mocked(businessService.changePassword).mockReset();
     vi.mocked(businessService.getMyBusiness).mockResolvedValue(negocio);
+    useAuthStore.setState({ refreshToken: null });
   });
 
   it('carga los datos del negocio en el formulario', async () => {
@@ -142,11 +144,12 @@ describe('MiNegocio', () => {
     expect(await screen.findByText('Cambios guardados correctamente.')).toBeInTheDocument();
   });
 
-  it('cambia la contraseña e informa que se cerraron las otras sesiones', async () => {
+  it('cambia la contraseña, guarda el refresh rotado e informa que se cerraron las otras sesiones', async () => {
     const user = userEvent.setup();
-    vi.mocked(businessService.changePassword).mockResolvedValue(
-      'Contraseña actualizada. Las demás sesiones fueron cerradas.',
-    );
+    vi.mocked(businessService.changePassword).mockResolvedValue({
+      message: 'Contraseña actualizada. Las demás sesiones fueron cerradas.',
+      refreshToken: 'refresh-nuevo',
+    });
 
     renderPagina();
     await screen.findByDisplayValue('Cobros del Sur');
@@ -161,6 +164,8 @@ describe('MiNegocio', () => {
     expect(
       await screen.findByText('Contraseña actualizada. Las demás sesiones fueron cerradas.'),
     ).toBeInTheDocument();
+    // La sesión actual sigue viva: el refresh nuevo queda guardado
+    expect(useAuthStore.getState().refreshToken).toBe('refresh-nuevo');
   });
 
   it('valida el largo mínimo de la nueva contraseña sin llamar al backend', async () => {

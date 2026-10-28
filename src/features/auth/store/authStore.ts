@@ -21,6 +21,8 @@ interface AuthState {
   logout: () => void;
   setLoading: (loading: boolean) => void;
   setTokens: (accessToken: string, refreshToken: string) => void;
+  /** Rotacion puntual del refresh (cambio de contraseña) sin tocar el access token. */
+  setRefreshToken: (refreshToken: string) => void;
   checkTokenExpiration: () => void;
 }
 
@@ -135,6 +137,10 @@ export const useAuthStore = create<AuthState>()(
           user: { email, role },
           isAuthenticated: true,
         });
+      },
+
+      setRefreshToken: (refreshToken: string) => {
+        set({ refreshToken });
       },
 
       checkTokenExpiration: async () => {

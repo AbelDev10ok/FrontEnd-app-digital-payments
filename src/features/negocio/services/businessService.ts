@@ -5,6 +5,16 @@ import {
 } from "@/shared/config/api";
 import type { BusinessMe, BusinessUpdateRequest } from "@/shared/types/business";
 
+/** Resultado del cambio de contraseña: mensaje + refresh token rotado. */
+export interface ChangePasswordResult {
+  message: string;
+  /**
+   * Refresh token nuevo que devuelve el backend: esta sesión sigue abierta y
+   * las demás quedan invalidadas. `null` si el backend no lo expone.
+   */
+  refreshToken: string | null;
+}
+
 /** Extrae el mensaje de error de una respuesta 400 del backend. */
 const extraerError = async (response: Response, fallback: string): Promise<Error> => {
   try {
@@ -47,9 +57,10 @@ export const businessService = {
 
   /**
    * Cambia la contrasena del usuario autenticado.
-   * El backend invalida el refresh token: las demas sesiones se cierran.
+   * El backend rota el refresh token: las otras sesiones se cierran y la
+   * respuesta trae el token nuevo para conservar esta sesion abierta.
    */
-  async changePassword(currentPassword: string, newPassword: string): Promise<string> {
+  async changePassword(currentPassword: string, newPassword: string): Promise<ChangePasswordResult> {
     const response = await authenticatedFetch(`${USUARIOS_API_URL}/me/password`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -59,6 +70,10 @@ export const businessService = {
       throw await extraerError(response, "Error al cambiar la contraseña");
     }
     const body = await response.json().catch(() => null);
-    return body?.message ?? "Contraseña actualizada.";
+    return {
+      message: body?.message ?? "Contraseña actualizada.",
+      refreshToken:
+        typeof body?.data?.refreshToken === "string" ? body.data.refreshToken : null,
+    };
   },
 };

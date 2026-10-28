@@ -8,6 +8,7 @@ import Input from '@/shared/components/ui/Input';
 import Select from '@/shared/components/ui/Select';
 import Field from '@/shared/components/ui/Field';
 import { businessService } from '@/features/negocio/services/businessService';
+import { useAuthStore } from '@features/auth/store/authStore';
 import { applyCurrency } from '@/shared/utils/formatCurrency';
 import { etiquetaMoneda, opcionesMonedaNegocio } from '@/shared/utils/currencies';
 import type { BusinessMe } from '@/shared/types/business';
@@ -140,10 +141,13 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
     setGuardandoClave(true);
     setFeedbackClave(null);
     try {
-      const mensaje = await businessService.changePassword(claveActual, claveNueva);
+      const { message, refreshToken } = await businessService.changePassword(claveActual, claveNueva);
+      // El backend rotó el refresh: guardamos el nuevo para que esta sesión
+      // siga abierta (las demás quedaron invalidadas).
+      if (refreshToken) useAuthStore.getState().setRefreshToken(refreshToken);
       setClaveActual('');
       setClaveNueva('');
-      setFeedbackClave({ tipo: 'ok', mensaje });
+      setFeedbackClave({ tipo: 'ok', mensaje: message });
     } catch (err) {
       setFeedbackClave({
         tipo: 'error',
