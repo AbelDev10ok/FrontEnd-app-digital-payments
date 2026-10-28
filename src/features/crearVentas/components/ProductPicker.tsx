@@ -13,6 +13,9 @@ interface ProductPickerProps {
   products: ProductDto[];
   productTypes: ProductTypeDto[];
   onSelect: (product: ProductDto, cantidad: number) => void;
+  /** Variante ya elegida y su cantidad, al volver del detalle con "Cambiar". */
+  initialVariantId?: string | number | null;
+  initialCantidad?: number | null;
 }
 
 /**
@@ -52,16 +55,26 @@ const ProductPicker: React.FC<ProductPickerProps> = ({
   products,
   productTypes,
   onSelect,
+  initialVariantId = null,
+  initialCantidad = null,
 }) => {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(
     () => new Set(),
   );
-  const [selectedProduct, setSelectedProduct] = useState<ProductDto | null>(
-    null,
-  );
-  const [cantidad, setCantidad] = useState(1);
+  const [selectedProduct, setSelectedProduct] = useState<ProductDto | null>(() => {
+    if (initialVariantId == null || initialVariantId === "") return null;
+    return (
+      products.find(
+        (p) => String(p.variantId ?? p.id) === String(initialVariantId),
+      ) ?? null
+    );
+  });
+  const [cantidad, setCantidad] = useState(() => {
+    const inicial = Math.floor(Number(initialCantidad));
+    return Number.isInteger(inicial) && inicial >= 1 ? inicial : 1;
+  });
 
   const categoriesByParent = agruparCategoriasPorPadre(productTypes);
   const categoryAndDescendantIds =

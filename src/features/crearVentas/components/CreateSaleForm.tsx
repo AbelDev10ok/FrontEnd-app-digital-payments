@@ -6,7 +6,7 @@ import AutocompleteSeller from '@/shared/components/AutocompleteSeller';
 import SubmitBar from '@/features/crearVentas/components/SubmitBar';
 import AutocompleteClient from '@/features/crearVentas/components/AutocompleteClient';
 import PrimerCuota from '@/features/crearVentas/components/PrimerCuota';
-import { Calendar, Plus, Coins, Percent, Package } from 'lucide-react';
+import { Package } from 'lucide-react';
 import { Button, Alert } from '@/shared/components/ui';
 import ErrorAnnouncer from '@/shared/components/feedback/ErrorAnnouncer';
 import useFormErrorA11y from '@/shared/hooks/useFormErrorA11y';
@@ -14,6 +14,7 @@ import { calculateLoanTotals, monedaDeLaOperacion } from '@/features/crearVentas
 import { formatCurrency, getCurrency, getCurrencySymbol } from '@/shared/utils/formatCurrency';
 import { etiquetaMoneda, opcionesMonedaNegocio } from '@/shared/utils/currencies';
 import { getLocalDateString } from '@/shared/utils/formatDate';
+import { especificacionesDe } from '@/shared/utils/productSpecs';
 import { eyebrow } from '@/shared/theme';
 
 interface LoanSummaryProps {
@@ -57,7 +58,7 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({ formData, formatCurrency }) =
   );
 };
 
-interface CostoYGananciaProps {
+interface ResumenVentaProps {
   /** Costo del negocio de la venta completa (unitario × cantidad) */
   costoTotal: number | null;
   /** Total a cobrar de la operación (al contado sale del precio de lista) */
@@ -65,50 +66,35 @@ interface CostoYGananciaProps {
   formatCurrency: (n: number) => string;
 }
 
-/** Badge con el costo y la ganancia de la venta que se está armando. */
-const CostoYGanancia: React.FC<CostoYGananciaProps> = ({ costoTotal, totalCobrar, formatCurrency }) => {
-  if (costoTotal == null) {
-    return (
-      <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-input text-gray-700 font-medium">—</div>
-    );
-  }
-  const ganancia = totalCobrar != null ? totalCobrar - costoTotal : null;
+/** Resumen de la venta que se está armando: costo, ganancia y total, en filas. */
+const ResumenVenta: React.FC<ResumenVentaProps> = ({ costoTotal, totalCobrar, formatCurrency }) => {
+  const ganancia = costoTotal != null && totalCobrar != null ? totalCobrar - costoTotal : null;
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
-        Costo {formatCurrency(costoTotal)}
-      </span>
-      {ganancia != null && (
-        <span
-          className={`rounded-full px-3 py-1 text-sm font-medium ${
-            ganancia >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
-          }`}
-        >
-          Ganancia {formatCurrency(ganancia)}
-        </span>
-      )}
-    </div>
-  );
-};
-
-interface TotalACobrarProps {
-  totalCobrar: number | null;
-  formatCurrency: (n: number) => string;
-}
-
-const TotalACobrar: React.FC<TotalACobrarProps> = ({ totalCobrar, formatCurrency }) => {
-  if (totalCobrar == null || totalCobrar <= 0) return null;
-  return (
-    <div className="mt-2 rounded-input border border-brand-100 bg-brand-50/30 p-3">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="text-sm text-gray-600">Total a cobrar</span>
-        <span className="text-base font-semibold text-gray-800 font-mono tabular-nums">{formatCurrency(totalCobrar)}</span>
+    <div className="rounded-xl bg-brand-50 border border-brand-100 p-4">
+      <p className="text-sm font-medium text-brand-700 mb-2">Resumen de la venta</p>
+      <div className="space-y-1 text-sm text-gray-700">
+        <p className="flex justify-between gap-3">
+          <span>Costo</span>
+          <span className="font-semibold">{costoTotal != null ? formatCurrency(costoTotal) : '—'}</span>
+        </p>
+        {ganancia != null && (
+          <p className="flex justify-between gap-3">
+            <span>Ganancia</span>
+            <span className={`font-semibold ${ganancia >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+              {formatCurrency(ganancia)}
+            </span>
+          </p>
+        )}
+        <p className="flex items-baseline justify-between gap-3 border-t border-brand-200 pt-2">
+          <span className="font-medium text-gray-800">Total a cobrar</span>
+          <span className="text-base font-semibold text-brand-700 font-mono tabular-nums">
+            {totalCobrar != null ? formatCurrency(totalCobrar) : '—'}
+          </span>
+        </p>
       </div>
     </div>
   );
 };
-
-
 
 interface Props {
   formData: any;
@@ -158,6 +144,7 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
     ? Number(formData.amountFee) * Number(formData.quantityFees)
     : null;
   const totalCobrar = esContado ? totalContado : totalEnCuotas;
+  const specsSeleccion = selectedProduct ? especificacionesDe(selectedProduct) : [];
 
   const today = getLocalDateString();
   const paymentOptions = isPrestamo
@@ -188,83 +175,77 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
 
   return (
     <div className="bg-white rounded-card shadow-card border border-gray-100">
-      <form ref={formRef} onSubmit={handleFormSubmit} className="p-6 space-y-8">
-        {/* Sección: Producto o Préstamo */}
+      <form ref={formRef} onSubmit={handleFormSubmit} className="p-6 space-y-6">
+        {/* Ficha del producto elegido en el paso anterior: qué se vende, cuánto
+            y a qué precio; "Cambiar" vuelve al selector. */}
+        {formData.productId && onBackToProductPicker && (
+          <div className="rounded-xl bg-brand-50 border border-brand-100 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <Package className="w-6 h-6 shrink-0 text-brand-600" />
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-900 truncate">
+                    {selectedProduct?.name ?? (formData.descripcion || 'Producto seleccionado')}
+                    {specsSeleccion.length > 0 && (
+                      <span className="font-normal text-gray-500"> · {specsSeleccion.join(' · ')}</span>
+                    )}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {cantidad} × {precioUnitario != null ? money(precioUnitario) : '—'}
+                    {selectedProduct?.stock != null ? ` · Stock: ${selectedProduct.stock}` : ''}
+                  </p>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={onBackToProductPicker}>
+                Cambiar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Errores del producto que bloquean el envío: visibles, no silenciosos */}
+        {!isPrestamo && (visibleErrors.productId || visibleErrors.productTypeId || visibleErrors.cantidad) && (
+          <div role="alert" className="space-y-1">
+            {visibleErrors.productId && <p className="text-sm text-red-600">{visibleErrors.productId}</p>}
+            {visibleErrors.productTypeId && <p className="text-sm text-red-600">{visibleErrors.productTypeId}</p>}
+            {visibleErrors.cantidad && <p className="text-sm text-red-600">{visibleErrors.cantidad}</p>}
+          </div>
+        )}
+
+        {/* Sección: Datos de la venta / del préstamo */}
         <div>
-          <h2 className={`${eyebrow.table} mb-4`}>{isPrestamo ? 'Datos del préstamo' : 'Producto'}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <h2 className={`${eyebrow.table} mb-4`}>{isPrestamo ? 'Datos del préstamo' : 'Datos de la venta'}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <InputWithIcon id="fecha" name="fecha" label="Fecha" required type="date" value={formData.fecha} onChange={handleInputChange} icon={<Calendar strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={visibleErrors.fecha} max={today} />
+              <InputWithIcon id="fecha" name="fecha" label="Fecha" required type="date" value={formData.fecha} onChange={handleInputChange} error={visibleErrors.fecha} max={today} />
             </div>
 
-            {isPrestamo ? (
-              <div>
-                <SelectWithIcon
-                  id="payments"
-                  name="payments"
-                  label="Tipo de pago"
-                  required
-                  value={formData.payments}
-                  onChange={e => {
-                    const { name, value } = e.target;
-                    setFormData((prev: any) => ({
-                      ...prev,
-                      [name]: value,
-                      quantityFees: value === 'CONTADO' ? 1 : prev.quantityFees,
-                    }));
-                  }}
-                  options={paymentOptions}
-                />
-              </div>
-            ) : (
-              <>
-                {/* Resumen del producto elegido en el paso anterior */}
-                {formData.productId && onBackToProductPicker && (
-                  <div className="md:col-span-2 bg-brand-50 border border-brand-200 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Package className="w-6 h-6 text-brand-600" />
-                        <div>
-                          <p className="font-semibold text-gray-900">{formData.descripcion || 'Producto seleccionado'}</p>
-                          <p className="text-xs text-gray-500">
-                            Costo total: {costoTotal != null ? money(costoTotal) : money(Number(formData.cost)) || '—'}
-                          </p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={onBackToProductPicker}>
-                        Cambiar
-                      </Button>
-                    </div>
-                    {selectedProduct?.stock != null && (
-                      <p className="mt-1 text-xs text-gray-500">Stock registrado: {selectedProduct.stock}</p>
-                    )}
-                  </div>
-                )}
-                {/* Errores del producto que bloquean el envío: visibles, no silenciosos */}
-                {(visibleErrors.productId || visibleErrors.productTypeId || visibleErrors.cantidad) && (
-                  <div role="alert" className="md:col-span-2 space-y-1">
-                    {visibleErrors.productId && <p className="text-sm text-red-600">{visibleErrors.productId}</p>}
-                    {visibleErrors.productTypeId && <p className="text-sm text-red-600">{visibleErrors.productTypeId}</p>}
-                    {visibleErrors.cantidad && <p className="text-sm text-red-600">{visibleErrors.cantidad}</p>}
-                  </div>
-                )}
-              </>
-            )}
+            <div>
+              <SelectWithIcon
+                id="payments"
+                name="payments"
+                label="Tipo de pago"
+                required
+                value={formData.payments}
+                onChange={e => {
+                  const { name, value } = e.target;
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    [name]: value,
+                    quantityFees: value === 'CONTADO' ? 1 : prev.quantityFees,
+                  }));
+                }}
+                options={paymentOptions}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Sección: Cliente y vendedor */}
+        {/* Sección: Cliente y vendedor (el cliente primero: su cartera precarga
+            al vendedor de la operación) */}
         <div>
           <h2 className={`${eyebrow.table} mb-4`}>Cliente y vendedor</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <AutocompleteSeller
-                value={formData.sellerId}
-                sellers={sellers}
-                onChange={(id: string | number) => setFormData((prev: any) => ({ ...prev, sellerId: String(id) }))}
-                error={visibleErrors.sellerId}
-              />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <AutocompleteClient
                 value={Number(formData.cliente)}
@@ -273,118 +254,93 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
                 error={visibleErrors.cliente}
               />
             </div>
+            <div>
+              <AutocompleteSeller
+                value={formData.sellerId}
+                sellers={sellers}
+                onChange={(id: string | number) => setFormData((prev: any) => ({ ...prev, sellerId: String(id) }))}
+                error={visibleErrors.sellerId}
+              />
+            </div>
           </div>
         </div>
 
         {/* Sección: Condiciones de pago */}
         <div>
           <h2 className={`${eyebrow.table} mb-4`}>Condiciones de pago</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {!isPrestamo && (
-              <div>
-                <SelectWithIcon
-                  id="payments"
-                  name="payments"
-                  label="Tipo de pago"
-                  required
-                  value={formData.payments}
-                  onChange={e => {
-                    const { name, value } = e.target;
-                    setFormData((prev: any) => ({
-                      ...prev,
-                      [name]: value,
-                      quantityFees: value === 'CONTADO' ? 1 : prev.quantityFees,
-                    }));
-                  }}
-                  options={paymentOptions}
-                />
-              </div>
-            )}
-
-            {formData.payments !== 'CONTADO' && (
-              <div>
-                <InputWithIcon id="quantityFees" name="quantityFees" label="Cantidad de cuotas" required type="number" value={formData.quantityFees} onChange={handleInputChange} icon={<Plus strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={visibleErrors.quantityFees} />
-              </div>
-            )}
-
-            {isPrestamo && (
-              <div>
-                <InputWithIcon id="interestRate" name="interestRate" label="Porcentaje de interés (%)" required type="number" value={formData.interestRate} onChange={handleInputChange} icon={<Percent strokeWidth={1.5} className="w-4 h-4 text-brand-600" />} error={visibleErrors.interestRate} />
-              </div>
-            )}
-
-            {/* Un préstamo no tiene producto del que heredar la moneda: se elige
-                acá y los montos de esta sección se interpretan en ella. */}
-            {isPrestamo && (
-              <div>
-                <SelectWithIcon
-                  id="currency"
-                  name="currency"
-                  label="Moneda"
-                  value={formData.currency || getCurrency()}
-                  onChange={handleInputChange}
-                  icon={<Coins strokeWidth={1.5} className="w-4 h-4 text-brand-600" />}
-                  options={opcionesMonedaNegocio(formData.currency).map((m) => ({ value: m, label: etiquetaMoneda(m) }))}
-                />
-              </div>
-            )}
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {!isPrestamo && !esContado && (
-              <div>
-                <InputWithIcon id="amountFee" name="amountFee" label="Valor de la cuota" required type="number" value={formData.amountFee} onChange={handleInputChange} symbol={simbolo} error={visibleErrors.amountFee} />
-              </div>
+              <>
+                <div>
+                  <InputWithIcon id="quantityFees" name="quantityFees" label="Cantidad de cuotas" required type="number" value={formData.quantityFees} onChange={handleInputChange} error={visibleErrors.quantityFees} />
+                </div>
+                <div>
+                  <InputWithIcon id="amountFee" name="amountFee" label="Valor de la cuota" required type="number" value={formData.amountFee} onChange={handleInputChange} symbol={simbolo} error={visibleErrors.amountFee} />
+                </div>
+              </>
             )}
 
-            {/* Al contado el total sale del precio de venta del catálogo: se
-                muestra calculado, no como campo editable. */}
-            {esContado && (
-              <div>
-                <p className="block text-sm font-medium text-gray-700 mb-2">
-                  Total de la venta (contado)
-                </p>
-                <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-input text-gray-700 font-medium font-mono tabular-nums">
-                  {totalContado != null ? money(totalContado) : '—'}
+            {isPrestamo && (
+              <>
+                <div>
+                  <InputWithIcon id="quantityFees" name="quantityFees" label="Cantidad de cuotas" required type="number" value={formData.quantityFees} onChange={handleInputChange} error={visibleErrors.quantityFees} />
                 </div>
+                <div>
+                  <InputWithIcon id="interestRate" name="interestRate" label="Porcentaje de interés (%)" required type="number" value={formData.interestRate} onChange={handleInputChange} error={visibleErrors.interestRate} />
+                </div>
+
+                {/* Un préstamo no tiene producto del que heredar la moneda: se elige
+                    acá y los montos de esta sección se interpretan en ella. */}
+                <div>
+                  <SelectWithIcon
+                    id="currency"
+                    name="currency"
+                    label="Moneda"
+                    value={formData.currency || getCurrency()}
+                    onChange={handleInputChange}
+                    options={opcionesMonedaNegocio(formData.currency).map((m) => ({ value: m, label: etiquetaMoneda(m) }))}
+                  />
+                </div>
+
+                <div>
+                  <InputWithIcon id="cost" name="cost" label="Monto entregado" required type="number" value={formData.cost} onChange={handleInputChange} symbol={simbolo} error={visibleErrors.cost} />
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* La venta cierra su sección con el resumen: al contado el total sale
+              del precio de lista del catálogo y se detalla debajo. */}
+          {!isPrestamo && (
+            <div className="mt-4">
+              <ResumenVenta costoTotal={costoTotal} totalCobrar={totalCobrar} formatCurrency={money} />
+              {esContado && (
                 <p className="mt-1 text-xs text-gray-500">
                   {cantidad} × {precioUnitario != null ? money(precioUnitario) : '—'} (precio de venta del catálogo)
                 </p>
-              </div>
-            )}
-
-            <div>
-              {isPrestamo ? (
-                <InputWithIcon id="cost" name="cost" label="Monto entregado" required type="number" value={formData.cost} onChange={handleInputChange} symbol={simbolo} error={visibleErrors.cost} />
-              ) : (
-                <div>
-                  <p className="block text-sm font-medium text-gray-700 mb-2">
-                    Costo del producto
-                  </p>
-                  <CostoYGanancia costoTotal={costoTotal} totalCobrar={totalCobrar} formatCurrency={money} />
-                  <TotalACobrar totalCobrar={totalCobrar} formatCurrency={money} />
-                </div>
               )}
             </div>
+          )}
 
-            {/* La regla "el total a cobrar supera al costo" no se arregla en el
-                costo (en la venta es de sólo lectura): el aviso va junto a los
-                campos que sí se pueden editar. */}
-            {!isPrestamo && visibleErrors.cost && (
-              <p
-                role="alert"
-                tabIndex={-1}
-                data-error-message
-                className="mt-4 rounded-input border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-              >
-                {visibleErrors.cost}
-              </p>
-            )}
-          </div>
+          {/* La regla "el total a cobrar supera al costo" no se arregla en el
+              costo (en la venta es de sólo lectura): el aviso va junto a los
+              campos que sí se pueden editar. */}
+          {!isPrestamo && visibleErrors.cost && (
+            <p
+              role="alert"
+              tabIndex={-1}
+              data-error-message
+              className="mt-3 rounded-input border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+            >
+              {visibleErrors.cost}
+            </p>
+          )}
         </div>
 
         {/* Primera cuota */}
         <div>
           <h2 className={`${eyebrow.table} mb-4`}>Primera cuota</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <PrimerCuota
               firstFeeDate={formData.firstFeeDate}
               fecha={formData.fecha}

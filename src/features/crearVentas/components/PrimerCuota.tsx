@@ -1,5 +1,4 @@
 import React from 'react';
-import { Calendar, CheckCircle } from 'lucide-react';
 import InputWithIcon from './InputWithIcon';
 import { getCurrencySymbol } from '@/shared/utils/formatCurrency';
 
@@ -31,7 +30,6 @@ const PrimerCuota: React.FC<PrimerCuotaProps> = ({ firstFeeDate, fecha, payFirst
           type="date"
           value={firstFeeDate}
           onChange={onChange}
-          icon={<Calendar className="w-4 h-4 text-brand-600" />}
           error={errors?.firstFeeDate}
           min={fecha}
         />
@@ -49,8 +47,8 @@ const PrimerCuota: React.FC<PrimerCuotaProps> = ({ firstFeeDate, fecha, payFirst
           disabled={disabled}
           title={disabled ? 'La primera cuota no es hoy, no se puede pagar ahora' : 'Pagar la primera cuota ahora'}
         />
-        <label htmlFor="payFirstFee" className="text-sm text-gray-700 flex items-center gap-2">
-          <CheckCircle className="w-4 h-4 text-brand-500" /> Pagar primera cuota ahora
+        <label htmlFor="payFirstFee" className="text-sm text-gray-700">
+          Pagar primera cuota ahora
         </label>
       </div>
 

@@ -226,6 +226,29 @@ describe('ProductPicker', () => {
     );
   });
 
+  it('abre con la variante y la cantidad marcadas al volver con "Cambiar"', () => {
+    const onSelect = vi.fn();
+    render(
+      <ProductPicker
+        products={products}
+        productTypes={productTypes}
+        onSelect={onSelect}
+        initialVariantId={12}
+        initialCantidad={2}
+      />,
+    );
+
+    // La barra inferior arranca con Heladera (1500 × 2 = 3000)
+    expect(screen.getByDisplayValue('2')).toBeInTheDocument();
+    expect(screen.getByText(textoEnPantalla(3000, 'ARS'))).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar' }));
+    expect(onSelect).toHaveBeenCalledWith(
+      expect.objectContaining({ variantId: 12, name: 'Heladera Samsung' }),
+      2,
+    );
+  });
+
   it('muestra el mensaje de vacío cuando no hay productos', () => {
     render(<ProductPicker products={[]} productTypes={productTypes} onSelect={vi.fn()} />);
     expect(screen.getByText('No hay productos registrados')).toBeInTheDocument();

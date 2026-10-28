@@ -70,6 +70,9 @@ const CrearTransaccionInner = ({ type, user, onLogout }: CrearTransaccionProps) 
             products={products}
             productTypes={productTypes}
             onSelect={handleProductSelected}
+            // Volver con "Cambiar" reabre el selector con la selección puesta
+            initialVariantId={formData.productId}
+            initialCantidad={Number(formData.cantidad)}
           />
         ) : (
           <CreateSaleForm

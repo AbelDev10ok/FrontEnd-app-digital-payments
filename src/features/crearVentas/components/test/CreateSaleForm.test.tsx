@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import CreateSaleForm from '../CreateSaleForm';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
@@ -89,6 +89,39 @@ describe('CreateSaleForm', () => {
     expect(screen.getByLabelText(/^Monto entregado \*/)).toHaveAttribute('aria-required', 'true');
   });
 
+  it('muestra la ficha del producto elegido: qué se vende, cuánto y a qué precio', () => {
+    render(
+      <CreateSaleForm
+        formData={{
+          ...baseFormData,
+          tipo: 'VENTA',
+          productId: '1',
+          productTypeId: '1',
+          cantidad: '2',
+          cost: '800',
+          amountFee: '2200',
+          quantityFees: 4,
+        }}
+        setFormData={vi.fn()}
+        handleInputChange={vi.fn()}
+        errors={{}}
+        visibleErrors={{}}
+        isSubmittingDisabled={false}
+        products={[
+          { id: 1, variantId: 1, name: 'Heladera', cost: 400, price: 550, stock: 6, currency: 'ARS', productTypeId: 1, productTypeName: 'TV' },
+        ]}
+        sellers={[]}
+        displayedClients={[]}
+        onSubmit={vi.fn()}
+        onBackToProductPicker={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Heladera')).toBeInTheDocument();
+    expect(screen.getByText(`2 × ${textoEnPantalla(550, 'ARS')} · Stock: 6`)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cambiar' })).toBeInTheDocument();
+  });
+
   it('muestra el error de envío y le da foco', () => {
     render(
       <CreateSaleForm
@@ -177,8 +210,8 @@ describe('CreateSaleForm', () => {
     );
 
     const aviso = screen.getByText('El total a cobrar debe ser mayor al costo del producto');
-    // En la venta el costo es de sólo lectura: el aviso no puede colgar de él.
-    expect(screen.getByText('Costo del producto').parentElement?.contains(aviso)).toBe(false);
+    // En la venta el costo es de sólo lectura: el aviso no puede colgar del resumen.
+    expect(screen.getByText('Resumen de la venta').parentElement?.contains(aviso)).toBe(false);
     // Y sirve de destino del foco cuando ningún control queda marcado como inválido.
     expect(aviso).toHaveAttribute('data-error-message');
     expect(aviso).toHaveAttribute('tabindex', '-1');
@@ -213,10 +246,11 @@ describe('CreateSaleForm', () => {
 
     // El negocio está en pesos (moneda global), pero el precio del producto es en
     // dólares: los montos de la operación se muestran en la moneda del producto.
-    expect(screen.getByText(`Costo ${textoEnPantalla(500, 'USD')}`)).toBeInTheDocument();
+    const resumen = screen.getByText('Resumen de la venta').closest('div') as HTMLElement;
+    expect(within(resumen).getByText(textoEnPantalla(500, 'USD'))).toBeInTheDocument();
     // La ganancia sale del total a cobrar (600) menos el costo (500)
-    expect(screen.getByText(`Ganancia ${textoEnPantalla(100, 'USD')}`)).toBeInTheDocument();
-    expect(screen.queryByText(`Costo ${textoEnPantalla(500, 'ARS')}`)).not.toBeInTheDocument();
+    expect(within(resumen).getByText(textoEnPantalla(100, 'USD'))).toBeInTheDocument();
+    expect(screen.queryByText(textoEnPantalla(500, 'ARS'))).not.toBeInTheDocument();
   });
 
   it('al contado muestra el total calculado del catálogo en vez del campo de cuota', () => {
@@ -249,12 +283,14 @@ describe('CreateSaleForm', () => {
 
     // No se edita el monto al contado: manda el precio de venta del catálogo
     expect(screen.queryByLabelText(/Valor de la cuota/)).not.toBeInTheDocument();
-    expect(screen.getByText('Total de la venta (contado)')).toBeInTheDocument();
-    // 1000 = 500 × 2: aparece como total y como "Total a cobrar"
-    expect(screen.getAllByText(textoEnPantalla(1000, 'ARS')).length).toBeGreaterThan(0);
-    // El costo del badge es el de la venta completa (400 × 2) y la ganancia 200
-    expect(screen.getByText(`Costo ${textoEnPantalla(800, 'ARS')}`)).toBeInTheDocument();
-    expect(screen.getByText(`Ganancia ${textoEnPantalla(200, 'ARS')}`)).toBeInTheDocument();
+    const resumen = screen.getByText('Resumen de la venta').closest('div') as HTMLElement;
+    // 1000 = 500 × 2: el total del catálogo, en el resumen
+    expect(within(resumen).getByText(textoEnPantalla(1000, 'ARS'))).toBeInTheDocument();
+    // El costo es el de la venta completa (400 × 2) y la ganancia 200
+    expect(within(resumen).getByText(textoEnPantalla(800, 'ARS'))).toBeInTheDocument();
+    expect(within(resumen).getByText(textoEnPantalla(200, 'ARS'))).toBeInTheDocument();
+    // El detalle del total al contado queda debajo del resumen
+    expect(screen.getByText(/precio de venta del catálogo/)).toBeInTheDocument();
   });
 
   it('en un préstamo deja elegir la moneda y resume los montos en ella', () => {
