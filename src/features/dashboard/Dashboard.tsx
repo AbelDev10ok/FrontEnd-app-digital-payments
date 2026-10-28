@@ -219,17 +219,17 @@ const Dashboard: React.FC<PageProps> = ({ user, onLogout }) => {
   return (
     <DashboardLayout title="Dashboard" user={user} onLogout={onLogout}>
       <div className="space-y-6">
-        <div className="rounded-card bg-brand-950 p-8 text-white">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="min-w-0">
-              <h1 className="text-3xl font-display font-bold tracking-tight mb-2 truncate">
+        <div className="rounded-card bg-brand-950 p-5 text-white sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-4">
+            <div className="sm:min-w-[18rem] sm:flex-1">
+              <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight mb-2 break-words">
                 ¡Hola{user?.email ? `, ${user.email.split("@")[0]}` : ""}!
               </h1>
               <p className="text-brand-100/90 text-lg">
                 Actividad de tu negocio, mes a mes
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
               <Select
                 value={year}
                 onChange={(e) => setYear(Number(e.target.value))}
@@ -258,7 +258,7 @@ const Dashboard: React.FC<PageProps> = ({ user, onLogout }) => {
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
                 aria-label="Filtrar por moneda"
-                className="sm:w-auto text-gray-900 shadow-sm"
+                className="col-span-2 sm:w-auto text-gray-900 shadow-sm"
               >
                 <option value={TODAS}>Todas las monedas</option>
                 {opcionesMoneda.map((m) => (
@@ -271,7 +271,9 @@ const Dashboard: React.FC<PageProps> = ({ user, onLogout }) => {
                 onClick={refresh}
                 variant="secondary"
                 aria-label="Actualizar métricas"
+                isLoading={loading}
                 leftIcon={<RefreshCw className="w-5 h-5" />}
+                className="col-span-2"
               >
                 Actualizar
               </Button>
@@ -288,6 +290,7 @@ const Dashboard: React.FC<PageProps> = ({ user, onLogout }) => {
             <Button
               onClick={refresh}
               variant="secondary"
+              isLoading={loading}
               leftIcon={<RefreshCw className="w-5 h-5" />}
             >
               Reintentar
@@ -304,7 +307,7 @@ const Dashboard: React.FC<PageProps> = ({ user, onLogout }) => {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3">
           {cards.map((card) => (
             <StatCard
               key={card.label}
@@ -338,7 +341,7 @@ const Dashboard: React.FC<PageProps> = ({ user, onLogout }) => {
               monto={metrics.overdueAmount}
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:items-start">
               <Card className="lg:col-span-2 p-6">
                 <h3 className="text-lg font-display font-bold tracking-tight text-gray-900 mb-1">
                   Operaciones últimos 12 meses

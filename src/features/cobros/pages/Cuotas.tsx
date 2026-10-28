@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Eye, HandCoins, ListChecks, Search } from 'lucide-react';
 import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import PageHeader from '@/shared/components/ui/PageHeader';
@@ -24,7 +24,7 @@ interface CuotasProps {
   onLogout: () => void;
 }
 
-const ESTADOS: { value: string; label: string }[] = [
+const ESTADOS: { value: CuotaEstadoFiltro; label: string }[] = [
   { value: 'PENDING', label: 'Todas las pendientes' },
   { value: 'TODAY', label: 'Vencen hoy' },
   { value: 'DELAYED', label: 'Vencidas' },
@@ -34,8 +34,17 @@ const ESTADOS: { value: string; label: string }[] = [
 
 const formatearFecha = (iso: string) => (iso ? iso.split('-').reverse().join('/') : '—');
 
+/** Estado válido de la URL; cualquier valor desconocido cae al default. */
+const estadoInicial = (param: string | null): CuotaEstadoFiltro =>
+  ESTADOS.find((op) => op.value === param)?.value ?? 'PENDING';
+
 const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
-  const [estado, setEstado] = useState<CuotaEstadoFiltro>('PENDING');
+  // El filtro de estado vive también en la URL (como en el tablero): la alerta
+  // de vencidas llega con ?estado=DELAYED y al cambiarlo el link queda al día.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [estado, setEstado] = useState<CuotaEstadoFiltro>(() =>
+    estadoInicial(searchParams.get('estado')),
+  );
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
   const [page, setPage] = useState(0);
@@ -71,6 +80,18 @@ const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
     aplicar();
   };
 
+  /** Mantiene el estado elegido en la URL (replace: no ensucia el historial). */
+  const actualizarEstado = (value: CuotaEstadoFiltro) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('estado', value);
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
   return (
     <DashboardLayout title="Cuotas" user={user} onLogout={onLogout}>
       <PageHeader
@@ -89,9 +110,11 @@ const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
             <Select
               id="filtro-estado"
               value={estado}
-              onChange={(e) =>
-                cambiarFiltros(() => setEstado(e.target.value as CuotaEstadoFiltro))
-              }
+              onChange={(e) => {
+                const value = e.target.value as CuotaEstadoFiltro;
+                cambiarFiltros(() => setEstado(value));
+                actualizarEstado(value);
+              }}
             >
               {ESTADOS.map((op) => (
                 <option key={op.value} value={op.value}>
@@ -130,6 +153,7 @@ const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
                   setDesde('');
                   setHasta('');
                   setEstado('PENDING');
+                  actualizarEstado('PENDING');
                 })
               }
             >

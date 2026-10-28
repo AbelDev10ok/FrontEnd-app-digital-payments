@@ -23,15 +23,17 @@ export interface StatCardProps {
 export default function StatCard({ label, value, icon, tone = 'brand', footnote }: StatCardProps) {
   const t = toneConfig[tone];
   return (
-    <Card className="relative overflow-hidden p-6">
+    // En móvil la tarjeta se compacta (p-4, valor un paso más chico y sin
+    // icono): así entra en grillas de 2 columnas sin pisar montos largos.
+    <Card className="relative overflow-hidden p-4 sm:p-6">
       <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${t.accent}`} />
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-start sm:items-center justify-between gap-2">
+        <div className="min-w-0">
           <p className={`${eyebrow.section} ${neutral.muted}`}>{label}</p>
-          <p className={`mt-1.5 text-2xl font-display font-extrabold tracking-tight ${t.value}`}>{value}</p>
+          <p className={`mt-1.5 text-xl sm:text-2xl font-display font-extrabold tracking-tight break-words ${t.value}`}>{value}</p>
         </div>
         {icon && (
-          <div className={`p-3 ${radius.md} ${t.iconBg}`}>
+          <div className={`hidden sm:block shrink-0 p-3 ${radius.md} ${t.iconBg}`}>
             <span className={`block ${t.iconText}`}>{icon}</span>
           </div>
         )}

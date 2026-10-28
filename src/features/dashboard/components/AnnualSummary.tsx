@@ -14,11 +14,13 @@ const AnnualSummary: React.FC<AnnualSummaryProps> = ({ anual }) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    // 2×2 fijo: con 4 columnas los montos se cortaban dentro de la tarjeta
+    // (el ancho disponible depende de la grilla externa, no del contenido).
+    <div className="grid grid-cols-2 gap-3">
       {items.map((item) => (
         <div key={item.label} className="bg-gray-50 rounded-xl px-4 py-3">
           <p className="text-xs font-medium text-gray-500">{item.label}</p>
-          <p className="text-lg font-bold text-gray-900 font-mono tabular-nums">
+          <p className="text-lg font-bold text-gray-900 font-mono tabular-nums break-words">
             {item.value}
           </p>
         </div>

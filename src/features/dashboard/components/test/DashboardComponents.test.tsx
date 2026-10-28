@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
+import type { ReactElement } from 'react';
 import MonthlyBarChart from '../MonthlyBarChart';
 import AnnualSummary from '../AnnualSummary';
 import OverdueFeesAlert from '../OverdueFeesAlert';
 import SalesStatusBreakdown from '../SalesStatusBreakdown';
 import TopClientsList from '../TopClientsList';
 import type { MonthlySales } from '@/shared/types/dashboard';
+
+/** La alerta de vencidas es un enlace: necesita contexto de router. */
+const renderConRouter = (ui: ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>);
 
 describe('MonthlyBarChart', () => {
   const series = [
@@ -46,6 +52,21 @@ describe('MonthlyBarChart', () => {
     expect(screen.getAllByText('Vendido')).toHaveLength(2);
     expect(screen.getAllByText('Cobrado')).toHaveLength(2);
   });
+
+  it('permite elegir un mes y muestra sus valores sin depender del hover', async () => {
+    const user = userEvent.setup();
+    render(<MonthlyBarChart series={series} />);
+
+    // Por defecto queda seleccionado el último mes de la serie (el consultado)
+    expect(screen.getByText(/^Sep 2026 · Vendido/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Ago 2026/ }));
+    expect(screen.getByText(/^Ago 2026 · Vendido/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Ago 2026/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
 });
 
 describe('AnnualSummary', () => {
@@ -67,20 +88,25 @@ describe('AnnualSummary', () => {
 });
 
 describe('OverdueFeesAlert', () => {
-  it('muestra el singular para una cuota vencida', () => {
-    render(<OverdueFeesAlert cantidad={1} monto={{ ARS: 500 }} />);
+  it('muestra el singular para una cuota vencida y lleva a las cuotas vencidas', () => {
+    renderConRouter(<OverdueFeesAlert cantidad={1} monto={{ ARS: 500 }} />);
     expect(screen.getByText('1 cuota vencida')).toBeInTheDocument();
     expect(screen.getByText(/Monto total por cobrar: \$ 500/)).toBeInTheDocument();
+    // La alerta avisa y además lleva a resolverlas
+    expect(screen.getByRole('link')).toHaveAttribute(
+      'href',
+      '/dashboard/cuotas?estado=DELAYED',
+    );
   });
 
   it('muestra el plural y el monto formateado', () => {
-    render(<OverdueFeesAlert cantidad={3} monto={{ ARS: 2500 }} />);
+    renderConRouter(<OverdueFeesAlert cantidad={3} monto={{ ARS: 2500 }} />);
     expect(screen.getByText('3 cuotas vencidas')).toBeInTheDocument();
     expect(screen.getByText(/2\.500/)).toBeInTheDocument();
   });
 
   it('no renderiza nada cuando no hay cuotas vencidas', () => {
-    const { container } = render(<OverdueFeesAlert cantidad={0} monto={{}} />);
+    const { container } = renderConRouter(<OverdueFeesAlert cantidad={0} monto={{}} />);
     expect(container).toBeEmptyDOMElement();
   });
 });

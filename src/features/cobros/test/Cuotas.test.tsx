@@ -192,4 +192,33 @@ describe('Cuotas', () => {
     expect(screen.getByText('$ 25.000')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Cobrar/ })).not.toBeInTheDocument();
   });
+
+  it('abre con el filtro "Vencidas" cuando llega desde el tablero (?estado=DELAYED)', async () => {
+    render(
+      <MemoryRouter initialEntries={['/dashboard/cuotas?estado=DELAYED']}>
+        <Cuotas user={null} onLogout={vi.fn()} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByLabelText('Estado')).toHaveValue('DELAYED');
+    expect(await screen.findByText('Maria Lopez')).toBeInTheDocument();
+    expect(collectionsService.getCuotas).toHaveBeenCalledWith(
+      expect.objectContaining({ estado: 'DELAYED' }),
+    );
+  });
+
+  it('ignora un estado desconocido en la URL y cae al default', async () => {
+    render(
+      <MemoryRouter initialEntries={['/dashboard/cuotas?estado=HACK']}>
+        <Cuotas user={null} onLogout={vi.fn()} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByLabelText('Estado')).toHaveValue('PENDING');
+    await waitFor(() =>
+      expect(collectionsService.getCuotas).toHaveBeenCalledWith(
+        expect.objectContaining({ estado: 'PENDING' }),
+      ),
+    );
+  });
 });
