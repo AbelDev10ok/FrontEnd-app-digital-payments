@@ -78,9 +78,9 @@ const Register: React.FC = () => {
 
   if (successMessage) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-brand-50 via-surface to-brand-100 flex items-center justify-center p-4">
         <div className="w-full max-w-md text-center">
-          <div className="bg-white rounded-card shadow-xl p-8 border border-gray-100">
+          <div className="bg-surface rounded-card shadow-xl p-8 border border-gray-100">
             <CheckCircle2 className="w-16 h-16 text-emerald-600 mx-auto mb-4" aria-hidden="true" />
             <h1 className="text-2xl font-bold text-gray-900 mb-2">¡Cuenta creada!</h1>
             <p className="text-gray-600 mb-6">{successMessage}</p>
@@ -94,17 +94,17 @@ const Register: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-surface to-brand-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-2xl mb-4 shadow-lg">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-action rounded-2xl mb-4 shadow-lg">
             <Store className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-display font-bold tracking-tight text-brand-950 mb-2">Creá tu cuenta</h1>
+          <h1 className="text-3xl font-display font-bold tracking-tight text-heading mb-2">Creá tu cuenta</h1>
           <p className="text-gray-600">Empezá a gestionar tus cobros en minutos</p>
         </div>
 
-        <div className="bg-white rounded-card shadow-xl p-8 border border-gray-100">
+        <div className="bg-surface rounded-card shadow-xl p-8 border border-gray-100">
           <form onSubmit={handleSubmit} noValidate className="space-y-6">
             <Field htmlFor="negocio" label="Nombre de tu negocio (opcional)">
               <div className="relative">

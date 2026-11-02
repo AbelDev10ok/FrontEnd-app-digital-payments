@@ -155,14 +155,14 @@ const Landing: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-surface text-gray-900">
       <PublicHeader />
 
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(60rem_30rem_at_80%_-10%,#d7f2e4_0%,transparent_60%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(60rem_30rem_at_80%_-10%,rgb(var(--c-brand-100))_0%,transparent_60%)]"
         />
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 md:py-24 lg:grid-cols-2">
           <div>
@@ -172,7 +172,7 @@ const Landing: React.FC = () => {
               Para quien vende al crédito
             </p>
             <h1
-              className="animate-fade-up font-display mt-3 text-4xl font-black leading-tight tracking-tight text-brand-950 sm:text-5xl motion-reduce:animate-none"
+              className="animate-fade-up font-display mt-3 text-4xl font-black leading-tight tracking-tight text-heading sm:text-5xl motion-reduce:animate-none"
               style={{ animationDelay: '80ms' }}
             >
               Dejá de anotar las cuotas a mano
@@ -190,7 +190,7 @@ const Landing: React.FC = () => {
             >
               <Link
                 to="/register"
-                className="rounded-lg bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-600/20 transition-colors hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+                className="rounded-lg bg-action px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-600/20 transition-colors hover:bg-action-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
               >
                 Probar la app
               </Link>
@@ -224,14 +224,14 @@ const Landing: React.FC = () => {
       <section id="funciones" className="scroll-mt-16 border-t border-gray-100 bg-gray-50/70">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-20">
           <p className={`${eyebrow.section} text-brand-600`}>Funciones</p>
-          <h2 className="font-display mt-2 text-2xl font-extrabold tracking-tight text-brand-950 sm:text-3xl">
+          <h2 className="font-display mt-2 text-2xl font-extrabold tracking-tight text-heading sm:text-3xl">
             Lo que hacés todos los días, más rápido
           </h2>
           <div className="mt-10 grid gap-4 sm:grid-cols-2">
             {FEATURES.map((feature) => (
               <article
                 key={feature.title}
-                className="rounded-card border border-gray-100 bg-white p-6 shadow-card transition-shadow hover:shadow-card-hover"
+                className="rounded-card border border-gray-100 bg-surface p-6 shadow-card transition-shadow hover:shadow-card-hover"
               >
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50">
                   <feature.icon className="h-6 w-6 text-brand-600" aria-hidden="true" />
@@ -249,14 +249,14 @@ const Landing: React.FC = () => {
       {/* Cómo funciona (secuencia real: 1 → 2 → 3) */}
       <section id="como-funciona" className="scroll-mt-16">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-20">
-          <h2 className="font-display text-2xl font-extrabold tracking-tight text-brand-950 sm:text-3xl">
+          <h2 className="font-display text-2xl font-extrabold tracking-tight text-heading sm:text-3xl">
             Cómo funciona
           </h2>
           <ol className="mt-10 grid gap-4 md:grid-cols-3">
             {PASOS.map((paso, index) => (
               <li
                 key={paso.titulo}
-                className="rounded-card border border-gray-100 bg-white p-6 shadow-card"
+                className="rounded-card border border-gray-100 bg-surface p-6 shadow-card"
               >
                 <span
                   aria-hidden="true"
@@ -277,7 +277,7 @@ const Landing: React.FC = () => {
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-20">
           <div className="max-w-md">
             <p className={`${eyebrow.section} text-brand-600`}>Tus números</p>
-            <h2 className="font-display mt-2 text-2xl font-extrabold tracking-tight text-brand-950 sm:text-3xl">
+            <h2 className="font-display mt-2 text-2xl font-extrabold tracking-tight text-heading sm:text-3xl">
               Tu mes a un vistazo
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-gray-600">
@@ -289,7 +289,7 @@ const Landing: React.FC = () => {
             {NUMEROS_EJEMPLO.map((n) => (
               <div
                 key={n.etiqueta}
-                className="relative overflow-hidden rounded-card border border-gray-100 bg-white p-5 shadow-card"
+                className="relative overflow-hidden rounded-card border border-gray-100 bg-surface p-5 shadow-card"
               >
                 <span aria-hidden="true" className={`absolute inset-x-0 top-0 h-1 ${n.accent}`} />
                 <p className={`${eyebrow.section} text-gray-500`}>{n.etiqueta}</p>
@@ -314,9 +314,9 @@ const Landing: React.FC = () => {
           </h2>
           <div className="mt-10 grid gap-4 md:grid-cols-2">
             {NEGOCIOS.map((negocio) => (
-              <article key={negocio.titulo} className="rounded-card border border-white/10 bg-white/5 p-6">
+              <article key={negocio.titulo} className="rounded-card border border-on-dark/10 bg-on-dark/5 p-6">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-on-dark/10">
                     <negocio.icon className="h-5 w-5 text-brand-300" aria-hidden="true" />
                   </span>
                   <h3 className="font-display text-lg font-bold text-white">{negocio.titulo}</h3>
@@ -333,7 +333,7 @@ const Landing: React.FC = () => {
       {/* Preguntas frecuentes */}
       <section id="preguntas" className="scroll-mt-16">
         <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 md:py-20">
-          <h2 className="font-display text-2xl font-extrabold tracking-tight text-brand-950 sm:text-3xl">
+          <h2 className="font-display text-2xl font-extrabold tracking-tight text-heading sm:text-3xl">
             Preguntas frecuentes
           </h2>
           <div className="mt-8">
@@ -343,9 +343,9 @@ const Landing: React.FC = () => {
       </section>
 
       {/* CTA final */}
-      <section className="border-t border-gray-100 bg-gradient-to-b from-brand-50 to-white">
+      <section className="border-t border-gray-100 bg-gradient-to-b from-brand-50 to-surface">
         <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
-          <h2 className="font-display text-2xl font-extrabold tracking-tight text-brand-950 sm:text-3xl">
+          <h2 className="font-display text-2xl font-extrabold tracking-tight text-heading sm:text-3xl">
             Probalo hoy, cobrá mejor mañana
           </h2>
           <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-gray-600">
@@ -354,7 +354,7 @@ const Landing: React.FC = () => {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
               to="/precios"
-              className="inline-block rounded-lg bg-brand-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-brand-600/20 transition-colors hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+              className="inline-block rounded-lg bg-action px-8 py-3 text-sm font-bold text-white shadow-lg shadow-brand-600/20 transition-colors hover:bg-action-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
             >
               Ver precios y empezar
             </Link>

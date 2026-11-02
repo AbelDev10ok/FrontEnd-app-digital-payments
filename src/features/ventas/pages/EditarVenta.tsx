@@ -108,7 +108,7 @@ const EditarVenta: React.FC<PageProps> = ({ user, onLogout }) => {
           <Link to={`/dashboard/ventas/${id}`} className="p-2 rounded-xl hover:bg-gray-100">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
-          <h1 className="text-2xl font-display font-bold tracking-tight text-brand-950 ml-2">{isLoan ? "Editar Préstamo" : "Editar Venta"}</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight text-heading ml-2">{isLoan ? "Editar Préstamo" : "Editar Venta"}</h1>
         </div>
 
         {saveError && <div className="mb-4"><Alert tone="danger">{saveError}</Alert></div>}

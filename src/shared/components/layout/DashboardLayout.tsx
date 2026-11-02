@@ -35,7 +35,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, user
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 relative">
+    <div className="min-h-screen bg-page relative">
       {/* Salto al contenido: sin esto la tabulación entra por el menú lateral
           (18 paradas) antes de llegar a la pantalla. Queda fuera del viewport
           por transform, no por `display:none`: sigue en el orden de tabulación
@@ -49,7 +49,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, user
           e.preventDefault();
           document.getElementById('contenido-principal')?.focus();
         }}
-        className="absolute left-4 top-4 z-50 -translate-y-24 rounded-input bg-white px-4 py-2 text-sm font-medium text-brand-700 shadow-card ring-2 ring-brand-500 transition-transform focus:translate-y-0"
+        className="absolute left-4 top-4 z-50 -translate-y-24 rounded-input bg-surface px-4 py-2 text-sm font-medium text-brand-700 shadow-card ring-2 ring-brand-500 transition-transform focus:translate-y-0"
       >
         Saltar al contenido
       </a>
@@ -57,7 +57,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, user
       {/* Resplandor decorativo como el hero de la landing */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(60rem_18rem_at_80%_-20%,#d7f2e4_0%,transparent_60%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(60rem_18rem_at_80%_-20%,rgb(var(--c-brand-100))_0%,transparent_60%)]"
       />
 
       {/* Sidebar */}

@@ -43,11 +43,11 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
       aria-label={title}
     >
       <div
-        className={`relative w-full ${panelSize[size]} max-h-[calc(100vh-2rem)] overflow-y-auto bg-white ${radius.card} shadow-xl p-6 animate-modal-panel motion-reduce:animate-none`}
+        className={`relative w-full ${panelSize[size]} max-h-[calc(100vh-2rem)] overflow-y-auto bg-surface ${radius.card} shadow-xl p-6 animate-modal-panel motion-reduce:animate-none`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h3 className={`font-display text-lg font-bold tracking-tight text-brand-950`}>{title}</h3>
+          <h3 className={`font-display text-lg font-bold tracking-tight text-heading`}>{title}</h3>
           <button
             onClick={onClose}
             aria-label="Cerrar"

@@ -119,9 +119,9 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm">
-      <div className="bg-white rounded-card w-full max-w-md p-6 m-4 shadow-xl">
+      <div className="bg-surface rounded-card w-full max-w-md p-6 m-4 shadow-xl">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="font-display text-lg font-bold tracking-tight text-brand-950">
+          <h3 className="font-display text-lg font-bold tracking-tight text-heading">
             {isPaid ? "Editar Cuota Pagada" : "Posponer Vencimiento"}
           </h3>
           <button

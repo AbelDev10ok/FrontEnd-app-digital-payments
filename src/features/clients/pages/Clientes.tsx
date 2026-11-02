@@ -96,7 +96,7 @@ const Clientes: React.FC<PageProps> = ({ user, onLogout }) => {
         {/* Stats bar */}
         {!loading && !error && totalElements > 0 && stats && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white rounded-card p-4 shadow-card border border-gray-100 flex items-center gap-3">
+            <div className="bg-surface rounded-card p-4 shadow-card border border-gray-100 flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center shrink-0">
                 <Users className="w-5 h-5 text-brand-600" />
               </div>
@@ -105,7 +105,7 @@ const Clientes: React.FC<PageProps> = ({ user, onLogout }) => {
                 <p className="text-lg font-bold text-gray-900">{totalElements}</p>
               </div>
             </div>
-            <div className="bg-white rounded-card p-4 shadow-card border border-gray-100 flex items-center gap-3">
+            <div className="bg-surface rounded-card p-4 shadow-card border border-gray-100 flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
                 <AlertCircle className="w-5 h-5 text-amber-600" />
               </div>
@@ -114,7 +114,7 @@ const Clientes: React.FC<PageProps> = ({ user, onLogout }) => {
                 <p className="text-lg font-bold text-gray-900">{stats.conDeuda} <span className="text-sm font-normal text-gray-500">de {clients.length}</span></p>
               </div>
             </div>
-            <div className="bg-white rounded-card p-4 shadow-card border border-gray-100 flex items-center gap-3">
+            <div className="bg-surface rounded-card p-4 shadow-card border border-gray-100 flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                 <DollarSign className="w-5 h-5 text-red-600" />
               </div>

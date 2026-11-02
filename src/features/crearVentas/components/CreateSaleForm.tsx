@@ -174,7 +174,7 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
   }, [submitError]);
 
   return (
-    <div className="bg-white rounded-card shadow-card border border-gray-100">
+    <div className="bg-surface rounded-card shadow-card border border-gray-100">
       <form ref={formRef} onSubmit={handleFormSubmit} className="p-6 space-y-6">
         {/* Ficha del producto elegido en el paso anterior: qué se vende, cuánto
             y a qué precio; "Cambiar" vuelve al selector. */}

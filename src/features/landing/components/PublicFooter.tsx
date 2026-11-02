@@ -2,13 +2,13 @@ import { Link } from 'react-router-dom';
 import { Wallet } from 'lucide-react';
 
 const PublicFooter: React.FC = () => (
-  <footer className="border-t border-gray-100 bg-white">
+  <footer className="border-t border-gray-100 bg-surface">
     <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-10 sm:px-6 md:flex-row">
       <div className="flex items-center gap-2">
-        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-action">
           <Wallet className="h-4 w-4 text-white" aria-hidden="true" />
         </span>
-        <span className="font-display text-sm font-extrabold tracking-tight text-brand-950">
+        <span className="font-display text-sm font-extrabold tracking-tight text-heading">
           Cobros<span className="text-brand-600">&amp;</span>Ventas
         </span>
       </div>

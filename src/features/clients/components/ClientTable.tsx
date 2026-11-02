@@ -14,7 +14,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, searchTerm }) => {
   
   return (
           <>
-            <div className="bg-transparent md:bg-white md:rounded-card md:shadow-card md:border md:border-gray-100">
+            <div className="bg-transparent md:bg-surface md:rounded-card md:shadow-card md:border md:border-gray-100">
                 <table className="w-full border-collapse">
                   <thead className="hidden md:table-header-group">
                     <tr className={neutralBg.tableHeader}>
@@ -38,18 +38,18 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, searchTerm }) => {
                   <tbody className="divide-y divide-gray-100">
                     {clients.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className={`px-6 py-8 text-center ${neutral.muted} bg-white rounded-card shadow-card`}>
+                        <td colSpan={5} className={`px-6 py-8 text-center ${neutral.muted} bg-surface rounded-card shadow-card`}>
                           {searchTerm ? 'No se encontraron clientes que coincidan con la búsqueda' : 'No hay clientes registrados'}
                         </td>
                       </tr>
                     ) : (
                       clients.map((cliente: Client) => (
-                        <tr key={cliente.id} className="block mb-4 bg-white rounded-card shadow-card border border-gray-200 md:table-row md:border-none md:shadow-none md:mb-0 md:hover:bg-gray-50/60 transition-colors duration-200">
+                        <tr key={cliente.id} className="block mb-4 bg-surface rounded-card shadow-card border border-gray-200 md:table-row md:border-none md:shadow-none md:mb-0 md:hover:bg-gray-50/60 transition-colors duration-200">
                         
                         {/* Celda Cliente: Es la cabecera de la tarjeta en móvil */}
                         <td className="p-4 flex items-center border-b border-gray-200 md:border-b-0 md:table-cell md:px-6 md:py-4 md:whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="w-10 h-10 bg-brand-600 shadow-sm rounded-full flex items-center justify-center">
+                            <div className="w-10 h-10 bg-action shadow-sm rounded-full flex items-center justify-center">
                               <span className="text-white font-medium text-sm">
                                 {cliente.name.split(' ').map((n: string) => n[0]).join('')}
                               </span>

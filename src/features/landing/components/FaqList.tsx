@@ -9,7 +9,7 @@ export interface FaqItem {
  */
 export default function FaqList({ items }: { items: FaqItem[] }) {
   return (
-    <div className="divide-y divide-gray-200 rounded-card border border-gray-200 bg-white">
+    <div className="divide-y divide-gray-200 rounded-card border border-gray-200 bg-surface">
       {items.map((item) => (
         <details key={item.pregunta} className="group px-5 py-4">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 [&::-webkit-details-marker]:hidden">

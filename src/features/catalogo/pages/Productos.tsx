@@ -105,7 +105,7 @@ const Productos: React.FC<ProductosProps> = ({ user, onLogout }) => {
               <span
                 aria-hidden
                 className={`rounded-full px-1.5 py-0.5 text-xs font-semibold ${
-                  activo ? 'bg-white text-brand-700' : 'bg-gray-100 text-gray-600'
+                  activo ? 'bg-surface text-brand-700' : 'bg-gray-100 text-gray-600'
                 }`}
               >
                 {count}

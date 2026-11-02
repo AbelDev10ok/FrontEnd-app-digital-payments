@@ -36,7 +36,7 @@ const Precios: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-gray-900">
+    <div className="flex min-h-screen flex-col bg-surface text-gray-900">
       <PublicHeader variant="page" />
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-16 sm:px-6">
@@ -48,7 +48,7 @@ const Precios: React.FC = () => {
           Volver al inicio
         </Link>
 
-        <h1 className="font-display mt-6 text-3xl font-black tracking-tight text-brand-950 sm:text-4xl">
+        <h1 className="font-display mt-6 text-3xl font-black tracking-tight text-heading sm:text-4xl">
           Un plan. Todo incluido.
         </h1>
         <p className="mt-3 max-w-lg text-base leading-relaxed text-gray-600">
@@ -67,7 +67,7 @@ const Precios: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-white p-8">
+          <div className="bg-surface p-8">
             <ul className="space-y-3">
               {INCLUYE.map((item) => (
                 <li key={item} className="flex items-start gap-3 text-sm text-gray-700">
@@ -79,7 +79,7 @@ const Precios: React.FC = () => {
 
             <Link
               to="/register"
-              className="mt-8 block rounded-lg bg-brand-600 px-6 py-3 text-center text-sm font-bold text-white shadow-lg shadow-brand-600/20 transition-colors hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+              className="mt-8 block rounded-lg bg-action px-6 py-3 text-center text-sm font-bold text-white shadow-lg shadow-brand-600/20 transition-colors hover:bg-action-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
             >
               Empezar ahora
             </Link>
@@ -91,7 +91,7 @@ const Precios: React.FC = () => {
         </article>
 
         <section aria-label="Preguntas sobre el plan" className="mt-12">
-          <h2 className="font-display text-2xl font-extrabold tracking-tight text-brand-950 sm:text-3xl">
+          <h2 className="font-display text-2xl font-extrabold tracking-tight text-heading sm:text-3xl">
             Preguntas frecuentes
           </h2>
           <div className="mt-6">

@@ -10,7 +10,7 @@ describe('Card', () => {
 
   it('mergea className propio con las clases base', () => {
     const { container } = render(<Card className="p-6 custom">X</Card>);
-    expect(container.firstChild).toHaveClass('bg-white');
+    expect(container.firstChild).toHaveClass('bg-surface');
     expect(container.firstChild).toHaveClass('p-6');
     expect(container.firstChild).toHaveClass('custom');
   });

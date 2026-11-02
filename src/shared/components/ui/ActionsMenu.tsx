@@ -173,7 +173,7 @@ export default function ActionsMenu({ label, items, align = 'end' }: ActionsMenu
               left: position.left,
               width: PANEL_WIDTH,
             }}
-            className={`z-50 rounded-card border border-gray-100 bg-white py-1 shadow-card animate-modal-panel motion-reduce:animate-none ${
+            className={`z-50 rounded-card border border-gray-100 bg-surface py-1 shadow-card animate-modal-panel motion-reduce:animate-none ${
               align === 'end' ? 'origin-top-right' : 'origin-top-left'
             }`}
           >

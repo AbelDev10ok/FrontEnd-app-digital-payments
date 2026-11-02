@@ -28,8 +28,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-          <div className="bg-white border border-red-200 rounded-xl shadow-sm max-w-md w-full p-6 text-center">
+        <div className="min-h-screen flex items-center justify-center bg-page p-4">
+          <div className="bg-surface border border-red-200 rounded-xl shadow-sm max-w-md w-full p-6 text-center">
             <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-3" />
             <h1 className="text-lg font-semibold text-gray-900 mb-1">Algo salió mal</h1>
             <p className="text-sm text-gray-600 mb-4">
@@ -39,7 +39,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               <button
                 type="button"
                 onClick={this.handleReset}
-                className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+                className="inline-flex items-center gap-2 rounded-lg bg-action px-4 py-2 text-sm font-medium text-white hover:bg-action-hover"
               >
                 <RotateCcw className="w-4 h-4" />
                 Reintentar

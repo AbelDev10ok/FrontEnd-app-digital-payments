@@ -175,7 +175,7 @@ const SalesFilters = ({
   );
 
   return (
-    <div className="bg-white rounded-card p-6 shadow-card">
+    <div className="bg-surface rounded-card p-6 shadow-card">
       <div className="flex items-center justify-between gap-4 mb-4 md:hidden">
         <span className="text-sm font-semibold">Filtros</span>
         <Button
@@ -193,9 +193,9 @@ const SalesFilters = ({
       {/* Modal de filtros para mobile */}
       {showMobileFilters && (
         <div className="fixed inset-0 bg-gray-950/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-card shadow-xl w-full max-w-lg p-6 mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-surface rounded-card shadow-xl w-full max-w-lg p-6 mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display text-lg font-bold tracking-tight text-brand-950">Filtros</h3>
+              <h3 className="font-display text-lg font-bold tracking-tight text-heading">Filtros</h3>
               <button
                 onClick={() => setShowMobileFilters(false)}
                 className="text-gray-400 hover:text-gray-600"

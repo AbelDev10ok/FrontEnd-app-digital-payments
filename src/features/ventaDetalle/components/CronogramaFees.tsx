@@ -125,11 +125,11 @@ export default function CronogramaFees({
   return (
     <section>
       {transaction.fees.length > 0 && (
-        <div className="bg-white rounded-card p-6 shadow-card">
+        <div className="bg-surface rounded-card p-6 shadow-card">
           {/* Progreso de cobro */}
           <div className="mb-4">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <h3 className="font-display text-lg font-bold tracking-tight text-brand-950">
+              <h3 className="font-display text-lg font-bold tracking-tight text-heading">
                 Cronograma de cuotas
               </h3>
               <p

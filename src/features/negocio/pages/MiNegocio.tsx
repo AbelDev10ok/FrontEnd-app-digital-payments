@@ -44,7 +44,7 @@ const FeedbackMsg = ({ feedback }: { feedback: NonNullable<Feedback> }) => (
 );
 
 const TituloCard = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="font-display text-base font-bold tracking-tight text-brand-950 mb-4">{children}</h2>
+  <h2 className="font-display text-base font-bold tracking-tight text-heading mb-4">{children}</h2>
 );
 
 const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {

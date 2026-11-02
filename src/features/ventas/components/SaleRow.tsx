@@ -87,7 +87,7 @@ const SaleRow: React.FC<Props> = ({
     <tr key={sale.id} className="group hover:bg-gray-50/60 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
-          <div className="w-10 h-10 bg-brand-600 shadow-sm rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-action shadow-sm rounded-full flex items-center justify-center">
             <span className="text-white font-mono font-medium text-sm">
               #{sale.id}
             </span>
@@ -136,7 +136,7 @@ const SaleRow: React.FC<Props> = ({
       </td>
       {/* En móvil la tabla scrollea en horizontal: las acciones quedan fijas
           a la derecha para no tener que arrastrar hasta el final de la fila. */}
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium max-md:sticky max-md:right-0 max-md:bg-white max-md:group-hover:bg-gray-50 max-md:border-l max-md:border-gray-100">
+      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium max-md:sticky max-md:right-0 max-md:bg-surface max-md:group-hover:bg-gray-50 max-md:border-l max-md:border-gray-100">
         <div className="flex items-center justify-end gap-1">
           <Link
             to={`/dashboard/ventas/${sale.id}`}

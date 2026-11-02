@@ -173,7 +173,7 @@ const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
             <Search className="w-10 h-10 text-gray-300 mb-3" />
-            <h2 className="font-display text-lg font-bold text-brand-950">Sin resultados</h2>
+            <h2 className="font-display text-lg font-bold text-heading">Sin resultados</h2>
             <p className="mt-1 text-sm text-gray-500">No hay cuotas que coincidan con los filtros elegidos.</p>
           </div>
         ) : (
@@ -217,7 +217,7 @@ const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
                     <td className="px-5 py-3.5">
                       <CuotaEstadoBadge cuota={cuota} />
                     </td>
-                    <td className="px-5 py-3.5 text-right font-mono text-sm font-semibold tabular-nums text-brand-950 whitespace-nowrap">
+                    <td className="px-5 py-3.5 text-right font-mono text-sm font-semibold tabular-nums text-heading whitespace-nowrap">
                       {formatCurrency(montoCobrableDeCuota(cuota), cuota.currency ?? undefined)}
                     </td>
                     <td className="px-5 py-3.5">

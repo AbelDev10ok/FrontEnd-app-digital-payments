@@ -27,7 +27,7 @@ const SaleTable: React.FC<Props> = ({
   onDelete,
 }) => {
   return (
-    <div className="bg-white rounded-card shadow-card">
+    <div className="bg-surface rounded-card shadow-card">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className={neutralBg.tableHeader}>

@@ -14,7 +14,7 @@ describe('Button', () => {
   it('aplica la variante y el tamaño por defecto', () => {
     render(<Button>Aceptar</Button>);
     const btn = screen.getByRole('button', { name: 'Aceptar' });
-    expect(btn.className).toContain('bg-brand-600');
+    expect(btn.className).toContain('bg-action');
     expect(btn.className).toContain('px-4 py-2.5');
     expect(btn).not.toBeDisabled();
   });

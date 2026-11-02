@@ -8,7 +8,7 @@ type InfoClienteProps = {
 
 const InfoCliente: React.FC<InfoClienteProps> = ({ client }) => {
   return (
-        <div className="bg-white rounded-card shadow-card border border-gray-100 p-6">
+        <div className="bg-surface rounded-card shadow-card border border-gray-100 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Información de Contacto</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex items-center space-x-3">
