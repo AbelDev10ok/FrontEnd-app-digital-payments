@@ -156,6 +156,7 @@ describe('MiNegocio', () => {
 
     await user.type(screen.getByLabelText(/Contraseña actual/), 'ClaveVieja1');
     await user.type(screen.getByLabelText(/Nueva contraseña/), 'ClaveNueva123');
+    await user.type(screen.getByLabelText(/Repetir nueva contraseña/), 'ClaveNueva123');
     await user.click(screen.getByRole('button', { name: /Actualizar contraseña/ }));
 
     await waitFor(() =>
@@ -168,6 +169,20 @@ describe('MiNegocio', () => {
     expect(useAuthStore.getState().refreshToken).toBe('refresh-nuevo');
   });
 
+  it('no cambia la contraseña si la repetición no coincide', async () => {
+    const user = userEvent.setup();
+    renderPagina();
+    await screen.findByDisplayValue('Cobros del Sur');
+
+    await user.type(screen.getByLabelText(/Contraseña actual/), 'ClaveVieja1');
+    await user.type(screen.getByLabelText(/Nueva contraseña/), 'ClaveNueva123');
+    await user.type(screen.getByLabelText(/Repetir nueva contraseña/), 'ClaveNueva124');
+    await user.click(screen.getByRole('button', { name: /Actualizar contraseña/ }));
+
+    expect(await screen.findByText('Las contraseñas no coinciden.')).toBeInTheDocument();
+    expect(businessService.changePassword).not.toHaveBeenCalled();
+  });
+
   it('valida el largo mínimo de la nueva contraseña sin llamar al backend', async () => {
     const user = userEvent.setup();
     renderPagina();
@@ -175,6 +190,7 @@ describe('MiNegocio', () => {
 
     await user.type(screen.getByLabelText(/Contraseña actual/), 'ClaveVieja1');
     await user.type(screen.getByLabelText(/Nueva contraseña/), 'corta');
+    await user.type(screen.getByLabelText(/Repetir nueva contraseña/), 'corta');
     await user.click(screen.getByRole('button', { name: /Actualizar contraseña/ }));
 
     expect(await screen.findByText(/al menos 8 caracteres/)).toBeInTheDocument();

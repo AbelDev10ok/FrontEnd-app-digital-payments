@@ -64,6 +64,7 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
 
   const [claveActual, setClaveActual] = useState('');
   const [claveNueva, setClaveNueva] = useState('');
+  const [repetirClave, setRepetirClave] = useState('');
   const [guardandoClave, setGuardandoClave] = useState(false);
   const [feedbackClave, setFeedbackClave] = useState<Feedback>(null);
 
@@ -138,6 +139,10 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
       setFeedbackClave({ tipo: 'error', mensaje: 'La nueva contraseña debe tener al menos 8 caracteres.' });
       return;
     }
+    if (claveNueva !== repetirClave) {
+      setFeedbackClave({ tipo: 'error', mensaje: 'Las contraseñas no coinciden.' });
+      return;
+    }
     setGuardandoClave(true);
     setFeedbackClave(null);
     try {
@@ -147,6 +152,7 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
       if (refreshToken) useAuthStore.getState().setRefreshToken(refreshToken);
       setClaveActual('');
       setClaveNueva('');
+      setRepetirClave('');
       setFeedbackClave({ tipo: 'ok', mensaje: message });
     } catch (err) {
       setFeedbackClave({
@@ -324,6 +330,17 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
                     minLength={8}
                     value={claveNueva}
                     onChange={(e) => setClaveNueva(e.target.value)}
+                    required
+                  />
+                </Field>
+                <Field label="Repetir nueva contraseña" htmlFor="clave-repetida" required>
+                  <Input
+                    id="clave-repetida"
+                    type="password"
+                    autoComplete="new-password"
+                    minLength={8}
+                    value={repetirClave}
+                    onChange={(e) => setRepetirClave(e.target.value)}
                     required
                   />
                 </Field>
