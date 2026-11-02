@@ -1,5 +1,6 @@
 import React from "react";
 import { LogOut, User, Menu } from "lucide-react";
+import ThemeToggle from "../ui/ThemeToggle";
 
 interface UserShape {
   email?: string;
@@ -34,7 +35,7 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <header
-      className={`border-b border-gray-100 bg-white/85 backdrop-blur ${className}`}
+      className={`border-b border-gray-100 bg-surface/85 backdrop-blur ${className}`}
     >
       <div className="flex items-center justify-between gap-4 px-4 py-2 md:px-6">
         {showMenuButton ? (
@@ -50,11 +51,12 @@ const Header: React.FC<HeaderProps> = ({
         )}
 
         <div className="ml-auto flex items-center gap-2 md:gap-4">
+          <ThemeToggle />
           <div className="text-right hidden md:block">
             <p className="text-sm font-medium text-gray-900">{user?.email}</p>
             <p className="text-xs text-gray-500">{roleLabel}</p>
           </div>
-          <div className="flex items-center justify-center w-9 h-9 bg-brand-600 rounded-xl shadow-sm">
+          <div className="flex items-center justify-center w-9 h-9 bg-action rounded-xl shadow-sm">
             <User className="w-4 h-4 text-white" />
           </div>
           <button
