@@ -14,6 +14,7 @@ export default {
          */
         page: 'rgb(var(--c-page) / <alpha-value>)',
         surface: 'rgb(var(--c-surface) / <alpha-value>)',
+        field: 'rgb(var(--c-field) / <alpha-value>)',
         heading: 'rgb(var(--c-heading) / <alpha-value>)',
         // Acciones sólidas: verde de marca con texto blanco en ambos temas.
         action: {

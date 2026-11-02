@@ -121,6 +121,7 @@ El modo oscuro conserva la identidad verde y cambia la jerarquía de superficies
 - **Acento** (`brand-600`, `#4cb98a`): marca, acciones e iconos sobre superficies oscuras, aligerado para conservar contraste.
 - **Paneles de marca** (`bg-brand-950`): conservan su verde bosque profundo y su texto menta claro en ambos temas.
 - **Semánticos**: los fondos suaves bajan a tintas de baja luminosidad (`red-50`, `amber-50`, `emerald-50` nocturnos) y las tintas de texto se aligeran al extremo claro de cada familia; los rellenos sólidos (dots, badges con texto blanco) conservan los valores literales de siempre.
+- **Campos de formulario** (`field`, `#121b16`): receso tintado en verde con borde sutil — nunca el gris azulado que el navegador pinta por defecto ni el tinte de autocompletado, que se tematiza desde la paleta.
 
 ### Named Rules
 **The Paper Is Always Paper Rule.** El remito es un documento: se imprime sobre papel blanco con tinta oscura aunque el modo oscuro esté activo (`@media print` restaura la paleta clara) y en pantalla vive en un scope `theme-light`.

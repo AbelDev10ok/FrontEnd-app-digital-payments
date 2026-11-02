@@ -21,6 +21,7 @@
   /* Superficies */
   --c-page: 249 250 251;
   --c-surface: 255 255 255;
+  --c-field: 255 255 255;
 
   /* Neutrales (escala gray de Tailwind v3, 1:1) */
   --c-gray-50: 249 250 251;
@@ -88,6 +89,9 @@ html.dark {
   /* Superficies: carbón tintado en verde, capas de superficie a tarjeta */
   --c-page: 14 22 19;
   --c-surface: 23 34 29;
+  /* Campos de formulario: receso tintado en verde (el gris azulado que
+     pintaba el navegador no pertenece a la paleta) */
+  --c-field: 18 27 22;
 
   /* Neutrales: tinta menta fría sobre superficies oscuras */
   --c-gray-50: 30 43 37;
@@ -172,6 +176,34 @@ html.dark {
     color: rgb(var(--c-brand-900));
   }
 
+  /*
+   * Campos de formulario: fondo propio de la paleta (receto tintado en
+   * verde en modo oscuro). Cualquier utilidad `bg-*` del componente pisa
+   * esta base (capa utilities > base), así que los estados disabled/error
+   * conservan sus fondos.
+   */
+  input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']):not([type='color']),
+  select,
+  textarea {
+    background-color: rgb(var(--c-field));
+  }
+
+  /*
+   * Autocompletado del navegador: tematizado para que nunca pinte su tinte
+   * azulado sobre los campos en modo oscuro (superficie del navegador que
+   * no pertenece al design system).
+   */
+  html.dark input:-webkit-autofill,
+  html.dark input:-webkit-autofill:hover,
+  html.dark input:-webkit-autofill:focus,
+  html.dark textarea:-webkit-autofill,
+  html.dark select:-webkit-autofill {
+    -webkit-text-fill-color: rgb(var(--c-gray-900));
+    caret-color: rgb(var(--c-gray-900));
+    box-shadow: 0 0 0 1000px rgb(var(--c-field)) inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
   /* Superficies del navegador tematizadas sólo en modo oscuro: el modo claro
      conserva los defaults actuales sin cambios. */
   html.dark body {
@@ -204,6 +236,7 @@ html.dark {
 
     --c-page: 249 250 251;
     --c-surface: 255 255 255;
+    --c-field: 255 255 255;
 
     --c-gray-50: 249 250 251;
     --c-gray-100: 243 244 246;
