@@ -3,6 +3,8 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import useSaleForm from '../useSaleForm';
 import { salesService } from '@/features/ventas/services/salesServices';
 import { clientService } from '@/features/clients/services/clientServices';
+import { businessService } from '@/features/negocio/services/businessService';
+import type { BusinessMe } from '@/shared/types/business';
 import type { SaleFormData } from '@/shared/types/sales';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
 
@@ -19,6 +21,20 @@ vi.mock('@/features/ventas/services/salesServices', () => ({
 vi.mock('@/features/clients/services/clientServices', () => ({
   clientService: { getClientsPaginated: vi.fn() },
 }));
+
+vi.mock('@/features/negocio/services/businessService', () => ({
+  businessService: { getMyBusiness: vi.fn() },
+}));
+
+/** Negocio sin valores por defecto configurados. */
+const negocioBase: BusinessMe = {
+  id: 1,
+  name: 'Negocio',
+  currency: 'ARS',
+  defaultInterestRate: null,
+  defaultPaymentFrequency: null,
+  planStatus: 'TRIAL',
+};
 
 const client1 = {
   id: 1,
@@ -57,7 +73,7 @@ const validForm = (prev: SaleFormData): SaleFormData => ({
   productId: '1',
   descripcion: 'Heladera Samsung',
   payments: 'SEMANAL',
-  quantityFees: 1,
+  quantityFees: 2,
   amountFee: '600',
   cost: '400',
   firstFeeDate: prev.fecha,
@@ -71,6 +87,7 @@ describe('useSaleForm', () => {
     vi.mocked(salesService.getClientsBySeller).mockReset();
     vi.mocked(salesService.createSale).mockReset();
     vi.mocked(clientService.getClientsPaginated).mockReset();
+    vi.mocked(businessService.getMyBusiness).mockReset();
 
     vi.mocked(salesService.getProductTypes).mockResolvedValue([{ id: 1, name: 'VENTA' }]);
     vi.mocked(salesService.getProducts).mockResolvedValue([varianteHeladera]);
@@ -78,6 +95,7 @@ describe('useSaleForm', () => {
     vi.mocked(clientService.getClientsPaginated).mockResolvedValue({ content: [client1] } as never);
     vi.mocked(salesService.getClientsBySeller).mockResolvedValue([]);
     vi.mocked(salesService.createSale).mockResolvedValue({} as never);
+    vi.mocked(businessService.getMyBusiness).mockResolvedValue(negocioBase);
   });
 
   it('inicializa el formulario según el tipo PRESTAMO', () => {
@@ -85,7 +103,8 @@ describe('useSaleForm', () => {
     expect(result.current.formData.tipo).toBe('PRESTAMO');
     expect(result.current.formData.descripcion).toBe('');
     expect(result.current.formData.payments).toBe('SEMANAL');
-    expect(result.current.formData.quantityFees).toBe(1);
+    // En cuotas el piso son 2: una sola cuota equivale a vender al contado.
+    expect(result.current.formData.quantityFees).toBe(2);
   });
 
   it('el formulario vacío tiene errores de validación pero no bloquea el envío', () => {
@@ -146,8 +165,7 @@ describe('useSaleForm', () => {
         kind: 'VENTA',
         descriptionProduct: 'Heladera Samsung',
         payments: 'SEMANAL',
-        quantityFees: 1,
-        // El valor de la cuota queda precargado con el total de contado (500 × 1)
+        quantityFees: 2,
         amountFee: 500,
         // La venta manda la variante (SKU): el backend deriva costo y categoría
         variant: 1,
@@ -564,11 +582,12 @@ describe('useSaleForm', () => {
     });
     // La suma de los 3 precios unitarios es el piso de la venta
     await act(async () => {
-      result.current.setFormData((prev) => ({ ...prev, amountFee: '1000' }));
+      result.current.setFormData((prev) => ({ ...prev, amountFee: '700' }));
     });
 
+    // 2 cuotas de 700 = 1400, por debajo del piso de 1500
     expect(result.current.errors.amountFee).toBe(
-      `El total a cobrar (${formatCurrency(1000)}) no puede ser menor al precio de venta (${formatCurrency(1500)}).`,
+      `El total a cobrar (${formatCurrency(1400)}) no puede ser menor al precio de venta (${formatCurrency(1500)}).`,
     );
   });
 
@@ -615,6 +634,10 @@ describe('useSaleForm', () => {
 
     await act(async () => {
       result.current.setFormData((prev) => ({ ...prev, productId: '1' }));
+    });
+    // 2 cuotas de 250 = 500 (justo el precio de lista) y el costo es 600: avisa
+    await act(async () => {
+      result.current.setFormData((prev) => ({ ...prev, amountFee: '250' }));
     });
 
     // El negocio está en ARS; el importe que se está cargando es en USD
@@ -663,5 +686,108 @@ describe('useSaleForm', () => {
 
     const payload = vi.mocked(salesService.createSale).mock.calls[0][0];
     expect(payload).not.toHaveProperty('currency');
+  });
+
+  it('sugiere la tasa y la frecuencia por defecto del negocio al crear un préstamo', async () => {
+    vi.mocked(businessService.getMyBusiness).mockResolvedValue({
+      ...negocioBase,
+      defaultInterestRate: 15,
+      defaultPaymentFrequency: 'MENSUAL',
+    });
+
+    const { result } = renderHook(() => useSaleForm('PRESTAMO'));
+
+    await waitFor(() => expect(result.current.formData.interestRate).toBe('15'));
+    expect(result.current.formData.payments).toBe('MENSUAL');
+  });
+
+  it('no sugiere los defaults de préstamos en el alta de una venta', async () => {
+    vi.mocked(businessService.getMyBusiness).mockResolvedValue({
+      ...negocioBase,
+      defaultInterestRate: 15,
+      defaultPaymentFrequency: 'MENSUAL',
+    });
+
+    const { result } = renderHook(() => useSaleForm('VENTA'));
+    await waitFor(() => expect(businessService.getMyBusiness).not.toHaveBeenCalled());
+
+    expect(result.current.formData.interestRate).toBe('');
+    expect(result.current.formData.payments).toBe('SEMANAL');
+  });
+
+  it('los defaults del negocio no pisan lo que el usuario ya cargó', async () => {
+    let resolver: (negocio: BusinessMe) => void = () => {};
+    vi.mocked(businessService.getMyBusiness).mockReturnValue(
+      new Promise<BusinessMe>((resolve) => {
+        resolver = resolve;
+      }),
+    );
+
+    const { result } = renderHook(() => useSaleForm('PRESTAMO'));
+
+    await act(async () => {
+      result.current.handleInputChange({ target: { name: 'interestRate', value: '7' } } as never);
+      result.current.handleInputChange({ target: { name: 'payments', value: 'QUINCENAL' } } as never);
+    });
+
+    await act(async () => {
+      resolver({ ...negocioBase, defaultInterestRate: 20, defaultPaymentFrequency: 'MENSUAL' });
+    });
+
+    expect(result.current.formData.interestRate).toBe('7');
+    expect(result.current.formData.payments).toBe('QUINCENAL');
+  });
+
+  it('un default legado de contado no convierte el préstamo en contado', async () => {
+    vi.mocked(businessService.getMyBusiness).mockResolvedValue({
+      ...negocioBase,
+      defaultInterestRate: 10,
+      defaultPaymentFrequency: 'CONTADO',
+    });
+
+    const { result } = renderHook(() => useSaleForm('PRESTAMO'));
+
+    await waitFor(() => expect(result.current.formData.interestRate).toBe('10'));
+    // El préstamo sigue con una frecuencia en cuotas: CONTADO no aplica.
+    expect(result.current.formData.payments).toBe('SEMANAL');
+    expect(result.current.errors.payments).toBeUndefined();
+  });
+
+  it('una operación en cuotas no acepta una sola cuota', async () => {
+    const { result } = renderHook(() => useSaleForm('VENTA'));
+    await waitFor(() => expect(result.current.products.length).toBe(1));
+
+    await act(async () => {
+      result.current.setFormData((prev) => ({ ...validForm(prev), quantityFees: 1 }));
+    });
+
+    expect(result.current.errors.quantityFees).toBe('La cantidad de cuotas debe ser al menos 2');
+
+    let submitted: unknown;
+    await act(async () => {
+      submitted = await result.current.handleSubmit();
+    });
+
+    expect(submitted).toBe(false);
+    expect(salesService.createSale).not.toHaveBeenCalled();
+  });
+
+  it('un préstamo tampoco acepta una sola cuota', async () => {
+    const { result } = renderHook(() => useSaleForm('PRESTAMO'));
+    await waitFor(() => expect(result.current.formData.firstFeeDate).toBeTruthy());
+
+    await act(async () => {
+      result.current.setFormData((prev) => ({
+        ...prev,
+        cliente: 1,
+        payments: 'SEMANAL',
+        quantityFees: 1,
+        cost: '300',
+        interestRate: '10',
+        firstFeeDate: prev.fecha,
+      }));
+    });
+
+    expect(result.current.errors.quantityFees).toBe('La cantidad de cuotas debe ser al menos 2');
   });
 });

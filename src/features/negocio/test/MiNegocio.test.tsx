@@ -272,4 +272,77 @@ describe('MiNegocio', () => {
     ).toBeInTheDocument();
     expect(businessService.updateMyBusiness).not.toHaveBeenCalled();
   });
+
+  it('guarda los valores por defecto de préstamos', async () => {
+    const user = userEvent.setup();
+    vi.mocked(businessService.updateMyBusiness).mockResolvedValue({
+      ...negocio,
+      defaultInterestRate: 12.5,
+      defaultPaymentFrequency: 'MENSUAL',
+    });
+
+    renderPagina();
+    await screen.findByDisplayValue('Cobros del Sur');
+
+    await user.type(screen.getByLabelText('Tasa de interés (%)'), '12.5');
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Frecuencia de cuota' }),
+      'MENSUAL',
+    );
+    await user.click(screen.getByRole('button', { name: /Guardar defaults/ }));
+
+    await waitFor(() =>
+      expect(businessService.updateMyBusiness).toHaveBeenCalledWith(
+        expect.objectContaining({
+          defaultInterestRate: 12.5,
+          defaultPaymentFrequency: 'MENSUAL',
+        }),
+      ),
+    );
+  });
+
+  it('permite borrar los valores por defecto enviando la tasa nula y la frecuencia vacía', async () => {
+    const user = userEvent.setup();
+    vi.mocked(businessService.getMyBusiness).mockResolvedValue({
+      ...negocio,
+      defaultInterestRate: 12.5,
+      defaultPaymentFrequency: 'MENSUAL',
+    });
+    vi.mocked(businessService.updateMyBusiness).mockResolvedValue(negocio);
+
+    renderPagina();
+    await screen.findByDisplayValue('Cobros del Sur');
+
+    await user.clear(screen.getByLabelText('Tasa de interés (%)'));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Frecuencia de cuota' }), '');
+    await user.click(screen.getByRole('button', { name: /Guardar defaults/ }));
+
+    await waitFor(() =>
+      expect(businessService.updateMyBusiness).toHaveBeenCalledWith(
+        expect.objectContaining({ defaultInterestRate: null, defaultPaymentFrequency: '' }),
+      ),
+    );
+  });
+
+  it('no ofrece contado como frecuencia por defecto: un préstamo siempre es en cuotas', async () => {
+    renderPagina();
+    await screen.findByDisplayValue('Cobros del Sur');
+
+    const frecuencia = screen.getByRole('combobox', { name: 'Frecuencia de cuota' });
+    const opciones = Array.from(frecuencia.querySelectorAll('option')).map((o) => o.value);
+
+    expect(opciones).toEqual(['', 'SEMANAL', 'QUINCENAL', 'MENSUAL']);
+  });
+
+  it('un default legado de contado se muestra como sin valor por defecto', async () => {
+    vi.mocked(businessService.getMyBusiness).mockResolvedValue({
+      ...negocio,
+      defaultPaymentFrequency: 'CONTADO',
+    });
+
+    renderPagina();
+    await screen.findByDisplayValue('Cobros del Sur');
+
+    expect(screen.getByRole('combobox', { name: 'Frecuencia de cuota' })).toHaveValue('');
+  });
 });

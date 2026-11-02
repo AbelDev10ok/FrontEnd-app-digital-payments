@@ -228,11 +228,15 @@ const CreateSaleForm: React.FC<Props> = ({ formData, setFormData, handleInputCha
                 required
                 value={formData.payments}
                 onChange={e => {
-                  const { name, value } = e.target;
+                  // `handleInputChange` aplica el método de pago y marca el campo
+                  // como propio del usuario (no lo pisa un default que llega tarde).
+                  const { value } = e.target;
+                  handleInputChange(e);
+                  // Al contado no hay cuotas; en cuotas el piso son 2, porque una
+                  // sola cuota es una operación al contado.
                   setFormData((prev: any) => ({
                     ...prev,
-                    [name]: value,
-                    quantityFees: value === 'CONTADO' ? 1 : prev.quantityFees,
+                    quantityFees: value === 'CONTADO' ? 1 : Math.max(2, Number(prev.quantityFees) || 2),
                   }));
                 }}
                 options={paymentOptions}
