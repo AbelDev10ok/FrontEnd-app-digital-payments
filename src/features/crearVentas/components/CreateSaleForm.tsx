@@ -68,7 +68,8 @@ interface ResumenVentaProps {
 
 /** Resumen de la venta que se está armando: costo, ganancia y total, en filas. */
 const ResumenVenta: React.FC<ResumenVentaProps> = ({ costoTotal, totalCobrar, formatCurrency }) => {
-  const ganancia = costoTotal != null && totalCobrar != null ? totalCobrar - costoTotal : null;
+  const resultado = costoTotal != null && totalCobrar != null ? totalCobrar - costoTotal : null;
+  const esPerdida = resultado != null && resultado < 0;
   return (
     <div className="rounded-xl bg-brand-50 border border-brand-100 p-4">
       <p className="text-sm font-medium text-brand-700 mb-2">Resumen de la venta</p>
@@ -77,11 +78,11 @@ const ResumenVenta: React.FC<ResumenVentaProps> = ({ costoTotal, totalCobrar, fo
           <span>Costo</span>
           <span className="font-semibold">{costoTotal != null ? formatCurrency(costoTotal) : '—'}</span>
         </p>
-        {ganancia != null && (
+        {resultado != null && (
           <p className="flex justify-between gap-3">
-            <span>Ganancia</span>
-            <span className={`font-semibold ${ganancia >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
-              {formatCurrency(ganancia)}
+            <span>{esPerdida ? 'Pérdida' : 'Ganancia'}</span>
+            <span className={`font-semibold ${esPerdida ? 'text-red-700' : 'text-emerald-700'}`}>
+              {formatCurrency(Math.abs(resultado))}
             </span>
           </p>
         )}
