@@ -25,6 +25,7 @@ interface CuotasProps {
 }
 
 const ESTADOS: { value: CuotaEstadoFiltro; label: string }[] = [
+  { value: 'A_COBRAR', label: 'A cobrar (30 días)' },
   { value: 'PENDING', label: 'Todas las pendientes' },
   { value: 'TODAY', label: 'Vencen hoy' },
   { value: 'DELAYED', label: 'Vencidas' },
@@ -36,7 +37,7 @@ const formatearFecha = (iso: string) => (iso ? iso.split('-').reverse().join('/'
 
 /** Estado válido de la URL; cualquier valor desconocido cae al default. */
 const estadoInicial = (param: string | null): CuotaEstadoFiltro =>
-  ESTADOS.find((op) => op.value === param)?.value ?? 'PENDING';
+  ESTADOS.find((op) => op.value === param)?.value ?? 'A_COBRAR';
 
 const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
   // El filtro de estado vive también en la URL (como en el tablero): la alerta
@@ -145,15 +146,15 @@ const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
               onChange={(e) => cambiarFiltros(() => setHasta(e.target.value))}
             />
           </div>
-          {(desde || hasta || estado !== 'PENDING') && (
+          {(desde || hasta || estado !== 'A_COBRAR') && (
             <Button
               variant="ghost"
               onClick={() =>
                 cambiarFiltros(() => {
                   setDesde('');
                   setHasta('');
-                  setEstado('PENDING');
-                  actualizarEstado('PENDING');
+                  setEstado('A_COBRAR');
+                  actualizarEstado('A_COBRAR');
                 })
               }
             >

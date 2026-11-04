@@ -64,7 +64,7 @@ export interface CuotaItem {
   currency?: string | null;
 }
 
-export type CuotaEstadoFiltro = "PENDING" | "TODAY" | "DELAYED" | "UPCOMING" | "PAID";
+export type CuotaEstadoFiltro = "PENDING" | "TODAY" | "DELAYED" | "UPCOMING" | "PAID" | "A_COBRAR";
 
 export type SaleKindParam = "VENTA" | "PRESTAMO";
 

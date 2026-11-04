@@ -38,7 +38,6 @@ vi.mock('@/features/ventas/services/salesServices', () => ({
     deleteSale: vi.fn(),
     markFeeAsPaid: vi.fn(),
     postponeFee: vi.fn(),
-    deleteFee: vi.fn(),
     getDashboardStats: vi.fn().mockResolvedValue({
       year: 2026,
       month: 1,
