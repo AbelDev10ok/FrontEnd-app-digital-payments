@@ -96,4 +96,11 @@ describe("Login", () => {
     await user.click(screen.getByRole("button", { name: "Iniciar Sesión" }));
     expect(loginMock).toHaveBeenCalledWith("a@b.com", "123456");
   });
+
+  it("tiene un enlace para recuperar la contraseña olvidada", () => {
+    renderLogin();
+    expect(
+      screen.getByRole("link", { name: /olvidaste tu contraseña/i }),
+    ).toHaveAttribute("href", "/forgot-password");
+  });
 });

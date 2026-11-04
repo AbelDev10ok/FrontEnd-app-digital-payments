@@ -59,6 +59,68 @@ export async function register(
   }
   throw new Error(apiResponse.message || 'No se pudo completar el registro. Intente nuevamente.');
 }
+// Verificación de correo al registrarse. El endpoint responde envelope
+// { message, status, data } (a diferencia de forgot/reset que responden texto
+// plano) y el token viene como query param.
+export async function verifyEmail(token: string): Promise<string> {
+  const response = await fetch(
+    `${AUTH_API_URL}/verify?token=${encodeURIComponent(token)}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+
+  const apiResponse: ApiResponse<null> = await response.json();
+
+  if (response.ok && apiResponse.status === 'OK') {
+    return apiResponse.message;
+  }
+  throw new Error(apiResponse.message || 'No se pudo verificar el correo.');
+}
+// Solicitud de restablecimiento de contraseña. El backend responde texto plano
+// (sin envelope) y siempre con el mismo mensaje, exista o no el email.
+export async function forgotPassword(email: string): Promise<string> {
+  const response = await fetch(`${AUTH_API_URL}/forgot-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  const text = await response.text();
+  if (response.ok) {
+    return text;
+  }
+  throw new Error(text || 'No se pudo enviar el enlace. Intentá nuevamente.');
+}
+
+// Cambia la contraseña con el token que llegó por email. Responde texto plano
+// (sin envelope): el mensaje de éxito o de error viene directo en el cuerpo.
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+): Promise<string> {
+  const response = await fetch(
+    `${AUTH_API_URL}/reset-password?token=${encodeURIComponent(token)}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ newPassword }),
+    },
+  );
+
+  const text = await response.text();
+  if (response.ok) {
+    return text;
+  }
+  throw new Error(text || 'No se pudo restablecer la contraseña.');
+}
 // Función para refrescar el token
 // El endpoint /auth/refresh-token responde raw ({ accessToken, refreshToken }), sin envelope
 export async function refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {

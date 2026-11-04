@@ -41,6 +41,15 @@ const Privacidad = lazy(() => import("@/features/landing/pages/Privacidad"));
 const Register = lazy(
   () => import("@/features/auth/components/Register"),
 );
+const ForgotPassword = lazy(
+  () => import("@/features/auth/components/ForgotPassword"),
+);
+const ResetPassword = lazy(
+  () => import("@/features/auth/components/ResetPassword"),
+);
+const VerifyEmail = lazy(
+  () => import("@/features/auth/components/VerifyEmail"),
+);
 const CobrosDeHoy = lazy(
   () => import("@/features/cobros/pages/CobrosDeHoy"),
 );
@@ -67,6 +76,9 @@ function App() {
 
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify" element={<VerifyEmail />} />
 
             {/* Ruta protegida para usuarios */}
             <Route
