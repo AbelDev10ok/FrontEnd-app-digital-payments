@@ -41,14 +41,17 @@ const SaleRow: React.FC<Props> = ({
   // Eliminar es solo para errores de carga: sin cobros (ni parciales) y sin
   // remito emitido. El backend rechaza el borrado en ambos casos.
   const puedeEliminar = (sale.collectedAmount ?? 0) === 0 && !sale.remito;
+  // Editar solo tiene algo corregible en préstamos y ventas sin producto: una
+  // venta con producto tiene todo sellado (producto, categoría, precio y autoría).
+  const puedeEditar = !anulada && (esPrestamo || !sale.product);
 
   // Mismas reglas que el detalle: una venta anulada es terminal (no se edita
   // ni se anula de nuevo), remito solo de ventas emitibles o ya emitidas y
   // eliminar solo sin cobros.
   const acciones: ActionMenuItem[] = [
-    ...(anulada
-      ? []
-      : [{ label: "Editar", icon: Pencil, onSelect: () => onEdit(sale) }]),
+    ...(puedeEditar
+      ? [{ label: "Editar", icon: Pencil, onSelect: () => onEdit(sale) }]
+      : []),
     ...(sale.kind === "VENTA" && (!anulada || sale.remito)
       ? [
           {

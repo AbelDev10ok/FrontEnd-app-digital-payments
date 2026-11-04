@@ -12,6 +12,8 @@ export interface Client {
   dni?: string;
   /** Deuda por moneda ISO 4217: las monedas distintas nunca se suman entre sí */
   deudaTotal?: MontosPorMoneda;
+  /** Clientes en cartera cuando este cliente es vendedor (sólo lo trae el detalle). */
+  clientesEnCartera?: number;
 }
 
 

@@ -186,12 +186,6 @@ export interface UpdateSaleRequest {
   /** Variante/SKU vendida (opcional) */
   variant?: number | null;
   kind: SaleKind;
-  /**
-   * Corrección deliberada del vendedor sellado en la operación. `null` = sin
-   * atribuir; las reasignaciones del cliente no pasan por acá.
-   */
-  sellerId?: number | null;
-
 }
 
 /** Resumen del remito emitido de una venta. */

@@ -117,6 +117,16 @@ describe('SaleRow', () => {
     expect(screen.getByRole('menuitem', { name: 'Eliminar' })).toBeInTheDocument();
   });
 
+  it('no ofrece editar una venta con producto, pero sí anularla', () => {
+    renderFila(crearVenta({ product: { id: 7, name: 'Televisor', variantId: 9 } }));
+
+    abrirMenu();
+
+    // Producto, categoría, precio y autoría están sellados: no hay nada que corregir
+    expect(screen.queryByRole('menuitem', { name: 'Editar' })).not.toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Anular venta' })).toBeInTheDocument();
+  });
+
   it('permite ver el remito de una venta anulada que ya lo tenía', () => {
     renderFila(
       crearVenta({

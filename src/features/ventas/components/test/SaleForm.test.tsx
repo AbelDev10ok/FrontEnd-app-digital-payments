@@ -88,4 +88,21 @@ describe('SaleForm', () => {
     const costo = screen.getByLabelText(/Costo/);
     expect(costo.parentElement?.querySelector('span')?.textContent).toBe('US$');
   });
+
+  it('no permite corregir el vendedor: la autoría se sella al crear la operación', () => {
+    render(
+      <MemoryRouter>
+        <SaleForm
+          initialValues={ventaEnDolares}
+          onSubmit={vi.fn()}
+          loading={false}
+          submitLabel="Guardar"
+          cancelTo="/dashboard/ventas/todas"
+          productTypes={[]}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByText(/vendedor/i)).not.toBeInTheDocument();
+  });
 });
