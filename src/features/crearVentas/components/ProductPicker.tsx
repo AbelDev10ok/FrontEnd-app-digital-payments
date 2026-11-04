@@ -144,7 +144,7 @@ const ProductPicker: React.FC<ProductPickerProps> = ({
           aria-controls={hasChildren ? `category-children-${category.id}` : undefined}
           className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
             isSelected
-              ? "bg-brand-600 text-white"
+              ? "bg-action text-white"
               : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}
         >
@@ -177,7 +177,7 @@ const ProductPicker: React.FC<ProductPickerProps> = ({
     : [];
 
   return (
-    <div className="bg-white rounded-card shadow-card border border-gray-100 p-6">
+    <div className="bg-surface rounded-card shadow-card border border-gray-100 p-6">
       <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
         Elegir producto
       </h2>
@@ -232,7 +232,7 @@ const ProductPicker: React.FC<ProductPickerProps> = ({
                 onClick={() => setSelectedCategory(null)}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   selectedCategory === null
-                    ? "bg-brand-600 text-white"
+                    ? "bg-action text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
@@ -264,7 +264,7 @@ const ProductPicker: React.FC<ProductPickerProps> = ({
                     className={`relative p-4 rounded-xl border text-left transition-[background-color,border-color,box-shadow] duration-150 ease-out ${
                       isSelected
                         ? "bg-brand-50 border-brand-400 ring-2 ring-brand-400"
-                        : "bg-white border-gray-200 hover:bg-brand-50/40 hover:border-brand-200"
+                        : "bg-surface border-gray-200 hover:bg-brand-50/40 hover:border-brand-200"
                     } ${noDisponible ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                   >
                     {noPrice && (
@@ -329,7 +329,7 @@ const ProductPicker: React.FC<ProductPickerProps> = ({
           En móvil se apila (producto / stepper + total / botón a lo ancho): en
           una sola fila el contenido empujaba "Continuar" fuera de la tarjeta. */}
       {selectedProduct && (
-        <div className="sticky bottom-0 -mx-6 -mb-6 px-6 py-4 bg-white border-t border-gray-200 rounded-b-card">
+        <div className="sticky bottom-0 -mx-6 -mb-6 px-6 py-4 bg-surface border-t border-gray-200 rounded-b-card">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3">
               <Package className="w-6 h-6 shrink-0 text-brand-600" />

@@ -192,7 +192,7 @@ export default function PayFeeModal({ cuota, onClose, onPaid, deudaRestante, fec
                   <span className="text-gray-600 whitespace-nowrap">{formatDateHour(pago.paidAt)}</span>
                   <span className="flex items-center gap-2">
                     <span className="text-xs text-gray-500">{etiquetaMetodo(pago.paymentMethod)}</span>
-                    <span className="font-mono tabular-nums font-semibold text-brand-950">
+                    <span className="font-mono tabular-nums font-semibold text-heading">
                       {formatCurrency(pago.amount, cuota.currency ?? undefined)}
                     </span>
                   </span>

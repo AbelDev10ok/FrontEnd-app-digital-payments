@@ -517,17 +517,24 @@ export const salesService = {
     }
   },
 
-  async deleteFee(feeId: number): Promise<void> {
-    const response = await authenticatedFetch(`${LOANS_API_URL}/fee/${feeId}`, {
-      method: "DELETE",
-    });
+  /**
+   * Reprogramación en bloque: corre esta cuota y todas las impagas que le siguen
+   * el mismo delta en días naturales (nunca hacia atrás).
+   */
+  async reprogramFee(feeId: number, days: number): Promise<void> {
+    const url = `${LOANS_API_URL}/fee/${feeId}/reprogram?days=${days}`;
+
+    const response = await authenticatedFetch(url, { method: "POST" });
 
     if (!response.ok) {
       try {
         const apiResponse = await response.json();
+        console.error("Error al reprogramar las cuotas:", apiResponse);
         throw new Error(apiResponse.message);
       } catch (e) {
-        throw new Error(e instanceof Error ? e.message : "Ocurrió un error desconocido");
+        const errorMessage =
+          e instanceof Error ? e.message : "Ocurrió un error desconocido";
+        throw new Error(errorMessage);
       }
     }
   },

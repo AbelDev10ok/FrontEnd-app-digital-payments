@@ -169,7 +169,7 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
-          <div className="w-12 h-12 bg-brand-600 shadow-sm rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 bg-action shadow-sm rounded-full flex items-center justify-center">
             <span className="text-white font-medium text-lg">
               {client.name.split(' ').map(n => n[0]).join('')}
             </span>

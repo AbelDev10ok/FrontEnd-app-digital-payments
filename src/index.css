@@ -2,6 +2,168 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Temas (DESIGN.md → "Modo oscuro").
+ *
+ * Cada color tematizable es una variable CSS con tripletes RGB, consumida
+ * desde tailwind.config.js como `rgb(var(--c-x) / <alpha-value>)`. Los
+ * valores claros son idénticos a los hexadecimales que reemplazan: el modo
+ * claro no cambia ni un píxel. `html.dark` invierte la paleta hacia el mundo
+ * nocturno (carbón tintado en verde, tinta menta, acentos aligerados) y
+ * `@media print` la vuelve a forzar en claro: el remito siempre se imprime
+ * sobre papel blanco.
+ */
+
+:root,
+.theme-light {
+  color-scheme: light;
+
+  /* Superficies */
+  --c-page: 249 250 251;
+  --c-surface: 255 255 255;
+  --c-field: 255 255 255;
+
+  /* Neutrales (escala gray de Tailwind v3, 1:1) */
+  --c-gray-50: 249 250 251;
+  --c-gray-100: 243 244 246;
+  --c-gray-200: 229 231 235;
+  --c-gray-300: 209 213 219;
+  --c-gray-400: 156 163 175;
+  --c-gray-500: 107 114 128;
+  --c-gray-600: 75 85 99;
+  --c-gray-700: 55 65 81;
+  --c-gray-800: 31 41 55;
+  --c-gray-900: 17 24 39;
+
+  /* Marca */
+  --c-heading: 7 38 28;
+  --c-brand-50: 238 250 244;
+  --c-brand-100: 215 242 228;
+  --c-brand-200: 176 229 203;
+  --c-brand-600: 26 128 89;
+  --c-brand-700: 22 103 73;
+  --c-brand-800: 19 82 59;
+  --c-brand-900: 17 67 50;
+
+  /* Semánticos (rojo, ámbar, esmeralda, violeta) */
+  --c-red-50: 254 242 242;
+  --c-red-100: 254 226 226;
+  --c-red-200: 254 202 202;
+  --c-red-300: 252 165 165;
+  --c-red-600: 220 38 38;
+  --c-red-700: 185 28 28;
+  --c-red-800: 153 27 27;
+  --c-red-900: 127 29 29;
+
+  --c-amber-50: 255 251 235;
+  --c-amber-100: 254 243 199;
+  --c-amber-200: 253 230 138;
+  --c-amber-300: 252 211 77;
+  --c-amber-600: 217 119 6;
+  --c-amber-700: 180 83 9;
+  --c-amber-800: 146 64 14;
+  --c-amber-900: 120 53 15;
+
+  --c-emerald-50: 236 253 245;
+  --c-emerald-100: 209 250 229;
+  --c-emerald-200: 167 243 208;
+  --c-emerald-300: 110 231 183;
+  --c-emerald-600: 5 150 105;
+  --c-emerald-700: 4 120 87;
+  --c-emerald-800: 6 95 70;
+  --c-emerald-900: 6 78 59;
+
+  --c-purple-50: 250 245 255;
+  --c-purple-100: 243 232 255;
+  --c-purple-200: 233 213 255;
+  --c-purple-300: 216 180 254;
+  --c-purple-600: 147 51 234;
+  --c-purple-700: 126 34 206;
+  --c-purple-800: 107 33 168;
+  --c-purple-900: 88 28 135;
+}
+
+html.dark {
+  color-scheme: dark;
+
+  /* Superficies: carbón tintado en verde, capas de superficie a tarjeta */
+  --c-page: 14 22 19;
+  --c-surface: 23 34 29;
+  /* Campos de formulario: receso tintado en verde (el gris azulado que
+     pintaba el navegador no pertenece a la paleta) */
+  --c-field: 18 27 22;
+
+  /* Neutrales: tinta menta fría sobre superficies oscuras */
+  --c-gray-50: 30 43 37;
+  --c-gray-100: 32 45 39;
+  --c-gray-200: 39 53 46;
+  --c-gray-300: 68 86 77;
+  --c-gray-400: 124 140 131;
+  --c-gray-500: 147 162 154;
+  --c-gray-600: 173 186 179;
+  --c-gray-700: 198 209 203;
+  --c-gray-800: 221 229 225;
+  --c-gray-900: 233 239 236;
+
+  /* Marca: titulares en menta claro, acentos aligerados para conservar
+     contraste sobre superficies oscuras */
+  --c-heading: 228 243 234;
+  --c-brand-50: 18 39 31;
+  --c-brand-100: 22 50 42;
+  --c-brand-200: 36 80 60;
+  --c-brand-600: 76 185 138;
+  --c-brand-700: 99 201 156;
+  --c-brand-800: 139 217 182;
+  --c-brand-900: 168 227 198;
+
+  /* Semánticos: tintas aligeradas, fondos a baja luminosidad */
+  --c-red-50: 43 22 24;
+  --c-red-100: 58 28 31;
+  --c-red-200: 92 42 44;
+  --c-red-300: 122 54 56;
+  --c-red-600: 248 113 113;
+  --c-red-700: 252 165 165;
+  --c-red-800: 254 202 202;
+  --c-red-900: 254 226 226;
+
+  --c-amber-50: 43 34 16;
+  --c-amber-100: 58 45 19;
+  --c-amber-200: 92 74 32;
+  --c-amber-300: 122 96 41;
+  --c-amber-600: 251 191 36;
+  --c-amber-700: 252 211 77;
+  --c-amber-800: 253 230 138;
+  --c-amber-900: 254 243 199;
+
+  --c-emerald-50: 16 38 28;
+  --c-emerald-100: 20 51 36;
+  --c-emerald-200: 31 80 56;
+  --c-emerald-300: 42 107 74;
+  --c-emerald-600: 52 211 153;
+  --c-emerald-700: 110 231 183;
+  --c-emerald-800: 167 243 208;
+  --c-emerald-900: 209 250 229;
+
+  --c-purple-50: 36 29 51;
+  --c-purple-100: 46 36 66;
+  --c-purple-200: 74 58 107;
+  --c-purple-300: 93 74 133;
+  --c-purple-600: 196 181 253;
+  --c-purple-700: 221 214 254;
+  --c-purple-800: 237 233 254;
+  --c-purple-900: 245 243 255;
+}
+
+/*
+ * Panel de marca (verde bosque profundo): el texto menta claro que vive
+ * dentro de un `bg-brand-950` conserva su paleta en ambos temas — el panel
+ * mantiene su identidad oscura también en modo claro.
+ */
+.bg-brand-950 {
+  --c-brand-100: 215 242 228;
+  --c-brand-200: 176 229 203;
+}
+
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
@@ -10,14 +172,52 @@
 
   /* Selección de texto con el verde de marca (lenguaje de la landing) */
   ::selection {
-    background-color: #d7f2e4;
-    color: #114332;
+    background-color: rgb(var(--c-brand-100));
+    color: rgb(var(--c-brand-900));
+  }
+
+  /*
+   * Campos de formulario: fondo propio de la paleta (receto tintado en
+   * verde en modo oscuro). Cualquier utilidad `bg-*` del componente pisa
+   * esta base (capa utilities > base), así que los estados disabled/error
+   * conservan sus fondos.
+   */
+  input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']):not([type='color']),
+  select,
+  textarea {
+    background-color: rgb(var(--c-field));
+  }
+
+  /*
+   * Autocompletado del navegador: tematizado para que nunca pinte su tinte
+   * azulado sobre los campos en modo oscuro (superficie del navegador que
+   * no pertenece al design system).
+   */
+  html.dark input:-webkit-autofill,
+  html.dark input:-webkit-autofill:hover,
+  html.dark input:-webkit-autofill:focus,
+  html.dark textarea:-webkit-autofill,
+  html.dark select:-webkit-autofill {
+    -webkit-text-fill-color: rgb(var(--c-gray-900));
+    caret-color: rgb(var(--c-gray-900));
+    box-shadow: 0 0 0 1000px rgb(var(--c-field)) inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  /* Superficies del navegador tematizadas sólo en modo oscuro: el modo claro
+     conserva los defaults actuales sin cambios. */
+  html.dark body {
+    caret-color: rgb(var(--c-brand-600));
+    accent-color: rgb(var(--c-brand-600));
+    scrollbar-color: rgb(var(--c-gray-400)) transparent;
   }
 }
 
 /*
  * Remitos: la vista imprimible se genera en el navegador. El tamaño y margen
  * de página se fijan acá; el resto del documento usa utilidades `print:`.
+ * Al imprimir se restaura la paleta clara completa: el papel siempre es
+ * blanco aunque la app esté en modo oscuro.
  */
 @media print {
   @page {
@@ -28,5 +228,70 @@
   html,
   body {
     background: #fff !important;
+  }
+
+  :root:root,
+  html.dark {
+    color-scheme: light;
+
+    --c-page: 249 250 251;
+    --c-surface: 255 255 255;
+    --c-field: 255 255 255;
+
+    --c-gray-50: 249 250 251;
+    --c-gray-100: 243 244 246;
+    --c-gray-200: 229 231 235;
+    --c-gray-300: 209 213 219;
+    --c-gray-400: 156 163 175;
+    --c-gray-500: 107 114 128;
+    --c-gray-600: 75 85 99;
+    --c-gray-700: 55 65 81;
+    --c-gray-800: 31 41 55;
+    --c-gray-900: 17 24 39;
+
+    --c-heading: 7 38 28;
+    --c-brand-50: 238 250 244;
+    --c-brand-100: 215 242 228;
+    --c-brand-200: 176 229 203;
+    --c-brand-600: 26 128 89;
+    --c-brand-700: 22 103 73;
+    --c-brand-800: 19 82 59;
+    --c-brand-900: 17 67 50;
+
+    --c-red-50: 254 242 242;
+    --c-red-100: 254 226 226;
+    --c-red-200: 254 202 202;
+    --c-red-300: 252 165 165;
+    --c-red-600: 220 38 38;
+    --c-red-700: 185 28 28;
+    --c-red-800: 153 27 27;
+    --c-red-900: 127 29 29;
+
+    --c-amber-50: 255 251 235;
+    --c-amber-100: 254 243 199;
+    --c-amber-200: 253 230 138;
+    --c-amber-300: 252 211 77;
+    --c-amber-600: 217 119 6;
+    --c-amber-700: 180 83 9;
+    --c-amber-800: 146 64 14;
+    --c-amber-900: 120 53 15;
+
+    --c-emerald-50: 236 253 245;
+    --c-emerald-100: 209 250 229;
+    --c-emerald-200: 167 243 208;
+    --c-emerald-300: 110 231 183;
+    --c-emerald-600: 5 150 105;
+    --c-emerald-700: 4 120 87;
+    --c-emerald-800: 6 95 70;
+    --c-emerald-900: 6 78 59;
+
+    --c-purple-50: 250 245 255;
+    --c-purple-100: 243 232 255;
+    --c-purple-200: 233 213 255;
+    --c-purple-300: 216 180 254;
+    --c-purple-600: 147 51 234;
+    --c-purple-700: 126 34 206;
+    --c-purple-800: 107 33 168;
+    --c-purple-900: 88 28 135;
   }
 }

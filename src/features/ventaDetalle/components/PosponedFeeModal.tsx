@@ -1,10 +1,13 @@
 import React, { useState } from "react";
-import { X, Calendar, Trash2 } from "lucide-react";
+import { X, Calendar } from "lucide-react";
 import { salesService } from "@/features/ventas/services/salesServices";
 import { useSalesCountsStore } from "@/features/ventas/store/salesCountsStore";
-import { Button, Input } from "@/shared/components/ui";
+import { Button, Input, Select } from "@/shared/components/ui";
 import { formatCurrency, getCurrencySymbol } from "@/shared/utils/formatCurrency";
 import { toInputDate } from "@/shared/utils/formatDate";
+
+/** Alcance de la edición de una cuota impaga (S13b). */
+type AlcanceEdicion = "SOLO_ESTA" | "SIGUIENTES";
 
 interface PostponeFeeModalProps {
   isOpen: boolean;
@@ -20,7 +23,24 @@ interface PostponeFeeModalProps {
   maxAmount: number;
   currentPaymentDate?: string;
   isPaid: boolean;
+  /**
+   * ¿Quedan cuotas impagas después de esta? Define el alcance por defecto:
+   * "Esta y las siguientes" cuando las hay, "Sólo esta" cuando es la última.
+   */
+  hasLaterUnpaidFees?: boolean;
 }
+
+/**
+ * Días naturales entre dos fechas YYYY-MM-DD. Se calculan en UTC para que el huso
+ * horario del navegador no corra el resultado.
+ */
+const diasEntre = (desde: string, hasta: string): number => {
+  const [anioDesde, mesDesde, diaDesde] = desde.split("-").map(Number);
+  const [anioHasta, mesHasta, diaHasta] = hasta.split("-").map(Number);
+  const inicio = Date.UTC(anioDesde, mesDesde - 1, diaDesde);
+  const fin = Date.UTC(anioHasta, mesHasta - 1, diaHasta);
+  return Math.round((fin - inicio) / 86_400_000);
+};
 
 const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
   isOpen,
@@ -35,17 +55,20 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
   maxAmount,
   currentPaymentDate,
   isPaid,
+  hasLaterUnpaidFees = false,
 }) => {
   const [newDate, setNewDate] = useState(currentDate);
   const [newPaymentDate, setNewPaymentDate] = useState(
     currentPaymentDate ? toInputDate(currentPaymentDate) : "",
   );
   const [newAmount, setNewAmount] = useState(currentAmount?.toString() ?? "");
+  const [alcance, setAlcance] = useState<AlcanceEdicion>(
+    hasLaterUnpaidFees ? "SIGUIENTES" : "SOLO_ESTA",
+  );
   const [loading, setLoading] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
-  // Editar o eliminar una cuota mueve los conteos del menú (A Cobrar / Activas).
+  // Editar una cuota mueve los conteos del menú (A Cobrar / Activas).
   const refreshSalesCounts = useSalesCountsStore((state) => state.refresh);
 
   if (!isOpen) return null;
@@ -55,10 +78,35 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Evita doble envío (Enter repetido) mientras se guarda o se elimina.
-    if (loading || deleting) return;
+    // Evita doble envío (Enter repetido) mientras se guarda.
+    if (loading) return;
     setLoading(true);
     setError("");
+
+    // "Esta y las siguientes" corre toda la cola de impagas el mismo delta: el
+    // backend no acepta deltas ≤ 0, así que hacia atrás o sin cambio se rechaza acá.
+    if (!isPaid && alcance === "SIGUIENTES") {
+      const delta = diasEntre(currentDate, newDate);
+      if (delta <= 0) {
+        setError("La nueva fecha debe ser posterior a la fecha actual de la cuota");
+        setLoading(false);
+        return;
+      }
+      try {
+        await salesService.reprogramFee(feeId, delta);
+        refreshSalesCounts();
+        onSuccess();
+        onClose();
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Error al reprogramar las cuotas",
+        );
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
     const amountVal = parseFloat(newAmount);
     if (!Number.isFinite(amountVal) || amountVal < 0) {
@@ -95,33 +143,11 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
     }
   };
 
-  const handleDelete = async () => {
-    if (loading || deleting) return;
-    if (!window.confirm("¿Estás seguro de que deseas eliminar esta cuota?"))
-      return;
-
-    setDeleting(true);
-    setError("");
-
-    try {
-      await salesService.deleteFee(feeId);
-      refreshSalesCounts();
-      onSuccess();
-      onClose();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Error al eliminar la cuota",
-      );
-    } finally {
-      setDeleting(false);
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm">
-      <div className="bg-white rounded-card w-full max-w-md p-6 m-4 shadow-xl">
+      <div className="bg-surface rounded-card w-full max-w-md p-6 m-4 shadow-xl">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="font-display text-lg font-bold tracking-tight text-brand-950">
+          <h3 className="font-display text-lg font-bold tracking-tight text-heading">
             {isPaid ? "Editar Cuota Pagada" : "Posponer Vencimiento"}
           </h3>
           <button
@@ -135,7 +161,28 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-6">
           {!isPaid && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="fee-alcance" className="block text-sm font-medium text-gray-700 mb-2">
+                Alcance
+              </label>
+              <Select
+                id="fee-alcance"
+                value={alcance}
+                onChange={(e) => setAlcance(e.target.value as AlcanceEdicion)}
+              >
+                <option value="SOLO_ESTA">Sólo esta cuota</option>
+                <option value="SIGUIENTES">Esta y las siguientes</option>
+              </Select>
+              <p className="text-xs text-gray-500 mt-2">
+                {alcance === "SIGUIENTES"
+                  ? "Esta cuota y todas las impagas siguientes corren la misma cantidad de días."
+                  : "Sólo cambia el vencimiento de esta cuota."}
+              </p>
+            </div>
+          )}
+
+          {!isPaid && (
+            <div>
+              <label htmlFor="fee-fecha-vencimiento" className="block text-sm font-medium text-gray-700 mb-2">
                 Fecha de Vencimiento
               </label>
               <div className="relative">
@@ -143,6 +190,7 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
                   <Calendar className="h-5 w-5 text-gray-400" />
                 </div>
                 <Input
+                  id="fee-fecha-vencimiento"
                   type="date"
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
@@ -206,34 +254,21 @@ const PostponeFeeModal: React.FC<PostponeFeeModalProps> = ({
             </div>
           )}
 
-          <div className="flex justify-between items-center pt-2">
+          <div className="flex justify-end gap-3 pt-2">
             <Button
-              variant="dangerOutline"
-              onClick={handleDelete}
-              disabled={loading || deleting}
-              title="Eliminar cuota"
-              leftIcon={<Trash2 className="w-4 h-4" />}
+              variant="secondary"
+              onClick={onClose}
+              disabled={loading}
             >
-              <span className="hidden sm:inline">
-                {deleting ? "Eliminando..." : "Eliminar"}
-              </span>
+              Cancelar
             </Button>
-            <div className="flex gap-3">
-              <Button
-                variant="secondary"
-                onClick={onClose}
-                disabled={loading || deleting}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={loading || deleting}
-              >
-                {loading ? "Guardando..." : "Confirmar Cambio"}
-              </Button>
-            </div>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={loading}
+            >
+              {loading ? "Guardando..." : "Confirmar Cambio"}
+            </Button>
           </div>
         </form>
       </div>

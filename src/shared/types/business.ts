@@ -31,7 +31,9 @@ export interface BusinessUpdateRequest {
   /** Vacío ("") borra el dato; ausente lo deja como está. */
   phone?: string;
   currency?: string;
+  /** Tasa por defecto de préstamos (%). `null` la borra: no se admite "sin tocar". */
   defaultInterestRate?: number | null;
+  /** Vacío ("") borra el default; las del negocio son SEMANAL, QUINCENAL o MENSUAL. */
   defaultPaymentFrequency?: string;
 }
 
@@ -62,7 +64,7 @@ export interface CuotaItem {
   currency?: string | null;
 }
 
-export type CuotaEstadoFiltro = "PENDING" | "TODAY" | "DELAYED" | "UPCOMING" | "PAID";
+export type CuotaEstadoFiltro = "PENDING" | "TODAY" | "DELAYED" | "UPCOMING" | "PAID" | "A_COBRAR";
 
 export type SaleKindParam = "VENTA" | "PRESTAMO";
 

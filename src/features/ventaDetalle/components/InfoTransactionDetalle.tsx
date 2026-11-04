@@ -11,8 +11,8 @@ interface InfoTransactionDetalleProps {
 
 export default function InfoTransactionDetalle({transaction, isLoan, formatDate}: InfoTransactionDetalleProps) {
   return (
-        <div className="bg-white rounded-card p-6 shadow-card">
-            <h3 className="font-display text-lg font-bold tracking-tight text-brand-950 mb-4">Información de la Transacción</h3>
+        <div className="bg-surface rounded-card p-6 shadow-card">
+            <h3 className="font-display text-lg font-bold tracking-tight text-heading mb-4">Información de la Transacción</h3>
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <Calendar className="w-5 h-5 text-gray-400" />

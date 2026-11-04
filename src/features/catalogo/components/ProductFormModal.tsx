@@ -632,7 +632,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         </div>
       )}
 
-      <div className="sticky bottom-0 -mx-6 mt-6 flex justify-end gap-2 border-t border-gray-100 bg-white px-6 pb-6 pt-4 after:absolute after:inset-x-0 after:top-full after:h-6 after:bg-white after:content-['']">
+      <div className="sticky bottom-0 -mx-6 mt-6 flex justify-end gap-2 border-t border-gray-100 bg-surface px-6 pb-6 pt-4 after:absolute after:inset-x-0 after:top-full after:h-6 after:bg-surface after:content-['']">
         <Button variant="ghost" onClick={onClose} disabled={saving}>
           Cancelar
         </Button>

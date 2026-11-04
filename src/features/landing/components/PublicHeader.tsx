@@ -1,5 +1,6 @@
 import { Link, NavLink } from 'react-router-dom';
 import { Wallet } from 'lucide-react';
+import ThemeToggle from '@shared/components/ui/ThemeToggle';
 
 interface PublicHeaderProps {
   /** Enlaces internos de la landing (anclas de la misma página o rutas). */
@@ -13,13 +14,13 @@ const NAV_HOME = [
 ];
 
 const PublicHeader: React.FC<PublicHeaderProps> = ({ variant = 'home' }) => (
-  <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/85 backdrop-blur">
+  <header className="sticky top-0 z-40 border-b border-gray-100 bg-surface/85 backdrop-blur">
     <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
       <Link to="/" className="flex items-center gap-2.5">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 shadow-sm">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-action shadow-sm">
           <Wallet className="h-5 w-5 text-white" aria-hidden="true" />
         </span>
-        <span className="font-display text-lg font-extrabold tracking-tight text-brand-950">
+        <span className="font-display text-lg font-extrabold tracking-tight text-heading">
           Cobros<span className="text-brand-600">&amp;</span>Ventas
         </span>
       </Link>
@@ -48,6 +49,7 @@ const PublicHeader: React.FC<PublicHeaderProps> = ({ variant = 'home' }) => (
       </nav>
 
       <div className="flex items-center gap-2">
+        <ThemeToggle />
         <Link
           to="/login"
           className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 hover:text-brand-700"
@@ -56,7 +58,7 @@ const PublicHeader: React.FC<PublicHeaderProps> = ({ variant = 'home' }) => (
         </Link>
         <Link
           to="/register"
-          className="rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+          className="rounded-lg bg-action px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-action-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
         >
           Probar la app
         </Link>

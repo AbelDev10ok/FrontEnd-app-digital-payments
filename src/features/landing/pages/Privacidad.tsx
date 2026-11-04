@@ -48,7 +48,7 @@ const Privacidad: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-gray-900">
+    <div className="flex min-h-screen flex-col bg-surface text-gray-900">
       <PublicHeader variant="page" />
 
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-16 sm:px-6">
@@ -60,7 +60,7 @@ const Privacidad: React.FC = () => {
           Volver al inicio
         </Link>
 
-        <h1 className="font-display mt-6 text-3xl font-black tracking-tight text-brand-950">
+        <h1 className="font-display mt-6 text-3xl font-black tracking-tight text-heading">
           Política de privacidad
         </h1>
         <p className="mt-2 text-sm text-gray-500">Última actualización: agosto de 2026</p>

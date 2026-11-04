@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import CreateSaleForm from '../CreateSaleForm';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
@@ -423,5 +424,45 @@ describe('CreateSaleForm', () => {
     );
 
     expect(simboloDe(/Monto primera cuota/)).toBe('US$');
+  });
+
+  it('al elegir un pago en cuotas la cantidad de cuotas sube a 2 como mínimo', () => {
+    // El formulario real mantiene el estado: el cambio de tipo de pago debe
+    // dejar la cantidad de cuotas fuera del "1" que equivale a contado.
+    const Harness = () => {
+      const [formData, setFormData] = useState({
+        ...baseFormData,
+        tipo: 'VENTA',
+        productId: '1',
+        productTypeId: '1',
+        payments: 'CONTADO',
+        quantityFees: 1,
+        amountFee: 100,
+      });
+      const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+      };
+      return (
+        <CreateSaleForm
+          formData={formData}
+          setFormData={setFormData}
+          handleInputChange={handleInputChange}
+          errors={{}}
+          visibleErrors={{}}
+          isSubmittingDisabled={false}
+          products={[]}
+          sellers={[]}
+          displayedClients={[]}
+          onSubmit={vi.fn()}
+        />
+      );
+    };
+
+    render(<Harness />);
+
+    fireEvent.change(screen.getByLabelText(/^Tipo de pago/), { target: { value: 'SEMANAL' } });
+
+    expect(screen.getByLabelText(/Cantidad de cuotas/)).toHaveValue(2);
   });
 });

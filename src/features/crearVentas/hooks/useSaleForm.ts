@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Client } from '@/shared/types/client';
 import {salesService } from '@/features/ventas/services/salesServices';
 import { clientService } from '@/features/clients/services/clientServices';
+import { businessService } from '@/features/negocio/services/businessService';
 import { CreateSaleRequest, ProductDto, ProductTypeDto, SaleFormData, SaleType } from '@/shared/types/sales';
 import { getLocalDateString } from '@/shared/utils/formatDate';
 import { getCurrency, formatCurrency } from '@/shared/utils/formatCurrency';
+import { esFrecuenciaDeCuota } from '@/shared/utils/payments';
 
 /**
  * Moneda de la operación.
@@ -56,7 +58,10 @@ const validateForm = (formData: SaleFormData, moneda: string): Record<string, st
     if (!formData.amountFee || Number(formData.amountFee) <= 0) newErrors.amountFee = 'Ingresa un valor de cuota válido';
   }
   if (formData.tipo !== 'PRESTAMO' && (!formData.cost || Number(formData.cost) <= 0)) newErrors.cost = 'Ingresa un costo válido';
-  if (!esContado && formData.payments !== 'CONTADO' && (!formData.quantityFees || Number(formData.quantityFees) < 1)) newErrors.quantityFees = 'La cantidad de cuotas debe ser al menos 1';
+  // En cuotas el piso son 2: con una sola cuota la operación es al contado.
+  if (formData.payments !== 'CONTADO' && (!formData.quantityFees || Number(formData.quantityFees) < 2)) {
+    newErrors.quantityFees = 'La cantidad de cuotas debe ser al menos 2';
+  }
 
   if (formData.payFirstFee) {
     if (!formData.firstFeeAmount || Number(formData.firstFeeAmount) <= 0) newErrors.firstFeeAmount = 'Ingresa monto de la primera cuota';
@@ -116,7 +121,8 @@ const createInitialFormData = (tipo: SaleType): SaleFormData => ({
   descripcion: '',
   fecha: getLocalDateString(new Date()),
   payments: 'SEMANAL',
-  quantityFees: 1,
+  // En cuotas el mínimo son 2: arranca en el piso, no en 1 (que equivale a contado).
+  quantityFees: 2,
   amountFee: '',
   cost: '',
   cantidad: '1',
@@ -148,6 +154,40 @@ export default function useSaleForm(initialType: SaleType) {
   // Los errores de validación se muestran recién después del primer intento de
   // envío: el formulario no abre en rojo y un clic (o Enter) los revela.
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  // Campos que el usuario ya tocó: un valor por defecto que llega tarde (la
+  // petición del negocio es asíncrona) nunca pisa lo que se está cargando.
+  const camposTocados = useRef({ interestRate: false, payments: false });
+
+  // Valores por defecto de préstamos configurados en Mi Negocio: se sugieren una
+  // sola vez al abrir el alta. Sin configuración, el formulario queda como está.
+  useEffect(() => {
+    if (initialType !== 'PRESTAMO') return;
+    let cancelado = false;
+    businessService
+      .getMyBusiness()
+      .then((negocio) => {
+        if (cancelado) return;
+        setFormData((prev) => {
+          const defaults: Partial<SaleFormData> = {};
+          const tasa = negocio.defaultInterestRate;
+          if (!camposTocados.current.interestRate && prev.interestRate === '' && tasa != null) {
+            defaults.interestRate = String(tasa);
+          }
+          // Un préstamo nunca es al contado: ese default no se sugiere.
+          const frecuencia = negocio.defaultPaymentFrequency;
+          if (!camposTocados.current.payments && esFrecuenciaDeCuota(frecuencia)) {
+            defaults.payments = frecuencia;
+          }
+          return Object.keys(defaults).length > 0 ? { ...prev, ...defaults } : prev;
+        });
+      })
+      .catch(() => {
+        // Sin defaults el alta funciona igual: no hay nada que avisarle al usuario.
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [initialType]);
 
   // Moneda de la operación: alimenta los avisos de validación para que hablen en
   // la moneda en la que realmente se está cargando el importe.
@@ -172,6 +212,10 @@ export default function useSaleForm(initialType: SaleType) {
       const checked = (target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked } as unknown as SaleFormData));
       return;
+    }
+    // Marca el campo como propio del usuario antes de que lleguen los defaults.
+    if (name === 'interestRate' || name === 'payments') {
+      camposTocados.current[name] = true;
     }
     const value = (target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).value;
     setFormData(prev => ({ ...prev, [name]: value } as unknown as SaleFormData));

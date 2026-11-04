@@ -25,6 +25,7 @@ interface CuotasProps {
 }
 
 const ESTADOS: { value: CuotaEstadoFiltro; label: string }[] = [
+  { value: 'A_COBRAR', label: 'A cobrar (30 días)' },
   { value: 'PENDING', label: 'Todas las pendientes' },
   { value: 'TODAY', label: 'Vencen hoy' },
   { value: 'DELAYED', label: 'Vencidas' },
@@ -36,7 +37,7 @@ const formatearFecha = (iso: string) => (iso ? iso.split('-').reverse().join('/'
 
 /** Estado válido de la URL; cualquier valor desconocido cae al default. */
 const estadoInicial = (param: string | null): CuotaEstadoFiltro =>
-  ESTADOS.find((op) => op.value === param)?.value ?? 'PENDING';
+  ESTADOS.find((op) => op.value === param)?.value ?? 'A_COBRAR';
 
 const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
   // El filtro de estado vive también en la URL (como en el tablero): la alerta
@@ -145,15 +146,15 @@ const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
               onChange={(e) => cambiarFiltros(() => setHasta(e.target.value))}
             />
           </div>
-          {(desde || hasta || estado !== 'PENDING') && (
+          {(desde || hasta || estado !== 'A_COBRAR') && (
             <Button
               variant="ghost"
               onClick={() =>
                 cambiarFiltros(() => {
                   setDesde('');
                   setHasta('');
-                  setEstado('PENDING');
-                  actualizarEstado('PENDING');
+                  setEstado('A_COBRAR');
+                  actualizarEstado('A_COBRAR');
                 })
               }
             >
@@ -173,7 +174,7 @@ const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
             <Search className="w-10 h-10 text-gray-300 mb-3" />
-            <h2 className="font-display text-lg font-bold text-brand-950">Sin resultados</h2>
+            <h2 className="font-display text-lg font-bold text-heading">Sin resultados</h2>
             <p className="mt-1 text-sm text-gray-500">No hay cuotas que coincidan con los filtros elegidos.</p>
           </div>
         ) : (
@@ -217,7 +218,7 @@ const Cuotas: React.FC<CuotasProps> = ({ user, onLogout }) => {
                     <td className="px-5 py-3.5">
                       <CuotaEstadoBadge cuota={cuota} />
                     </td>
-                    <td className="px-5 py-3.5 text-right font-mono text-sm font-semibold tabular-nums text-brand-950 whitespace-nowrap">
+                    <td className="px-5 py-3.5 text-right font-mono text-sm font-semibold tabular-nums text-heading whitespace-nowrap">
                       {formatCurrency(montoCobrableDeCuota(cuota), cuota.currency ?? undefined)}
                     </td>
                     <td className="px-5 py-3.5">

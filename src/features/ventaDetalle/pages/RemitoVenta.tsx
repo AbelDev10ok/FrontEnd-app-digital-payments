@@ -68,7 +68,7 @@ export default function RemitoVenta() {
 
   if (cargando) {
     return (
-      <div className="min-h-screen bg-gray-100 p-8 print:bg-white print:p-0">
+      <div className="theme-light min-h-screen bg-gray-100 p-8 print:bg-surface print:p-0">
         <Load message="Cargando remito..." />
       </div>
     );
@@ -76,9 +76,9 @@ export default function RemitoVenta() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 p-8 print:bg-white print:p-0">
+      <div className="theme-light min-h-screen bg-gray-100 p-8 print:bg-surface print:p-0">
         <Card className="mx-auto max-w-lg p-8 text-center">
-          <h1 className="font-display text-lg font-bold text-brand-950">
+          <h1 className="font-display text-lg font-bold text-heading">
             No se pudo cargar el remito
           </h1>
           <p className="mt-2 text-sm text-gray-600">{error}</p>
@@ -92,9 +92,9 @@ export default function RemitoVenta() {
 
   if (!documento) {
     return (
-      <div className="min-h-screen bg-gray-100 p-8 print:bg-white print:p-0">
+      <div className="theme-light min-h-screen bg-gray-100 p-8 print:bg-surface print:p-0">
         <Card className="mx-auto max-w-lg p-8 text-center">
-          <h1 className="font-display text-lg font-bold text-brand-950">
+          <h1 className="font-display text-lg font-bold text-heading">
             Esta venta todavía no tiene remito
           </h1>
           <p className="mt-2 text-sm text-gray-600">
@@ -112,7 +112,7 @@ export default function RemitoVenta() {
   const moneda = documento.currency ?? undefined;
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 print:bg-white print:py-0">
+    <div className="theme-light min-h-screen bg-gray-100 py-8 print:bg-surface print:py-0">
       <div className="mx-auto max-w-[210mm] px-4 print:max-w-none print:px-0">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
           <Button
@@ -136,7 +136,7 @@ export default function RemitoVenta() {
           </div>
         </div>
 
-        <article className="mx-auto bg-white p-10 shadow-card print:max-w-none print:p-0 print:shadow-none">
+        <article className="mx-auto bg-surface p-10 shadow-card print:max-w-none print:p-0 print:shadow-none">
           {/* La venta anulada deja el remito como historial: se marca para que
               nadie lo confunda con un comprobante vigente. */}
           {documento.saleStatus === 'CANCELED' && (
@@ -156,7 +156,7 @@ export default function RemitoVenta() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
                 Comprobante de entrega
               </p>
-              <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-brand-950">
+              <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-heading">
                 {documento.businessName}
               </h1>
               <div className="mt-2 space-y-0.5 text-sm text-gray-600">
@@ -166,7 +166,7 @@ export default function RemitoVenta() {
               </div>
             </div>
             <div className="text-right">
-              <p className="font-display text-3xl font-bold tracking-tight text-brand-950">
+              <p className="font-display text-3xl font-bold tracking-tight text-heading">
                 REMITO
               </p>
               <p className="mt-1 font-mono text-lg font-semibold text-gray-900">
@@ -249,7 +249,7 @@ export default function RemitoVenta() {
                   {formatCurrency(documento.subtotal, moneda)}
                 </span>
               </div>
-              <div className="flex justify-between border-t border-gray-300 pt-2 text-base font-bold text-brand-950">
+              <div className="flex justify-between border-t border-gray-300 pt-2 text-base font-bold text-heading">
                 <span>Total</span>
                 <span className="font-mono tabular-nums">
                   {formatCurrency(documento.total, moneda)}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PayFeeModal from "@/features/cobros/components/PayFeeModal";
 import PostponeFeeModal from "@/features/ventaDetalle/components/PosponedFeeModal";
 import type { SaleResponseDto, FeeDto } from "@/shared/types/sales";
@@ -62,21 +62,47 @@ export default function CronogramaFees({
   refreshTransaction,
 }: CronogramaFeesProps) {
   const [cuotaACobrar, setCuotaACobrar] = useState<CuotaItem | null>(null);
-  // Cuota recién cobrada: se tiñe un instante para que el cambio a "Pagada"
-  // se vea, en lugar de aparecer sin transición.
-  const [justPaidId, setJustPaidId] = useState<number | null>(null);
+  // Cuotas que el último cobro dejó pagadas (la cascada puede cerrar varias de
+  // una): se tiñen un instante para que el cambio a "Pagada" se vea.
+  const [cuotasAResaltar, setCuotasAResaltar] = useState<number[]>([]);
+  // Lo que ya estaba cobrado ANTES de registrar el cobro: el diff contra la
+  // transacción refrescada marca qué cuotas pasaron a pagadas con ese cobro.
+  const pagadasAntesDelCobro = useRef<Set<number> | null>(null);
   const [editingFee, setEditingFee] = useState<{
     id: number;
     date: string;
     amount: number;
     paymentDate?: string;
     isPaid: boolean;
+    hasLaterUnpaid: boolean;
   } | null>(null);
 
   const estados = getFeeListStates(transaction.fees);
   // Una venta anulada es terminal: el cronograma queda como historial, sin
   // acciones de cobro ni edicion de cuotas.
   const anulada = transaction.status === 'CANCELED';
+  // La cobranza es FIFO: se cobra desde la cuota impaga más antigua del
+  // cronograma (el orden de la lista es el de vencimiento), no desde cualquiera.
+  const primeraImpagaId = transaction.fees.find((fee) => !fee.paid)?.id ?? null;
+
+  // Al llegar la transacción refrescada, resalta todas las cuotas que pasaron a
+  // pagadas con el último cobro (una sola si fue justo, varias si hubo cascada).
+  useEffect(() => {
+    const pagadasAntes = pagadasAntesDelCobro.current;
+    if (!pagadasAntes) return;
+    pagadasAntesDelCobro.current = null;
+    const nuevasPagadas = transaction.fees
+      .filter((fee) => fee.paid && !pagadasAntes.has(fee.id))
+      .map((fee) => fee.id);
+    if (nuevasPagadas.length === 0) return;
+    setCuotasAResaltar(nuevasPagadas);
+    window.setTimeout(() => setCuotasAResaltar([]), 1700);
+  }, [transaction.fees]);
+
+  // Impagas posteriores en el cronograma: define el alcance por defecto del modal
+  // ("Esta y las siguientes" cuando las hay, "Sólo esta" cuando es la última).
+  const hayImpagasPosteriores = (posicion: number): boolean =>
+    transaction.fees.slice(posicion + 1).some((fee) => !fee.paid);
 
   const feeToCuota = (fee: FeeDto, estadoVisual: FeeVisualState): CuotaItem =>
     ({
@@ -125,11 +151,11 @@ export default function CronogramaFees({
   return (
     <section>
       {transaction.fees.length > 0 && (
-        <div className="bg-white rounded-card p-6 shadow-card">
+        <div className="bg-surface rounded-card p-6 shadow-card">
           {/* Progreso de cobro */}
           <div className="mb-4">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <h3 className="font-display text-lg font-bold tracking-tight text-brand-950">
+              <h3 className="font-display text-lg font-bold tracking-tight text-heading">
                 Cronograma de cuotas
               </h3>
               <p
@@ -168,7 +194,7 @@ export default function CronogramaFees({
                 <li
                   key={fee.id}
                   className={`py-3.5 ${config.row ?? ""} ${
-                    fee.id === justPaidId
+                    cuotasAResaltar.includes(fee.id)
                       ? "animate-paid-flash motion-reduce:animate-none"
                       : ""
                   }`}
@@ -202,7 +228,7 @@ export default function CronogramaFees({
                       >
                         {config.label}
                       </span>
-                      {!fee.paid && !anulada && (
+                      {!fee.paid && !anulada && fee.id === primeraImpagaId && (
                         <Button
                           size="sm"
                           leftIcon={<HandCoins className="w-4 h-4" />}
@@ -220,6 +246,7 @@ export default function CronogramaFees({
                               amount: fee.amount,
                               paymentDate: fee.paymentDate,
                               isPaid: fee.paid,
+                              hasLaterUnpaid: hayImpagasPosteriores(index),
                             })
                           }
                           aria-label={`Posponer cuota ${fee.numberFee}`}
@@ -270,9 +297,14 @@ export default function CronogramaFees({
             cuota={cuotaACobrar}
             onClose={() => setCuotaACobrar(null)}
             onPaid={() => {
-              setJustPaidId(cuotaACobrar?.id ?? null);
+              // Snapshot de lo ya cobrado ANTES del refresh: cuando llegue la
+              // transacción actualizada se resalta entero lo que pagó este cobro.
+              pagadasAntesDelCobro.current = new Set(
+                transaction.fees
+                  .filter((fee) => fee.paid)
+                  .map((fee) => fee.id),
+              );
               refreshTransaction();
-              window.setTimeout(() => setJustPaidId(null), 1700);
             }}
             deudaRestante={transaction.remainingAmount}
             fechaMinima={transaction.dateSale}
@@ -294,6 +326,7 @@ export default function CronogramaFees({
               maxAmount={transaction.remainingAmount}
               currentPaymentDate={editingFee.paymentDate}
               isPaid={editingFee.isPaid}
+              hasLaterUnpaidFees={editingFee.hasLaterUnpaid}
             />
           )}
         </div>

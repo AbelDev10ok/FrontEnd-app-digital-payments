@@ -82,7 +82,7 @@ const SeriePorMoneda: React.FC<{
             >
               <span className="flex items-end gap-0.5 w-full justify-center h-28 sm:h-36">
                 <span
-                  className="w-1/2 max-w-[14px] rounded-t-sm bg-brand-500 group-hover:bg-brand-600 transition-colors"
+                  className="w-1/2 max-w-[14px] rounded-t-sm bg-brand-500 group-hover:bg-action transition-colors"
                   style={{
                     height: vendido > 0
                       ? `max(2px, ${(vendido / max) * 100}%)`

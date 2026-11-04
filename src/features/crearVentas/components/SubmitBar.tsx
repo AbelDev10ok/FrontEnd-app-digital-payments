@@ -21,7 +21,7 @@ const SubmitBar: React.FC<Props> = ({ cancelTo = '/dashboard/ventas/todas', isDi
   // En móvil los botones ocupan el ancho completo y el primario queda al pie,
   // al alcance del pulgar; desde `sm` vuelven a la fila alineada a la derecha.
   const layout = stickyOnMobile
-    ? 'sticky bottom-0 z-20 -mx-6 -mb-6 flex flex-col gap-3 rounded-b-card border-t border-gray-200 bg-white px-6 pt-4 pb-4 sm:static sm:z-auto sm:mx-0 sm:mb-0 sm:flex-row sm:justify-end sm:gap-4 sm:rounded-none sm:bg-transparent sm:px-0 sm:pt-6 sm:pb-0'
+    ? 'sticky bottom-0 z-20 -mx-6 -mb-6 flex flex-col gap-3 rounded-b-card border-t border-gray-200 bg-surface px-6 pt-4 pb-4 sm:static sm:z-auto sm:mx-0 sm:mb-0 sm:flex-row sm:justify-end sm:gap-4 sm:rounded-none sm:bg-transparent sm:px-0 sm:pt-6 sm:pb-0'
     : 'flex justify-end space-x-4 pt-6 border-t border-gray-200';
 
   return (

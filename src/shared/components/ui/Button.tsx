@@ -35,12 +35,12 @@ const tapScale = 'active:scale-[0.96] motion-reduce:active:scale-100';
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    'bg-brand-600 text-white shadow-lg shadow-brand-600/20 hover:bg-brand-700 focus-visible:outline-brand-600',
+    'bg-action text-white shadow-lg shadow-brand-600/20 hover:bg-action-hover focus-visible:outline-brand-600',
   secondary:
-    'border border-gray-200 bg-white text-brand-800 hover:bg-brand-50 focus-visible:outline-brand-600',
+    'border border-gray-200 bg-surface text-brand-800 hover:bg-brand-50 focus-visible:outline-brand-600',
   ghost: 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-gray-400',
   danger:
-    'bg-red-600 text-white shadow-lg shadow-red-600/20 hover:bg-red-700 focus-visible:outline-red-600',
+    'bg-danger-solid text-white shadow-lg shadow-red-600/20 hover:bg-danger-solid-hover focus-visible:outline-red-600',
   brandSoft:
     'bg-brand-50 text-brand-800 border border-brand-200 hover:bg-brand-100 focus-visible:outline-brand-600',
   dangerOutline:

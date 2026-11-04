@@ -6,6 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Gestión de cobros y ventas a cuotas: registrá ventas y préstamos, cobrá cada cuota y mirá tus números desde el celular." />
     <meta name="theme-color" content="#1a8059" />
+    <script>
+      // Aplica el tema antes del primer pintado (sin flash): misma lógica que
+      // src/shared/hooks/useTheme.ts — preferencia guardada o prefers-color-scheme.
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var root = document.documentElement;
+          root.classList.toggle('dark', dark);
+          root.style.colorScheme = dark ? 'dark' : 'light';
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', dark ? '#0e1613' : '#1a8059');
+        } catch (e) {}
+      })();
+    </script>
     <title>Gestión de Cobros y Ventas</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

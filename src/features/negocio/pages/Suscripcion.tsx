@@ -217,7 +217,7 @@ const Suscripcion: React.FC<SuscripcionProps> = ({ user, onLogout }) => {
                 {restante != null && (
                   <div className="flex items-center justify-between py-4">
                     <dt className={`text-sm ${neutral.muted}`}>{etiquetaFecha}</dt>
-                    <dd className="text-sm font-semibold text-brand-950 tabular-nums">
+                    <dd className="text-sm font-semibold text-heading tabular-nums">
                       {formatearFecha(fechaReferencia)}
                       <span className={`ml-2 font-normal ${neutral.subtle}`}>
                         ({restante >= 0 ? `${restante} días restantes` : 'vencida'})
@@ -229,7 +229,7 @@ const Suscripcion: React.FC<SuscripcionProps> = ({ user, onLogout }) => {
                 {activa && suscripcion?.currentPeriodStart && (
                   <div className="flex items-center justify-between py-4">
                     <dt className={`text-sm ${neutral.muted}`}>Inicio del periodo</dt>
-                    <dd className="text-sm font-semibold text-brand-950 tabular-nums">
+                    <dd className="text-sm font-semibold text-heading tabular-nums">
                       {formatearFecha(suscripcion.currentPeriodStart)}
                     </dd>
                   </div>
@@ -238,7 +238,7 @@ const Suscripcion: React.FC<SuscripcionProps> = ({ user, onLogout }) => {
                 {negocio && (
                   <div className="flex items-center justify-between py-4">
                     <dt className={`text-sm ${neutral.muted}`}>Negocio</dt>
-                    <dd className="text-sm font-semibold text-brand-950">{negocio.name}</dd>
+                    <dd className="text-sm font-semibold text-heading">{negocio.name}</dd>
                   </div>
                 )}
               </dl>
@@ -255,7 +255,7 @@ const Suscripcion: React.FC<SuscripcionProps> = ({ user, onLogout }) => {
                     <CalendarDays className={`w-5 h-5 ${tones.warning.icon}`} />
                   )}
                 </div>
-                <h2 className="font-display text-base font-bold tracking-tight text-brand-950">
+                <h2 className="font-display text-base font-bold tracking-tight text-heading">
                   {activa ? 'Suscripcion activa' : 'Suscripcion pausada'}
                 </h2>
                 <p className={`mt-2 text-sm leading-relaxed ${neutral.secondary}`}>
@@ -270,7 +270,7 @@ const Suscripcion: React.FC<SuscripcionProps> = ({ user, onLogout }) => {
                 )}
                 {confirmando ? (
                   <div className="mt-5">
-                    <p className="text-sm font-semibold text-brand-950">
+                    <p className="text-sm font-semibold text-heading">
                       {confirmando === 'cancelar'
                         ? '¿Cancelar la suscripcion?'
                         : '¿Pausar la suscripcion?'}
@@ -348,7 +348,7 @@ const Suscripcion: React.FC<SuscripcionProps> = ({ user, onLogout }) => {
                 <div className={`w-10 h-10 rounded-xl ${tones.brand.bg} border ${tones.brand.border} flex items-center justify-center mb-3`}>
                   <CreditCard className={`w-5 h-5 ${tones.brand.icon}`} />
                 </div>
-                <h2 className="font-display text-base font-bold tracking-tight text-brand-950">
+                <h2 className="font-display text-base font-bold tracking-tight text-heading">
                   Activar suscripcion
                 </h2>
                 <p className={`mt-2 text-sm leading-relaxed ${neutral.secondary}`}>

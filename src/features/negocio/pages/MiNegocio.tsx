@@ -11,6 +11,7 @@ import { businessService } from '@/features/negocio/services/businessService';
 import { useAuthStore } from '@features/auth/store/authStore';
 import { applyCurrency } from '@/shared/utils/formatCurrency';
 import { etiquetaMoneda, opcionesMonedaNegocio } from '@/shared/utils/currencies';
+import { FRECUENCIAS_DE_CUOTA, esFrecuenciaDeCuota } from '@/shared/utils/payments';
 import type { BusinessMe } from '@/shared/types/business';
 
 interface MiNegocioProps {
@@ -18,12 +19,13 @@ interface MiNegocioProps {
   onLogout: () => void;
 }
 
+// Un préstamo nunca es al contado: `CONTADO` no se ofrece como default.
 const FRECUENCIAS = [
   { value: '', label: 'Sin valor por defecto' },
-  { value: 'SEMANAL', label: 'Semanal' },
-  { value: 'QUINCENAL', label: 'Quincenal' },
-  { value: 'MENSUAL', label: 'Mensual' },
-  { value: 'CONTADO', label: 'Contado' },
+  ...FRECUENCIAS_DE_CUOTA.map((frecuencia) => ({
+    value: frecuencia,
+    label: frecuencia.charAt(0) + frecuencia.slice(1).toLowerCase(),
+  })),
 ];
 
 type Feedback = { tipo: 'ok' | 'error'; mensaje: string } | null;
@@ -42,7 +44,7 @@ const FeedbackMsg = ({ feedback }: { feedback: NonNullable<Feedback> }) => (
 );
 
 const TituloCard = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="font-display text-base font-bold tracking-tight text-brand-950 mb-4">{children}</h2>
+  <h2 className="font-display text-base font-bold tracking-tight text-heading mb-4">{children}</h2>
 );
 
 const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
@@ -79,7 +81,8 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
         setTelefono(b.phone ?? '');
         setMoneda(b.currency);
         setTasa(b.defaultInterestRate != null ? String(b.defaultInterestRate) : '');
-        setFrecuencia(b.defaultPaymentFrequency ?? '');
+        // Un default legado de contado no aplica a préstamos: queda sin valor.
+        setFrecuencia(esFrecuenciaDeCuota(b.defaultPaymentFrequency) ? b.defaultPaymentFrequency : '');
       })
       .catch((err) =>
         setFeedbackDatos({
@@ -118,7 +121,8 @@ const MiNegocio: React.FC<MiNegocioProps> = ({ user, onLogout }) => {
         phone: telefono.trim(),
         currency: moneda.trim().toUpperCase(),
         defaultInterestRate: tasa === '' ? null : Number(tasa),
-        defaultPaymentFrequency: frecuencia || undefined,
+        // Vacío borra el default en el backend: "Sin valor por defecto" se guarda.
+        defaultPaymentFrequency: frecuencia,
       });
       setNegocio(actualizado);
       applyCurrency(actualizado.currency);

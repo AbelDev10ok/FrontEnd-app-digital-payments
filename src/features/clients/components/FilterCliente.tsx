@@ -15,7 +15,7 @@ type FilterClienteProps = {
 
 const FilterCliente = ({searchTerm, setSearchTerm, selectedVendedorId, setSelectedVendedorId, vendedoresOptions, showFilters, setShowFilters}:FilterClienteProps) => {
   return (
-        <div className="bg-white rounded-card p-6 shadow-card border border-gray-100">
+        <div className="bg-surface rounded-card p-6 shadow-card border border-gray-100">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -36,7 +36,7 @@ const FilterCliente = ({searchTerm, setSearchTerm, selectedVendedorId, setSelect
                 {selectedVendedorId !== null ? vendedoresOptions.find(v => v.id === selectedVendedorId)?.name || 'Filtros' : 'Filtros'}
               </button>
               {showFilters && (
-                <div className="absolute right-0 z-10 mt-2 w-56 origin-top-right bg-white rounded-xl shadow-lg border border-gray-100 focus:outline-none">
+                <div className="absolute right-0 z-10 mt-2 w-56 origin-top-right bg-surface rounded-xl shadow-lg border border-gray-100 focus:outline-none">
                   <div className="py-1">
                     <div className="px-4 py-2 text-xs text-gray-400 uppercase">Filtrar por vendedor</div>
                     {vendedoresOptions && vendedoresOptions.length > 0 && vendedoresOptions.map(vendedor => (

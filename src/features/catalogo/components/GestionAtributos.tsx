@@ -181,7 +181,7 @@ const GestionAtributos: React.FC<GestionAtributosProps> = ({
                       {attr.values.map((valor) => (
                         <span
                           key={valor.id}
-                          className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-xs text-gray-600"
+                          className="rounded-full border border-gray-200 bg-surface px-2 py-0.5 text-xs text-gray-600"
                         >
                           {valor.value}
                         </span>

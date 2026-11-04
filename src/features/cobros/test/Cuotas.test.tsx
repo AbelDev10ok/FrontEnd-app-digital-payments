@@ -207,6 +207,18 @@ describe('Cuotas', () => {
     );
   });
 
+  it('arranca con el filtro "A cobrar (30 días)" por defecto', async () => {
+    renderPagina();
+
+    expect(screen.getByRole('option', { name: 'A cobrar (30 días)' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Estado')).toHaveValue('A_COBRAR');
+    await waitFor(() =>
+      expect(collectionsService.getCuotas).toHaveBeenCalledWith(
+        expect.objectContaining({ estado: 'A_COBRAR' }),
+      ),
+    );
+  });
+
   it('ignora un estado desconocido en la URL y cae al default', async () => {
     render(
       <MemoryRouter initialEntries={['/dashboard/cuotas?estado=HACK']}>
@@ -214,10 +226,37 @@ describe('Cuotas', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByLabelText('Estado')).toHaveValue('PENDING');
+    expect(screen.getByLabelText('Estado')).toHaveValue('A_COBRAR');
     await waitFor(() =>
       expect(collectionsService.getCuotas).toHaveBeenCalledWith(
-        expect.objectContaining({ estado: 'PENDING' }),
+        expect.objectContaining({ estado: 'A_COBRAR' }),
+      ),
+    );
+  });
+
+  it('no ofrece limpiar filtros cuando ya está en el default A_COBRAR', async () => {
+    renderPagina();
+
+    await screen.findByText('Maria Lopez');
+    expect(screen.queryByRole('button', { name: 'Limpiar filtros' })).not.toBeInTheDocument();
+  });
+
+  it('limpia los filtros y vuelve al default A_COBRAR', async () => {
+    const user = userEvent.setup();
+    renderPagina();
+
+    await screen.findByText('Maria Lopez');
+    await user.selectOptions(screen.getByLabelText('Estado'), 'DELAYED');
+    expect(screen.getByLabelText('Estado')).toHaveValue('DELAYED');
+
+    await user.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
+
+    // El reset vuelve al default de la vista, no a "Todas las pendientes"
+    expect(screen.getByLabelText('Estado')).toHaveValue('A_COBRAR');
+    expect(screen.queryByRole('button', { name: 'Limpiar filtros' })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(collectionsService.getCuotas).toHaveBeenLastCalledWith(
+        expect.objectContaining({ estado: 'A_COBRAR', page: 0 }),
       ),
     );
   });

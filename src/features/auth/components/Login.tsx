@@ -86,19 +86,19 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-surface to-brand-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-2xl mb-4 shadow-lg">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-action rounded-2xl mb-4 shadow-lg">
             <Lock className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-display font-bold tracking-tight text-brand-950 mb-2">
+          <h1 className="text-3xl font-display font-bold tracking-tight text-heading mb-2">
             Bienvenido
           </h1>
           <p className="text-gray-600">Inicia sesión en tu cuenta</p>
         </div>
 
-        <div className="bg-white rounded-card shadow-xl p-8 border border-gray-100">
+        <div className="bg-surface rounded-card shadow-xl p-8 border border-gray-100">
           <form onSubmit={handleSubmit} className="space-y-6">
             <Field
               htmlFor="email"

@@ -104,7 +104,7 @@ const AutocompleteClient: React.FC<Props> = ({ value, clients, onChange, placeho
             hidden={!open || filtered.length === 0}
             // Evita el blur del input al elegir con el mouse (incluida la barra de scroll).
             onMouseDown={e => e.preventDefault()}
-            className="absolute z-10 bg-white border border-gray-200 rounded-xl shadow-card mt-1 w-full max-h-40 overflow-y-auto"
+            className="absolute z-10 bg-surface border border-gray-200 rounded-xl shadow-card mt-1 w-full max-h-40 overflow-y-auto"
           >
             {filtered.map((c, index) => (
               <li
@@ -124,7 +124,7 @@ const AutocompleteClient: React.FC<Props> = ({ value, clients, onChange, placeho
             ))}
           </ul>
           {open && filtered.length === 0 && (
-            <div role="status" className="absolute z-10 bg-white border border-gray-200 rounded-xl shadow-card mt-1 w-full px-4 py-2 text-sm text-gray-500">
+            <div role="status" className="absolute z-10 bg-surface border border-gray-200 rounded-xl shadow-card mt-1 w-full px-4 py-2 text-sm text-gray-500">
               Sin resultados
             </div>
           )}

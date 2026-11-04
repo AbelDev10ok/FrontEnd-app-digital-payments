@@ -110,9 +110,9 @@ export const eyebrow = {
 /** Jerarquía de títulos en font-display. */
 export const heading = {
   /** Título grande de página. */
-  xl: 'font-display text-2xl font-extrabold tracking-tight text-brand-950',
+  xl: 'font-display text-2xl font-extrabold tracking-tight text-heading',
   /** Segundo nivel (secciones dentro de la página). */
-  lg: 'font-display text-xl font-extrabold tracking-tight text-brand-950',
+  lg: 'font-display text-xl font-extrabold tracking-tight text-heading',
 } as const;
 
 /** Radios de esquina del sistema. */

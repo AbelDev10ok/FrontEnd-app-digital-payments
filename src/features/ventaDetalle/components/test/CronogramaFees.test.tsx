@@ -29,7 +29,11 @@ vi.mock('@/features/cobros/components/PayFeeModal', () => ({
 }));
 
 vi.mock('@/features/ventaDetalle/components/PosponedFeeModal', () => ({
-  default: () => <div data-testid="modal-posponer" />,
+  default: ({ hasLaterUnpaidFees }: { hasLaterUnpaidFees?: boolean }) => (
+    <div data-testid="modal-posponer">
+      {hasLaterUnpaidFees ? 'con-siguientes' : 'solo-esta'}
+    </div>
+  ),
 }));
 
 const HOY = new Date(2026, 7, 24, 12, 0, 0); // 2026-08-24
@@ -213,7 +217,7 @@ describe('CronogramaFees', () => {
     expect(screen.getByText((content) => content.includes('05/07/2026'))).toBeInTheDocument();
   });
 
-  it('solo ofrece el botón de cobrar en cuotas impagas', () => {
+  it('solo ofrece el botón de cobrar en la primera cuota impaga del cronograma', () => {
     render(
       <CronogramaFees
         transaction={armarCronograma()}
@@ -223,7 +227,13 @@ describe('CronogramaFees', () => {
       />,
     );
 
-    expect(screen.getAllByRole('button', { name: /^Cobrar$/ })).toHaveLength(3);
+    // La 1 ya está pagada y la 2 es la impaga más antigua: sólo esa ofrece cobro
+    const botones = screen.getAllByRole('button', { name: /^Cobrar$/ });
+    expect(botones).toHaveLength(1);
+    expect(botones[0].closest('li')).toHaveTextContent('Cuota 2');
+    // El lápiz sigue disponible en todas las impagas no anuladas
+    expect(screen.getByRole('button', { name: 'Posponer cuota 3' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Posponer cuota 4' })).toBeInTheDocument();
   });
 
   it('no ofrece cobrar ni editar cuotas de una venta anulada', () => {
@@ -260,7 +270,57 @@ describe('CronogramaFees', () => {
     expect(screen.getByTestId('modal-pago')).toBeInTheDocument();
   });
 
-  it('tiñe la fila recién cobrada y la apaga al segundo y medio', () => {
+  it('resalta todas las cuotas que la cascada dejó pagadas y las apaga al segundo y medio', async () => {
+    const inicial = armarCronograma();
+    // El cobro de la cuota 2 sobró y la cascada cerró también la 3
+    const refrescada: SaleResponseDto = {
+      ...inicial,
+      paidFeesCount: 3,
+      remainingAmount: 15000,
+      fees: inicial.fees.map((fee) =>
+        fee.id === 2 || fee.id === 3 ? { ...fee, paid: true, status: 'PAID' as const } : fee,
+      ),
+    };
+    const refresh = vi.fn().mockImplementation(async () => {
+      rerender(
+        <CronogramaFees
+          transaction={refrescada}
+          formatDate={formatDate}
+          formatCurrency={formatCurrency}
+          refreshTransaction={refresh}
+        />,
+      );
+    });
+    const { rerender } = render(
+      <CronogramaFees
+        transaction={inicial}
+        formatDate={formatDate}
+        formatCurrency={formatCurrency}
+        refreshTransaction={refresh}
+      />,
+    );
+
+    // La primera cuota impaga es la 2: se cobra desde su botón.
+    fireEvent.click(screen.getByRole('button', { name: /^Cobrar$/ }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'simular cobro 2' }));
+    });
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+    // La cascada resalta TODAS las que pasaron a pagadas con este cobro
+    expect(screen.getByText('Cuota 2').closest('li')).toHaveClass('animate-paid-flash');
+    expect(screen.getByText('Cuota 3').closest('li')).toHaveClass('animate-paid-flash');
+    // La que ya estaba cobrada antes no se resalta de nuevo
+    expect(screen.getByText('Cuota 1').closest('li')).not.toHaveClass('animate-paid-flash');
+
+    act(() => {
+      vi.advanceTimersByTime(1700);
+    });
+    expect(screen.getByText('Cuota 2').closest('li')).not.toHaveClass('animate-paid-flash');
+    expect(screen.getByText('Cuota 3').closest('li')).not.toHaveClass('animate-paid-flash');
+  });
+
+  it('le dice al modal si hay impagas posteriores a la cuota editada', () => {
     render(
       <CronogramaFees
         transaction={armarCronograma()}
@@ -270,18 +330,13 @@ describe('CronogramaFees', () => {
       />,
     );
 
-    // La primera cuota impaga es la 2: se cobra desde su botón.
-    fireEvent.click(screen.getAllByRole('button', { name: /^Cobrar$/ })[0]);
-    fireEvent.click(screen.getByRole('button', { name: 'simular cobro 2' }));
+    // La 2 tiene impagas después (3 y 4)
+    fireEvent.click(screen.getByRole('button', { name: 'Posponer cuota 2' }));
+    expect(screen.getByTestId('modal-posponer')).toHaveTextContent('con-siguientes');
 
-    const fila = screen.getByText('Cuota 2').closest('li');
-    expect(fila).toHaveClass('animate-paid-flash');
-    expect(refreshTransaction).toHaveBeenCalledTimes(1);
-
-    act(() => {
-      vi.advanceTimersByTime(1700);
-    });
-    expect(fila).not.toHaveClass('animate-paid-flash');
+    // La 4 es la última impaga del cronograma
+    fireEvent.click(screen.getByRole('button', { name: 'Posponer cuota 4' }));
+    expect(screen.getByTestId('modal-posponer')).toHaveTextContent('solo-esta');
   });
 
   it('abre el modal de posponer al tocar el botón de una cuota', () => {

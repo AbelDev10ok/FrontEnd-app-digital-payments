@@ -209,7 +209,7 @@ const Vendedores: React.FC<PageProps> = ({ user, onLogout }) => {
       <div className="space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-display font-bold tracking-tight text-brand-950">Vendedores</h1>
+            <h1 className="text-2xl font-display font-bold tracking-tight text-heading">Vendedores</h1>
             <p className="text-sm text-gray-500 mt-1">
               Vendido y cobrado siguen la autoría sellada de cada operación; la deuda es la
               cartera que cada vendedor maneja hoy.
@@ -284,7 +284,7 @@ const Vendedores: React.FC<PageProps> = ({ user, onLogout }) => {
         ) : !metrics ? (
           <ErrorMessage message="No se pudieron cargar las métricas" />
         ) : (
-          <div className="bg-white rounded-card shadow-card overflow-x-auto">
+          <div className="bg-surface rounded-card shadow-card overflow-x-auto">
             <table className="w-full">
               <thead className={neutralBg.tableHeader}>
                 <tr>

@@ -33,7 +33,7 @@ const ResumenLinea = ({
   <div className="flex-1 min-w-[200px] px-5 py-3">
     <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">{titulo}</p>
     <p className="mt-1 flex items-baseline gap-2">
-      <span className="font-display text-xl font-extrabold tracking-tight text-brand-950 tabular-nums">
+      <span className="font-display text-xl font-extrabold tracking-tight text-heading tabular-nums">
         {formatMoneyByCurrency(monto) || formatCurrency(0)}
       </span>
       <span className="text-xs text-gray-500">
@@ -89,7 +89,7 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
 
       {data && (
         <>
-          <div className="flex flex-wrap gap-0 divide-y divide-gray-100 sm:divide-y-0 sm:divide-x sm:divide-gray-100 mb-6 rounded-card bg-white shadow-card">
+          <div className="flex flex-wrap gap-0 divide-y divide-gray-100 sm:divide-y-0 sm:divide-x sm:divide-gray-100 mb-6 rounded-card bg-surface shadow-card">
             <ResumenLinea titulo="Vencen hoy" cantidad={data.hoy.cantidad} monto={data.hoy.monto} />
             <ResumenLinea titulo="Vencidas" cantidad={data.vencidas.cantidad} monto={data.vencidas.monto} />
           </div>
@@ -98,7 +98,7 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
             {data.items.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
                 <CheckCircle2 className="w-10 h-10 text-emerald-500 mb-3" />
-                <h2 className="font-display text-lg font-bold text-brand-950">No hay cuotas por cobrar</h2>
+                <h2 className="font-display text-lg font-bold text-heading">No hay cuotas por cobrar</h2>
                 <p className="mt-1 text-sm text-gray-500">
                   No tenés cuotas vencidas ni con vencimiento en el día de la fecha.
                 </p>
@@ -108,7 +108,7 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
                 {data.items.map((cuota) => (
                   <li key={cuota.id} className="flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">
                     <div className="min-w-[180px] flex-1">
-                      <p className="font-semibold text-brand-950">{cuota.clientName}</p>
+                      <p className="font-semibold text-heading">{cuota.clientName}</p>
                       <p className="mt-0.5 text-xs text-gray-500 truncate max-w-[280px]">
                         {cuota.saleDescription || 'Venta'}
                       </p>
@@ -130,7 +130,7 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
 
                     <CuotaEstadoBadge cuota={cuota} />
 
-                    <p className="font-mono text-base font-semibold tabular-nums text-brand-950 min-w-[110px] text-right">
+                    <p className="font-mono text-base font-semibold tabular-nums text-heading min-w-[110px] text-right">
                       {formatCurrency(montoCobrableDeCuota(cuota), cuota.currency ?? undefined)}
                     </p>
 

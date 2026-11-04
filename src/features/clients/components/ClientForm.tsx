@@ -131,7 +131,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-card shadow-card border border-gray-100">
+    <div className="bg-surface rounded-card shadow-card border border-gray-100">
       <form ref={formRef} onSubmit={handleSubmit} className="p-6 space-y-6">
         <ErrorAnnouncer message={errorAnnouncement} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

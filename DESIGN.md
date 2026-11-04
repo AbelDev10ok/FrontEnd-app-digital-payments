@@ -106,6 +106,31 @@ La paleta parte de un verde comercial profundo y lo equilibra con neutrales frí
 ### Named Rules
 **The Green Has a Job Rule.** El verde más intenso identifica marca, acción o selección; no sustituye los tonos semánticos de éxito, advertencia y error.
 
+## Modo oscuro
+
+La aplicación alterna entre el mundo claro (por defecto, idéntico al histórico) y un mundo nocturno tintado en verde derivado de la marca. La preferencia se guarda en `localStorage` bajo la clave `theme`; sin preferencia guardada el tema sigue a `prefers-color-scheme` en vivo. El conmutador (sol/luna) vive en las barras superiores (`Header` y `PublicHeader`).
+
+### Dark World: "Libro de caja vivo" de noche
+
+El modo oscuro conserva la identidad verde y cambia la jerarquía de superficies hacia capas de carbón tintado en verde, con tinta menta fría y acentos aligerados.
+
+- **Fondo de página** (`page`, `#0e1613`): carbón tintado en verde, más oscuro que toda superficie.
+- **Superficie** (`surface`, `#17221d`): tarjetas, campos y paneles de trabajo.
+- **Tinta** (`gray-900`, `#e9efec`) para texto principal; **grafito** (`gray-500`) para metadatos; el resto de la escala neutra se invierte hacia arriba.
+- **Titulares** (`heading`, `#e4f3ea`): menta claro — reemplaza al verde bosque sobre fondos claros.
+- **Acento** (`brand-600`, `#4cb98a`): marca, acciones e iconos sobre superficies oscuras, aligerado para conservar contraste.
+- **Paneles de marca** (`bg-brand-950`): conservan su verde bosque profundo y su texto menta claro en ambos temas.
+- **Semánticos**: los fondos suaves bajan a tintas de baja luminosidad (`red-50`, `amber-50`, `emerald-50` nocturnos) y las tintas de texto se aligeran al extremo claro de cada familia; los rellenos sólidos (dots, badges con texto blanco) conservan los valores literales de siempre.
+- **Campos de formulario** (`field`, `#121b16`): receso tintado en verde con borde sutil — nunca el gris azulado que el navegador pinta por defecto ni el tinte de autocompletado, que se tematiza desde la paleta.
+
+### Named Rules
+**The Paper Is Always Paper Rule.** El remito es un documento: se imprime sobre papel blanco con tinta oscura aunque el modo oscuro esté activo (`@media print` restaura la paleta clara) y en pantalla vive en un scope `theme-light`.
+**The Brand Panel Keeps Its Palette Rule.** Dentro de un panel `bg-brand-950` el texto menta (`brand-100`/`brand-200`) nunca se oscurece: el panel conserva su paleta sobre él en ambos temas.
+
+### Implementación
+
+Los colores tematizables son variables CSS con tripletes RGB en `src/index.css` (`:root` claro / `html.dark` oscuro / restauración en `@media print`), consumidas por `tailwind.config.js` como `rgb(var(--c-x) / <alpha-value>)`. Los valores claros son idénticos a los hexadecimales que reemplazan. Los tokens nuevos son `page`, `surface`, `heading`, `action`/`action-hover`, `danger-solid`/`danger-solid-hover` y `on-dark` (superposición clara translúcida sobre paneles oscuros). El runtime de tema vive en `src/shared/hooks/useTheme.ts`.
+
 ## Typography
 
 **Display Font:** Archivo (con ui-sans-serif como fallback)  

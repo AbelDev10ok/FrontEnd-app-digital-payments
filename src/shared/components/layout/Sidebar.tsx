@@ -315,7 +315,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
     <aside
       aria-label="Menú principal"
       className={`
-      fixed left-0 top-0 h-full bg-white border-r border-gray-100 transition-transform duration-300 motion-reduce:transition-none z-50
+      fixed left-0 top-0 h-full bg-surface border-r border-gray-100 transition-transform duration-300 motion-reduce:transition-none z-50
       lg:w-64 lg:translate-x-0
       ${isOpen ? "translate-x-0 w-64" : "-translate-x-full w-64"}
     `}
@@ -324,11 +324,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
         {/* Logo/Brand */}
         <div className="p-4 border-b border-dashed border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 bg-brand-600 rounded-xl flex items-center justify-center shadow-sm">
+            <div className="w-9 h-9 bg-action rounded-xl flex items-center justify-center shadow-sm">
               <HandCoins strokeWidth={1.5} className="w-5 h-5 text-white" />
             </div>
             <div className="leading-tight">
-              <span className="block font-display font-extrabold tracking-tight text-brand-950">
+              <span className="block font-display font-extrabold tracking-tight text-heading">
                 Gestión de Cobros
               </span>
               <span className="block text-[11px] text-gray-500">y Ventas</span>

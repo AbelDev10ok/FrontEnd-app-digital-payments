@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PostponeFeeModal from '../PosponedFeeModal';
 import { salesService } from '@/features/ventas/services/salesServices';
 import { useSalesCountsStore } from '@/features/ventas/store/salesCountsStore';
 
 vi.mock('@/features/ventas/services/salesServices', () => ({
-  salesService: { postponeFee: vi.fn(), deleteFee: vi.fn() },
+  salesService: { postponeFee: vi.fn(), reprogramFee: vi.fn() },
 }));
 
 const renderModal = (props: Partial<React.ComponentProps<typeof PostponeFeeModal>> = {}) => {
@@ -33,7 +33,7 @@ const renderModal = (props: Partial<React.ComponentProps<typeof PostponeFeeModal
 
 beforeEach(() => {
   vi.mocked(salesService.postponeFee).mockReset();
-  vi.mocked(salesService.deleteFee).mockReset();
+  vi.mocked(salesService.reprogramFee).mockReset();
 });
 
 describe('PostponeFeeModal', () => {
@@ -99,35 +99,6 @@ describe('PostponeFeeModal', () => {
     expect(screen.queryByText('Monto de la Cuota')).not.toBeInTheDocument();
   });
 
-  it('elimina la cuota tras confirmar, llamando al servicio y refrescando', async () => {
-    const user = userEvent.setup();
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
-    const tokenAntes = useSalesCountsStore.getState().refreshToken;
-    const { onSuccess, onClose } = renderModal();
-    vi.mocked(salesService.deleteFee).mockResolvedValue(undefined);
-
-    await user.click(screen.getByRole('button', { name: /Eliminar/i }));
-
-    await waitFor(() => expect(salesService.deleteFee).toHaveBeenCalledWith(5));
-    expect(onSuccess).toHaveBeenCalled();
-    expect(onClose).toHaveBeenCalled();
-    // Eliminar la cuota mueve los conteos del menú
-    expect(useSalesCountsStore.getState().refreshToken).toBeGreaterThan(tokenAntes);
-    confirmSpy.mockRestore();
-  });
-
-  it('no elimina cuando el usuario cancela la confirmación', async () => {
-    const user = userEvent.setup();
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
-    const { onSuccess } = renderModal();
-
-    await user.click(screen.getByRole('button', { name: /Eliminar/i }));
-
-    expect(salesService.deleteFee).not.toHaveBeenCalled();
-    expect(onSuccess).not.toHaveBeenCalled();
-    confirmSpy.mockRestore();
-  });
-
   it('muestra el error del backend al posponer y no confirma', async () => {
     const user = userEvent.setup();
     const { onSuccess, onClose } = renderModal();
@@ -143,5 +114,95 @@ describe('PostponeFeeModal', () => {
     await screen.findByText('El monto supera el saldo restante');
     expect(onSuccess).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  // ----- Cuota impaga: alcance de la edición (S13b) -----
+
+  it('no muestra el selector de alcance en una cuota cobrada', () => {
+    renderModal();
+    expect(screen.queryByLabelText('Alcance')).not.toBeInTheDocument();
+  });
+
+  it('sin impagas posteriores arranca en "Sólo esta" y pospone la fecha como siempre', async () => {
+    const user = userEvent.setup();
+    const { onSuccess, onClose } = renderModal({
+      isPaid: false,
+      currentPaymentDate: undefined,
+      hasLaterUnpaidFees: false,
+    });
+    vi.mocked(salesService.postponeFee).mockResolvedValue(undefined);
+
+    expect(screen.getByLabelText('Alcance')).toHaveValue('SOLO_ESTA');
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar Cambio' }));
+
+    await waitFor(() => expect(salesService.postponeFee).toHaveBeenCalledTimes(1));
+    expect(salesService.postponeFee).toHaveBeenCalledWith(10, 5, '2026-10-01', 15000, undefined);
+    expect(salesService.reprogramFee).not.toHaveBeenCalled();
+    expect(onSuccess).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('con impagas posteriores arranca en "Esta y las siguientes" y reprograma con el delta en días', async () => {
+    const user = userEvent.setup();
+    const { onSuccess, onClose } = renderModal({
+      isPaid: false,
+      currentPaymentDate: undefined,
+      hasLaterUnpaidFees: true,
+    });
+    vi.mocked(salesService.reprogramFee).mockResolvedValue(undefined);
+
+    expect(screen.getByLabelText('Alcance')).toHaveValue('SIGUIENTES');
+
+    // 2026-10-11 - 2026-10-01 = 10 días
+    fireEvent.change(screen.getByLabelText('Fecha de Vencimiento'), {
+      target: { value: '2026-10-11' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Confirmar Cambio' }));
+
+    await waitFor(() => expect(salesService.reprogramFee).toHaveBeenCalledTimes(1));
+    expect(salesService.reprogramFee).toHaveBeenCalledWith(5, 10);
+    expect(salesService.postponeFee).not.toHaveBeenCalled();
+    expect(onSuccess).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('rechaza "Esta y las siguientes" sin delta positivo, sin llamar al servicio', async () => {
+    const user = userEvent.setup();
+    const { onSuccess, onClose } = renderModal({
+      isPaid: false,
+      currentPaymentDate: undefined,
+      hasLaterUnpaidFees: true,
+    });
+
+    // Una fecha anterior a la actual de la cuota: delta negativo
+    fireEvent.change(screen.getByLabelText('Fecha de Vencimiento'), {
+      target: { value: '2026-09-20' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Confirmar Cambio' }));
+
+    expect(
+      await screen.findByText('La nueva fecha debe ser posterior a la fecha actual de la cuota'),
+    ).toBeInTheDocument();
+    expect(salesService.reprogramFee).not.toHaveBeenCalled();
+    expect(salesService.postponeFee).not.toHaveBeenCalled();
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('con alcance "Sólo esta" pospone la fecha aunque haya impagas posteriores', async () => {
+    const user = userEvent.setup();
+    renderModal({ isPaid: false, currentPaymentDate: undefined, hasLaterUnpaidFees: true });
+    vi.mocked(salesService.postponeFee).mockResolvedValue(undefined);
+
+    await user.selectOptions(screen.getByLabelText('Alcance'), 'SOLO_ESTA');
+    fireEvent.change(screen.getByLabelText('Fecha de Vencimiento'), {
+      target: { value: '2026-10-05' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Confirmar Cambio' }));
+
+    await waitFor(() => expect(salesService.postponeFee).toHaveBeenCalledTimes(1));
+    expect(salesService.postponeFee).toHaveBeenCalledWith(10, 5, '2026-10-05', 15000, undefined);
+    expect(salesService.reprogramFee).not.toHaveBeenCalled();
   });
 });

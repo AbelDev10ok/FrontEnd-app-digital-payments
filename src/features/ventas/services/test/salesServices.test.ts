@@ -223,23 +223,25 @@ describe('salesService.postponeFee', () => {
   });
 });
 
-describe('salesService.deleteFee', () => {
+describe('salesService.reprogramFee', () => {
   beforeEach(() => {
     vi.mocked(authenticatedFetch).mockReset();
+    vi.mocked(authenticatedFetch).mockResolvedValue(okEnvelope({}));
   });
 
-  it('hace DELETE a /fee/{feeId}', async () => {
-    vi.mocked(authenticatedFetch).mockResolvedValue(okEnvelope({}));
-    await salesService.deleteFee(7);
+  it('llama al endpoint de reprogramación en bloque con el delta en días', async () => {
+    await salesService.reprogramFee(5, 3);
     const [url, init] = vi.mocked(authenticatedFetch).mock.calls[0];
-    expect(url).toBe(`${LOANS_API_URL}/fee/7`);
-    expect(init?.method).toBe('DELETE');
+    expect(url).toBe(`${LOANS_API_URL}/fee/5/reprogram?days=3`);
+    expect(init?.method).toBe('POST');
   });
 
   it('propaga el mensaje de error del backend en una respuesta 4xx', async () => {
-    vi.mocked(authenticatedFetch).mockResolvedValue(failEnvelope('No se puede eliminar la única cuota'));
-    await expect(salesService.deleteFee(7)).rejects.toThrow(
-      'No se puede eliminar la única cuota',
+    vi.mocked(authenticatedFetch).mockResolvedValue(
+      failEnvelope('No se puede reprogramar una cuota de una venta anulada'),
+    );
+    await expect(salesService.reprogramFee(5, 3)).rejects.toThrow(
+      'No se puede reprogramar una cuota de una venta anulada',
     );
   });
 });

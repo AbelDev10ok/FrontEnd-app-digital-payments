@@ -42,7 +42,7 @@ const ESTADO_STYLES: Record<CuotaDemo['estado'], { label: string; icon: React.Re
  */
 const CronogramaDemo: React.FC = () => (
   <div
-    className="w-full max-w-sm rotate-1 rounded-card border border-gray-200 bg-white shadow-xl motion-reduce:rotate-0"
+    className="w-full max-w-sm rotate-1 rounded-card border border-gray-200 bg-surface shadow-xl motion-reduce:rotate-0"
     aria-label="Ejemplo de cronograma de cuotas"
   >
     {/* Cabecera del ticket */}
