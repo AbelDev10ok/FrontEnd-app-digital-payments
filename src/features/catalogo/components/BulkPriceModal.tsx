@@ -182,6 +182,9 @@ const BulkPriceModal: React.FC<BulkPriceModalProps> = ({
   };
 
   const filasCambiadas = preview?.rows.filter((fila) => fila.changed) ?? [];
+  // Una sola acción principal: primero calcula, después aplica. Nunca queda un
+  // botón "Aplicar" apagado sin explicación (era el bloqueo reportado).
+  const listoParaAplicar = preview != null && preview.changedCount > 0;
 
   return (
     <Modal isOpen={isOpen} onClose={cerrar} title="Ajuste masivo de precios" size="lg">
@@ -405,23 +408,14 @@ const BulkPriceModal: React.FC<BulkPriceModalProps> = ({
             Cancelar
           </Button>
           <Button
-            variant="secondary"
-            onClick={verCambios}
-            isLoading={calculando}
+            onClick={listoParaAplicar ? aplicar : verCambios}
+            isLoading={calculando || aplicando}
             disabled={aplicando}
-            leftIcon={<Search className="w-4 h-4" />}
+            leftIcon={listoParaAplicar ? <Tags className="w-4 h-4" /> : <Search className="w-4 h-4" />}
           >
-            Ver cambios
-          </Button>
-          <Button
-            onClick={aplicar}
-            isLoading={aplicando}
-            disabled={!preview || preview.changedCount === 0}
-            leftIcon={<Tags className="w-4 h-4" />}
-          >
-            {preview && preview.changedCount > 0
+            {listoParaAplicar
               ? `Aplicar a ${preview.changedCount} ${preview.changedCount === 1 ? 'SKU' : 'SKUs'}`
-              : 'Aplicar'}
+              : 'Ver cambios'}
           </Button>
         </div>
       </div>

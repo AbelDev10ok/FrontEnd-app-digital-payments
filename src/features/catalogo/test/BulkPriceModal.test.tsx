@@ -142,9 +142,29 @@ describe('BulkPriceModal', () => {
 
     await user.type(screen.getByLabelText('Porcentaje'), '5');
 
-    // Un preview viejo no se puede aplicar: el botón vuelve a estar apagado.
-    expect(screen.getByRole('button', { name: /^Aplicar$/i })).toBeDisabled();
+    // Un preview viejo no se puede aplicar: la acción principal vuelve a calcular.
+    expect(screen.queryByRole('button', { name: /Aplicar/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Ver cambios/i })).toBeEnabled();
     expect(screen.queryByText('2 SKUs cambian:')).not.toBeInTheDocument();
+  });
+
+  it('no deja una acción muerta cuando el preview no cambia nada', async () => {
+    const user = userEvent.setup();
+    vi.mocked(salesService.previewBulkPrice).mockResolvedValue({
+      ...previewConCambios,
+      rows: previewConCambios.rows.map((fila) => ({ ...fila, newPrice: fila.oldPrice, newCost: fila.oldCost, changed: false })),
+      changedCount: 0,
+      unchangedCount: 2,
+    });
+    renderModal();
+
+    await user.type(screen.getByLabelText('Porcentaje'), '10');
+    await user.click(screen.getByRole('button', { name: /Ver cambios/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('no cambia ningún precio');
+    // Sin cambios no hay nada que aplicar: la acción principal sigue siendo calcular.
+    expect(screen.queryByRole('button', { name: /Aplicar/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Ver cambios/i })).toBeEnabled();
   });
 
   it('muestra el mensaje del backend cuando el ajuste rompe una regla', async () => {
