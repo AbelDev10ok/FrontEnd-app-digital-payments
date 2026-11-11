@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, Package, Pencil, Plus, RefreshCw, Search, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, History, Package, Pencil, Plus, RefreshCw, Search, Tags, Trash2 } from 'lucide-react';
 import { Alert, Badge, Button, Card, Input, Select } from '@/shared/components/ui';
 import ConfirmDialog from '@/features/catalogo/components/ConfirmDialog';
+import BulkPriceModal from '@/features/catalogo/components/BulkPriceModal';
+import PriceHistoryModal from '@/features/catalogo/components/PriceHistoryModal';
 import ProductFormModal from '@/features/catalogo/components/ProductFormModal';
 import { salesService } from '@/features/ventas/services/salesServices';
 import type { AttributeDto, ProductDto, ProductTypeDto } from '@/shared/types/sales';
@@ -60,6 +62,8 @@ const GestionProductos: React.FC<GestionProductosProps> = ({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState<ProductDto | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<number | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [historial, setHistorial] = useState<{ id: number; nombre: string } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   // El aviso de éxito se retira solo: informa sin estorbar en la próxima tarea.
@@ -198,6 +202,13 @@ const GestionProductos: React.FC<GestionProductosProps> = ({
             <option value="activo">Activos</option>
             <option value="inactivo">Inactivos</option>
           </Select>
+          <Button
+            variant="secondary"
+            leftIcon={<Tags className="w-4 h-4" />}
+            onClick={() => { setActionError(null); setBulkOpen(true); }}
+          >
+            Ajuste masivo
+          </Button>
           <Button leftIcon={<Plus className="w-4 h-4" />} onClick={() => { setActionError(null); setEditingId(null); setFormOpen(true); }}>
             Nuevo producto
           </Button>
@@ -273,6 +284,15 @@ const GestionProductos: React.FC<GestionProductosProps> = ({
                       <Button
                         variant="ghost"
                         size="sm"
+                        aria-label={`Historial de precios de ${base.name}`}
+                        onClick={() => setHistorial({ id: base.id, nombre: base.name })}
+                        className="text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      >
+                        <History className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         aria-label={`Editar producto ${base.name}`}
                         onClick={() => handleStartEdit(base.id)}
                         className="text-gray-600 hover:bg-gray-100 hover:text-gray-900"
@@ -343,6 +363,23 @@ const GestionProductos: React.FC<GestionProductosProps> = ({
           onFeedback(mensaje);
           void onReload();
         }}
+      />
+
+      <BulkPriceModal
+        isOpen={bulkOpen}
+        products={products}
+        categories={categories}
+        onClose={() => setBulkOpen(false)}
+        onApplied={(mensaje) => {
+          onFeedback(mensaje);
+          void onReload();
+        }}
+      />
+
+      <PriceHistoryModal
+        productId={historial?.id ?? null}
+        productName={historial?.nombre ?? ''}
+        onClose={() => setHistorial(null)}
       />
 
       <ConfirmDialog

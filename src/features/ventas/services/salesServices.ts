@@ -3,8 +3,11 @@ import { Client } from "@/shared/types/client";
 import type { DashboardStatsDto } from "@/shared/types/dashboard";
 import {
   AttributeDto,
+  BulkPriceRequest,
+  BulkPriceResult,
   CreateSaleRequest,
   PaymentDto,
+  PriceChangeDto,
   ProductDto,
   ProductPayload,
   ProductTypeDto,
@@ -14,7 +17,7 @@ import {
   UpdateSaleRequest,
 } from "@/shared/types/sales";
 import { ATTRIBUTES_API_URL, CLIENTS_API_URL, LOANS_API_URL, PRODUCTS_API_URL, PRODUCT_TYPES_API_URL, SALES_API_URL } from "@/shared/config/api";
-import { handleResponse } from "@/shared/utils/http";
+import { getErrorMessage, handleResponse } from "@/shared/utils/http";
 
 export interface Page<T> {
   content: T[];
@@ -208,6 +211,41 @@ export const salesService = {
         throw new Error("Ocurrió un error desconocido");
       }
     }
+  },
+
+  /** Qué quedaría en cada SKU con el ajuste. No escribe nada. */
+  async previewBulkPrice(request: BulkPriceRequest): Promise<BulkPriceResult> {
+    const response = await authenticatedFetch(`${PRODUCTS_API_URL}/bulk-price/preview`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    });
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, "Error al calcular el ajuste de precios"));
+    }
+    return response.json();
+  },
+
+  /** Aplica el ajuste en bloque y deja el historial de precios. */
+  async applyBulkPrice(request: BulkPriceRequest): Promise<BulkPriceResult> {
+    const response = await authenticatedFetch(`${PRODUCTS_API_URL}/bulk-price`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    });
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, "Error al aplicar el ajuste de precios"));
+    }
+    return response.json();
+  },
+
+  /** Historial de precios de un producto (del más reciente al más viejo). */
+  async getPriceHistory(productId: number): Promise<PriceChangeDto[]> {
+    const response = await authenticatedFetch(`${PRODUCTS_API_URL}/${productId}/price-history`);
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, "Error al obtener el historial de precios"));
+    }
+    return response.json();
   },
 
   async getAttributes(): Promise<AttributeDto[]> {

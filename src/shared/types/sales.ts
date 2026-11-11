@@ -172,6 +172,69 @@ export interface ProductPayload {
   variants: ProductVariantPayload[];
 }
 
+/** Alcance de un ajuste masivo: todo el catálogo, una categoría (con su rama) o SKUs elegidos. */
+export type BulkPriceScope = 'ALL' | 'CATEGORY' | 'VARIANTS';
+
+/** Cómo se calcula el precio nuevo: porcentaje o monto fijo por unidad. */
+export type BulkPriceMode = 'PERCENT' | 'AMOUNT';
+
+export interface BulkPriceRequest {
+  scope: BulkPriceScope;
+  categoryId?: number | null;
+  variantIds?: number[];
+  mode: BulkPriceMode;
+  value: number;
+  /** Aplica el mismo criterio al costo para conservar el margen. */
+  adjustCost: boolean;
+  /** Redondea el precio nuevo al múltiplo más cercano (opcional). */
+  roundTo?: number | null;
+}
+
+/** Un SKU del preview: lo que había y lo que quedaría. */
+export interface BulkPriceRow {
+  variantId: number | null;
+  productId: number | null;
+  productName: string | null;
+  sku: string | null;
+  variantLabel?: string | null;
+  currency?: string | null;
+  oldPrice: number;
+  newPrice: number;
+  oldCost: number;
+  newCost: number;
+  changed: boolean;
+}
+
+export interface BulkPriceResult {
+  rows: BulkPriceRow[];
+  totalCount: number;
+  changedCount: number;
+  unchangedCount: number;
+  /** Identifica el lote aplicado; null en el preview. */
+  batchId?: string | null;
+}
+
+/** Un cambio de precio del historial del catálogo. */
+export interface PriceChangeDto {
+  id: number;
+  variantId: number | null;
+  productId: number | null;
+  productName: string | null;
+  sku: string | null;
+  currency?: string | null;
+  oldPrice: number;
+  newPrice: number;
+  oldCost: number;
+  newCost: number;
+  adjustmentMode: BulkPriceMode | string | null;
+  adjustmentValue: number | null;
+  adjustCost: boolean | null;
+  roundTo: number | null;
+  batchId?: string | null;
+  createdAt: string;
+  createdBy?: string | null;
+}
+
 export interface SalesCountsDto {
   total: number;
   active: number;
