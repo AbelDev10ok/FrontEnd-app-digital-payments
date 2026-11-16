@@ -10,6 +10,7 @@ import {
   Eye,
   Plus,
   Package,
+  Boxes,
   HandCoins,
   CalendarClock,
   ListChecks,
@@ -476,6 +477,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
           >
             <Package strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
             <span>Productos</span>
+          </NavLink>
+
+          <NavLink
+            to="/dashboard/inventario"
+            onClick={onNavigate}
+            className={({ isActive }) => navLinkClass(isActive)}
+          >
+            <Boxes strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
+            <span>Inventario</span>
           </NavLink>
 
           <NavLink
