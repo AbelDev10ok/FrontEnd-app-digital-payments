@@ -7,6 +7,7 @@ import PriceHistoryModal from '@/features/catalogo/components/PriceHistoryModal'
 import ProductFormModal from '@/features/catalogo/components/ProductFormModal';
 import { salesService } from '@/features/ventas/services/salesServices';
 import type { AttributeDto, ProductDto, ProductTypeDto } from '@/shared/types/sales';
+import { normalizarBusqueda } from '@/shared/utils/busqueda';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
 import { especificacionesDe, resumenEspecificaciones } from '@/shared/utils/productSpecs';
 import { aplanarCategorias, categoriaYDescendientes } from '@/shared/utils/categoryTree';
@@ -22,12 +23,6 @@ interface GestionProductosProps {
   feedback: string | null;
   onFeedback: (mensaje: string | null) => void;
 }
-
-const normalizar = (texto: string | null | undefined) =>
-  (texto ?? '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '');
 
 /** Cada producto base agrupa sus variantes: el listado devuelve una fila por SKU. */
 const agruparPorProducto = (products: ProductDto[]) => {
@@ -82,7 +77,7 @@ const GestionProductos: React.FC<GestionProductosProps> = ({
   );
 
   const filtrados = useMemo(() => {
-    const consulta = normalizar(search.trim());
+    const consulta = normalizarBusqueda(search);
     return productosAgrupados.filter(({ base, variantes }) => {
       if (ramaFiltrada && (base.productTypeId == null || !ramaFiltrada.has(base.productTypeId))) {
         return false;
@@ -90,7 +85,7 @@ const GestionProductos: React.FC<GestionProductosProps> = ({
       if (filterActive === 'activo' && base.productActive === false) return false;
       if (filterActive === 'inactivo' && base.productActive !== false) return false;
       if (!consulta) return true;
-      const haystack = normalizar(
+      const haystack = normalizarBusqueda(
         [
           base.name,
           base.brand,
