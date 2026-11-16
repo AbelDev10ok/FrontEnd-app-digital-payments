@@ -18,6 +18,19 @@ interface RefreshTokenResponse {
   refreshToken: string;
 }
 
+const RUTA_SUSCRIPCION = '/dashboard/suscripcion';
+
+/**
+ * Manda al usuario a pagar sin cerrarle la sesión. Si ya está en esa pantalla
+ * no recarga: otra petición con 402 reiniciaría la página en loop.
+ */
+function redirigirASuscripcion(): void {
+  if (window.location.pathname === RUTA_SUSCRIPCION) {
+    return;
+  }
+  window.location.href = RUTA_SUSCRIPCION;
+}
+
 // authServices.ts
 export async function login(email: string, password: string): Promise<LoginResponse> {
   const response = await fetch(`${AUTH_API_URL}/login`, {
@@ -200,11 +213,14 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
       headers,
     });
 
-    // Si recibimos 402, el backend indica que la suscripcion no esta activa
+    // 402: el negocio no tiene suscripción activa (trial vencido o pago caído).
+    // No es un problema de sesión: la suscripción se paga desde
+    // /dashboard/suscripcion, que necesita el token para cargar (/api/billing
+    // está exento del gate). Cerrar sesión acá dejaba esa página inalcanzable y
+    // el login volvía a chocar con el 402, en loop hasta el rate limit.
     if (response.status === 402) {
-      logout();
-      window.location.href = '/dashboard/suscripcion';
-      throw new Error('Suscripcion requerida. Redirigiendo a la pagina de pago.');
+      redirigirASuscripcion();
+      throw new Error('Suscripción requerida. Redirigiendo a la página de pago.');
     }
 
     // Si el token es válido, o el error no es 401, devolver la respuesta para ser manejada por el service

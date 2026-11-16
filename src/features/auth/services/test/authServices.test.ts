@@ -337,6 +337,24 @@ describe("authenticatedFetch", () => {
       (callUrl as string).includes("/auth/logout"),
     )).toBe(true);
   });
+
+  it("conserva la sesión cuando el backend responde 402 (suscripción vencida)", async () => {
+    // El 402 no es un problema de sesión: la suscripción se paga desde
+    // /dashboard/suscripcion, y esa página necesita el token para cargar.
+    // Cerrar sesión acá dejaba al usuario en un loop login → 402 → login.
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(false, 402, { message: "Suscripcion requerida" }),
+    );
+
+    await expect(authenticatedFetch(url)).rejects.toThrow(/suscripci[oó]n requerida/i);
+
+    const state = useAuthStore.getState();
+    expect(state.isAuthenticated).toBe(true);
+    expect(state.accessToken).toBe("oldAccess");
+    expect(fetchMock.mock.calls.some(([callUrl]) =>
+      (callUrl as string).includes("/auth/logout"),
+    )).toBe(false);
+  });
 });
 
 describe("logout", () => {
