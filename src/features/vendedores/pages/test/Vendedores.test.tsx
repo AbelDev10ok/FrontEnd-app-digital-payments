@@ -73,7 +73,9 @@ describe('Vendedores', () => {
     expect(screen.getByText('luis')).toBeInTheDocument();
     expect(screen.getByText('Deshabilitado')).toBeInTheDocument();
     expect(screen.getByText('Sin vendedor')).toBeInTheDocument();
-    expect(sellerService.getSellerMetrics).toHaveBeenCalledWith(2026, 10);
+    // El mes va 1-based (enero = 1): la fecha de hoy no debe romper el test.
+    const hoy = new Date();
+    expect(sellerService.getSellerMetrics).toHaveBeenCalledWith(hoy.getFullYear(), hoy.getMonth() + 1);
   });
 
   it('separa ventas y préstamos con el conmutador', async () => {

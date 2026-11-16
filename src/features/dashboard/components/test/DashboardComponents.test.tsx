@@ -5,9 +5,11 @@ import { MemoryRouter } from 'react-router-dom';
 import type { ReactElement } from 'react';
 import MonthlyBarChart from '../MonthlyBarChart';
 import AnnualSummary from '../AnnualSummary';
+import CategoryBreakdownList from '../CategoryBreakdownList';
 import OverdueFeesAlert from '../OverdueFeesAlert';
 import SalesStatusBreakdown from '../SalesStatusBreakdown';
 import TopClientsList from '../TopClientsList';
+import TopProductsList from '../TopProductsList';
 import type { MonthlySales } from '@/shared/types/dashboard';
 
 /** La alerta de vencidas es un enlace: necesita contexto de router. */
@@ -158,5 +160,81 @@ describe('TopClientsList', () => {
     );
     expect(screen.getByText(/900/)).toBeInTheDocument();
     expect(screen.getByText(/US\$\s*70/)).toBeInTheDocument();
+  });
+});
+
+describe('CategoryBreakdownList', () => {
+  it('muestra categoría, ventas, unidades y monto del mes', () => {
+    render(
+      <CategoryBreakdownList
+        categories={[
+          { categoryId: 2, categoryName: 'Celulares', totalVentas: 3, unidades: 7, totalVendido: { ARS: 42000 } },
+        ]}
+      />,
+    );
+    expect(screen.getByText('Celulares')).toBeInTheDocument();
+    expect(screen.getByText('3 ventas · 7 unidades')).toBeInTheDocument();
+    expect(screen.getByText(/42\.000/)).toBeInTheDocument();
+  });
+
+  it('usa singular para una sola venta de una sola unidad y etiqueta el legado', () => {
+    render(
+      <CategoryBreakdownList
+        categories={[
+          { categoryId: null, categoryName: 'Sin categoría', totalVentas: 1, unidades: 1, totalVendido: { ARS: 500 } },
+        ]}
+      />,
+    );
+    expect(screen.getByText('Sin categoría')).toBeInTheDocument();
+    expect(screen.getByText('1 venta · 1 unidad')).toBeInTheDocument();
+  });
+
+  it('muestra cada moneda por separado, sin sumarlas', () => {
+    render(
+      <CategoryBreakdownList
+        categories={[
+          { categoryId: 1, categoryName: 'Televisores', totalVentas: 2, unidades: 2, totalVendido: { ARS: 900, USD: 70 } },
+        ]}
+      />,
+    );
+    expect(screen.getByText(/900/)).toBeInTheDocument();
+    expect(screen.getByText(/US\$\s*70/)).toBeInTheDocument();
+  });
+
+  it('muestra el estado vacío cuando no hay categorías con ventas', () => {
+    render(<CategoryBreakdownList categories={[]} />);
+    expect(screen.getByText('Sin ventas de productos este mes.')).toBeInTheDocument();
+  });
+});
+
+describe('TopProductsList', () => {
+  it('muestra el ranking con unidades, ventas y monto', () => {
+    render(
+      <TopProductsList
+        products={[
+          { productId: 1, productName: 'Fundas', totalVentas: 10, unidades: 12, totalVendido: { ARS: 12000 } },
+        ]}
+      />,
+    );
+    expect(screen.getByText('1')).toBeInTheDocument();
+    expect(screen.getByText('Fundas')).toBeInTheDocument();
+    expect(screen.getByText('12 unidades · 10 ventas')).toBeInTheDocument();
+    expect(screen.getByText(/12\.000/)).toBeInTheDocument();
+  });
+
+  it('usa singular para una sola unidad de una sola venta', () => {
+    render(
+      <TopProductsList
+        products={[
+          { productId: 9, productName: 'Smart TV 65', totalVentas: 1, unidades: 1, totalVendido: { ARS: 900000 } },
+        ]}
+      />,
+    );
+    expect(screen.getByText('1 unidad · 1 venta')).toBeInTheDocument();
+  });
+
+  it('muestra el estado vacío cuando no hay productos vendidos', () => {
+    render(<TopProductsList products={[]} />);
+    expect(screen.getByText('Aún no hay productos vendidos este mes.')).toBeInTheDocument();
   });
 });

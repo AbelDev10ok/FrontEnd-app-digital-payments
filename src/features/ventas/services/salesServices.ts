@@ -3,18 +3,25 @@ import { Client } from "@/shared/types/client";
 import type { DashboardStatsDto } from "@/shared/types/dashboard";
 import {
   AttributeDto,
+  BulkPriceRequest,
+  BulkPriceResult,
   CreateSaleRequest,
   PaymentDto,
+  PriceChangeDto,
   ProductDto,
   ProductPayload,
   ProductTypeDto,
   SaleDocumentDto,
   SaleResponseDto,
   SalesCountsDto,
+  StockAdjustmentRequest,
+  StockEntryRequest,
+  StockMovementDto,
+  StockMovementType,
   UpdateSaleRequest,
 } from "@/shared/types/sales";
-import { ATTRIBUTES_API_URL, CLIENTS_API_URL, LOANS_API_URL, PRODUCTS_API_URL, PRODUCT_TYPES_API_URL, SALES_API_URL } from "@/shared/config/api";
-import { handleResponse } from "@/shared/utils/http";
+import { ATTRIBUTES_API_URL, CLIENTS_API_URL, LOANS_API_URL, PRODUCTS_API_URL, PRODUCT_TYPES_API_URL, SALES_API_URL, STOCK_API_URL } from "@/shared/config/api";
+import { getErrorMessage, handleResponse } from "@/shared/utils/http";
 
 export interface Page<T> {
   content: T[];
@@ -192,6 +199,63 @@ export const salesService = {
     }
   },
 
+  /**
+   * Ajuste por conteo físico: se manda lo contado y el backend calcula el
+   * delta contra el stock actual. El motivo es obligatorio.
+   */
+  async registrarAjusteStock(payload: StockAdjustmentRequest): Promise<StockMovementDto> {
+    const response = await authenticatedFetch(`${STOCK_API_URL}/adjustment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, "Error al registrar el ajuste de stock"));
+    }
+    return response.json();
+  },
+
+  /**
+   * Ingreso de mercadería por lote: todas las líneas se registran en una sola
+   * operación y cada una deja su movimiento INGRESO con el costo observado.
+   */
+  async registrarIngresoStock(payload: StockEntryRequest): Promise<StockMovementDto[]> {
+    const response = await authenticatedFetch(`${STOCK_API_URL}/entries`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, "Error al registrar el ingreso de stock"));
+    }
+    return response.json();
+  },
+
+  /** Historial de movimientos de stock, paginado y filtrable por SKU. */
+  async getStockMovements(
+    params: {
+      variantId?: number;
+      from?: string;
+      to?: string;
+      type?: StockMovementType;
+      page?: number;
+      size?: number;
+    } = {},
+  ): Promise<Page<StockMovementDto>> {
+    const query = new URLSearchParams();
+    if (params.variantId != null) query.set("variantId", String(params.variantId));
+    if (params.from) query.set("from", params.from);
+    if (params.to) query.set("to", params.to);
+    if (params.type) query.set("type", params.type);
+    query.set("page", String(params.page ?? 0));
+    query.set("size", String(params.size ?? 20));
+    const response = await authenticatedFetch(`${STOCK_API_URL}/movements?${query.toString()}`);
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, "Error al obtener los movimientos de stock"));
+    }
+    return response.json();
+  },
+
   async deleteProduct(id: number): Promise<void> {
     const response = await authenticatedFetch(`${PRODUCTS_API_URL}/${id}`, {
       method: "DELETE",
@@ -208,6 +272,41 @@ export const salesService = {
         throw new Error("Ocurrió un error desconocido");
       }
     }
+  },
+
+  /** Qué quedaría en cada SKU con el ajuste. No escribe nada. */
+  async previewBulkPrice(request: BulkPriceRequest): Promise<BulkPriceResult> {
+    const response = await authenticatedFetch(`${PRODUCTS_API_URL}/bulk-price/preview`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    });
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, "Error al calcular el ajuste de precios"));
+    }
+    return response.json();
+  },
+
+  /** Aplica el ajuste en bloque y deja el historial de precios. */
+  async applyBulkPrice(request: BulkPriceRequest): Promise<BulkPriceResult> {
+    const response = await authenticatedFetch(`${PRODUCTS_API_URL}/bulk-price`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    });
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, "Error al aplicar el ajuste de precios"));
+    }
+    return response.json();
+  },
+
+  /** Historial de precios de un producto (del más reciente al más viejo). */
+  async getPriceHistory(productId: number): Promise<PriceChangeDto[]> {
+    const response = await authenticatedFetch(`${PRODUCTS_API_URL}/${productId}/price-history`);
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, "Error al obtener el historial de precios"));
+    }
+    return response.json();
   },
 
   async getAttributes(): Promise<AttributeDto[]> {

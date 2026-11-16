@@ -6,6 +6,7 @@ import { clientService } from '@/features/clients/services/clientServices';
 import { useClients } from '@features/clients/hooks/useClients';
 import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import ClientForm, { ClientFormData } from '@features/clients/components/ClientForm';
+import { telefonoNacional } from '@/shared/utils/telefono';
 import Load from '@/shared/components/feedback/Load';
 import ErrorMessage from '@/shared/components/feedback/ErrorMessage';
 import { Alert, PageHeader } from '@/shared/components/ui';
@@ -38,8 +39,11 @@ const EditarCliente: React.FC<PageProps> = ({ user, onLogout }) => {
           setInitialValues({
             name: client.name,
             email: client.email || '',
-            telefono: client.telefono,
+            telefono: telefonoNacional(client.telefono) ?? client.telefono,
             direccion: client.direccion || '',
+            localidad: client.localidad || '',
+            provincia: client.provincia || '',
+            codigoPostal: client.codigoPostal || '',
             dni: client.dni || '',
             sellerId: client.sellerId || '',
           });
@@ -64,6 +68,9 @@ const EditarCliente: React.FC<PageProps> = ({ user, onLogout }) => {
         telefono: formData.telefono.trim(),
         email: formData.email.trim() || '',
         direccion: formData.direccion.trim() || '',
+        localidad: formData.localidad.trim() || '',
+        provincia: formData.provincia.trim() || '',
+        codigoPostal: formData.codigoPostal.trim() || '',
         dni: formData.dni.trim().toLowerCase().replace(/\s+/g, ''),
         sellerId: formData.sellerId ? Number(formData.sellerId) : undefined,
       };

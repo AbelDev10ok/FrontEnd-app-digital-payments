@@ -1,4 +1,5 @@
 import { authenticatedFetch } from "@/features/auth/services/authServices";
+import { handleResponse } from "@/shared/utils/http";
 import { LOANS_API_URL } from "@/shared/config/api";
 import type {
   CobrosHoyResponse,
@@ -16,17 +17,45 @@ export interface CuotasFilters {
   clientId?: number;
 }
 
+export interface CobrosHoyFilters {
+  fecha?: string;
+  /** Cartera del cliente: quien lo atiende es quien cobra, no la autoría de la venta */
+  sellerId?: number;
+}
+
+/** Marca de gestión que devuelve registrar un recordatorio de pago. */
+export interface RecordatorioResponse {
+  feeId: number;
+  /** Fecha y hora local del recordatorio (`YYYY-MM-DDTHH:mm:ss`). */
+  ultimoRecordatorio: string;
+  recordatorios: number;
+}
+
 export const collectionsService = {
-  /** Agenda de cobros del dia: cuotas que vencen hoy + vencidas, con resumen. */
-  async getCobrosHoy(fecha?: string): Promise<CobrosHoyResponse> {
-    const url = fecha
-      ? `${LOANS_API_URL}/collections/today?date=${fecha}`
-      : `${LOANS_API_URL}/collections/today`;
-    const response = await authenticatedFetch(url);
+  /** Agenda de cobros: cuotas que vencen hasta la fecha (hoy por defecto) + vencidas, con resumen. */
+  async getCobrosHoy(filters: CobrosHoyFilters = {}): Promise<CobrosHoyResponse> {
+    const params = new URLSearchParams();
+    if (filters.fecha) params.append("date", filters.fecha);
+    if (filters.sellerId) params.append("sellerId", filters.sellerId.toString());
+    const query = params.toString();
+    const response = await authenticatedFetch(
+      `${LOANS_API_URL}/collections/today${query ? `?${query}` : ""}`,
+    );
     if (!response.ok) {
       throw new Error("Error al cargar los cobros del día");
     }
     return response.json();
+  },
+
+  /**
+   * Registra que se le recordó la cuota al cliente por WhatsApp (el envío es
+   * manual). La agenda usa la marca para no repetir el reclamo el mismo día.
+   */
+  async marcarRecordatorio(feeId: number): Promise<RecordatorioResponse> {
+    const response = await authenticatedFetch(`${LOANS_API_URL}/fee/${feeId}/reminder`, {
+      method: "POST",
+    });
+    return handleResponse<RecordatorioResponse>(response);
   },
 
   /** Vista global de cuotas con filtros combinables (paginada). */
