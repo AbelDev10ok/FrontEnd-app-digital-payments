@@ -7,6 +7,7 @@ export const LOANS_API_URL = `${API_BASE_URL}/api/loans`;
 export const SALES_API_URL = `${API_BASE_URL}/api/sales`;
 export const PRODUCT_TYPES_API_URL = `${API_BASE_URL}/api/product-types`;
 export const PRODUCTS_API_URL = `${API_BASE_URL}/api/products`;
+export const STOCK_API_URL = `${API_BASE_URL}/api/stock`;
 export const ATTRIBUTES_API_URL = `${API_BASE_URL}/api/attributes`;
 export const BUSINESS_API_URL = `${API_BASE_URL}/api/business`;
 export const BILLING_API_URL = `${API_BASE_URL}/api/billing`;

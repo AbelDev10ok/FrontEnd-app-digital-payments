@@ -10,6 +10,7 @@ import type {
   ProductDto,
   ProductPayload,
   ProductTypeDto,
+  ProductVariantPayload,
 } from '@/shared/types/sales';
 import { formatCurrency, getCurrency } from '@/shared/utils/formatCurrency';
 import { etiquetaMoneda, opcionesMonedaNegocio } from '@/shared/utils/currencies';
@@ -274,7 +275,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     if (!productTypeId) nuevosErrores.productTypeId = 'Elegí una categoría';
     if (variants.length === 0) nuevosErrores.variants = 'El producto debe tener al menos una variante';
 
-    const payloadVariants = [];
+    const payloadVariants: ProductVariantPayload[] = [];
     for (let i = 0; i < variants.length; i++) {
       const fila = variants[i];
       const cost = Number(fila.cost);
@@ -289,7 +290,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
       } else if (price <= cost) {
         nuevosErrores[`v${i}-price`] = `El precio de venta de ${etiqueta} debe ser mayor al costo`;
       }
-      if (fila.stock === '' || !Number.isInteger(stock) || stock < 0) {
+      // El stock de una variante existente no se edita desde el producto: la
+      // carga inicial sólo aplica al alta y los cambios van por el libro de
+      // inventario (ajuste por conteo), no por este formulario.
+      if (fila.id == null && (fila.stock === '' || !Number.isInteger(stock) || stock < 0)) {
         nuevosErrores[`v${i}-stock`] = `El stock de ${etiqueta} debe ser un número entero mayor o igual a 0`;
       }
       if (selectedAttributeIds.some((attributeId) => !fila.valores[attributeId])) {
@@ -300,7 +304,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         sku: fila.sku.trim() || null,
         cost,
         price,
-        stock,
+        ...(fila.id == null ? { stock } : {}),
         barcode: fila.barcode.trim() || null,
         active: fila.active,
         attributeValueIds: selectedAttributeIds
@@ -580,15 +584,25 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       placeholder="0"
                     />
                   </Field>
-                  <Field label="Stock" htmlFor={`stock-${indice}`} required error={errors[`v${indice}-stock`]}>
-                    <Input
-                      id={`stock-${indice}`}
-                      type="number"
-                      value={fila.stock}
-                      onChange={(e) => updateVariantRow(indice, { stock: e.target.value })}
-                      placeholder="0"
+                  {fila.id != null ? (
+                    <AjusteStockInline
+                      indice={indice}
+                      variantId={fila.id}
+                      stock={Number(fila.stock) || 0}
+                      onAdjusted={(stockAfter) => updateVariantRow(indice, { stock: String(stockAfter) })}
+                      onSaved={() => onSaved('Stock ajustado')}
                     />
-                  </Field>
+                  ) : (
+                    <Field label="Stock inicial" htmlFor={`stock-${indice}`} required error={errors[`v${indice}-stock`]}>
+                      <Input
+                        id={`stock-${indice}`}
+                        type="number"
+                        value={fila.stock}
+                        onChange={(e) => updateVariantRow(indice, { stock: e.target.value })}
+                        placeholder="0"
+                      />
+                    </Field>
+                  )}
                   <Field label="Código de barras" htmlFor={`barcode-${indice}`}>
                     <Input
                       id={`barcode-${indice}`}
@@ -645,3 +659,123 @@ const ProductForm: React.FC<ProductFormProps> = ({
 };
 
 export default ProductFormModal;
+
+/**
+ * Ajuste de stock por conteo en la fila de una variante existente.
+ *
+ * El stock no se edita desde el producto: se manda lo contado y el backend
+ * calcula la diferencia y la deja registrada en el libro de inventario.
+ */
+function AjusteStockInline({
+  indice,
+  variantId,
+  stock,
+  onAdjusted,
+  onSaved,
+}: {
+  indice: number;
+  variantId: number;
+  stock: number;
+  onAdjusted: (stockAfter: number) => void;
+  /** Avisa a la vista para que refresque el catálogo con el stock nuevo. */
+  onSaved: () => void;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const [contado, setContado] = useState('');
+  const [motivo, setMotivo] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
+
+  const guardarAjuste = async () => {
+    const cantidad = Number(contado);
+    if (contado === '' || !Number.isInteger(cantidad) || cantidad < 0) {
+      setError('El stock contado debe ser un número entero mayor o igual a 0');
+      return;
+    }
+    if (!motivo.trim()) {
+      setError('Indicá el motivo del ajuste');
+      return;
+    }
+    setGuardando(true);
+    setError(null);
+    try {
+      const movimiento = await salesService.registrarAjusteStock({
+        variantId,
+        countedQuantity: cantidad,
+        reason: motivo.trim(),
+      });
+      onAdjusted(movimiento.stockAfter ?? cantidad);
+      onSaved();
+      setAbierto(false);
+      setContado('');
+      setMotivo('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al registrar el ajuste de stock');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  return (
+    <>
+      <Field label="Stock">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-semibold text-gray-900">
+            {stock} {stock === 1 ? 'unidad' : 'unidades'}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-expanded={abierto}
+            onClick={() => {
+              setAbierto((previo) => !previo);
+              setError(null);
+            }}
+          >
+            {abierto ? 'Cerrar' : 'Ajustar'}
+          </Button>
+        </div>
+      </Field>
+
+      {abierto && (
+        <div className="col-span-2 rounded-lg border border-gray-200 bg-gray-50 p-3 lg:col-span-5">
+          <p className="text-xs text-gray-600">
+            El stock no se edita desde el producto: cargá lo contado y queda registrado como ajuste de
+            inventario.
+          </p>
+          <div className="mt-2 flex flex-wrap items-end gap-2">
+            <Field label="Stock contado" htmlFor={`stock-contado-${indice}`} required>
+              <Input
+                id={`stock-contado-${indice}`}
+                type="number"
+                min={0}
+                value={contado}
+                onChange={(e) => setContado(e.target.value)}
+                placeholder={String(stock)}
+                className="h-9 text-sm"
+              />
+            </Field>
+            <Field label="Motivo" htmlFor={`stock-motivo-${indice}`} required>
+              <Input
+                id={`stock-motivo-${indice}`}
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+                placeholder="Conteo físico, merma, rotura…"
+                className="h-9 text-sm"
+              />
+            </Field>
+            <Button type="button" size="sm" isLoading={guardando} onClick={guardarAjuste}>
+              Guardar ajuste
+            </Button>
+          </div>
+          {error && (
+            <p role="alert" className="mt-2 text-sm text-red-600">
+              {error}
+            </p>
+          )}
+        </div>
+      )}
+    </>
+  );
+}

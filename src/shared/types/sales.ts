@@ -154,7 +154,8 @@ export interface ProductVariantPayload {
   sku?: string | null;
   cost: number;
   price: number;
-  stock: number;
+  /** Sólo en el alta: el stock inicial. En la edición se omite (va por ajuste). */
+  stock?: number;
   barcode?: string | null;
   active?: boolean;
   attributeValueIds?: number[];
@@ -170,6 +171,44 @@ export interface ProductPayload {
   currency?: string | null;
   attributeIds?: number[];
   variants: ProductVariantPayload[];
+}
+
+/** Tipo de movimiento del libro de inventario. */
+export type StockMovementType = 'INGRESO' | 'VENTA' | 'ANULACION' | 'AJUSTE';
+
+/** Un movimiento de stock: el libro es la verdad y el stock es su caché. */
+export interface StockMovementDto {
+  id: number;
+  variantId: number;
+  sku: string;
+  type: StockMovementType;
+  delta: number;
+  unitCost?: number | null;
+  reason?: string | null;
+  saleId?: number | null;
+  createdAt: string;
+  createdBy?: string | null;
+  /** Stock que quedó tras el movimiento; sólo lo devuelven las altas. */
+  stockAfter?: number | null;
+}
+
+export interface StockAdjustmentRequest {
+  variantId: number;
+  countedQuantity: number;
+  reason: string;
+}
+
+/** Una línea de ingreso de mercadería: qué entra, cuánto y a qué costo. */
+export interface StockEntryLine {
+  variantId: number;
+  quantity: number;
+  unitCost?: number | null;
+}
+
+/** Ingreso de mercadería por lote: varias líneas en una sola operación. */
+export interface StockEntryRequest {
+  note?: string | null;
+  lines: StockEntryLine[];
 }
 
 /** Alcance de un ajuste masivo: todo el catálogo, una categoría (con su rama) o SKUs elegidos. */
