@@ -1,16 +1,33 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarClock, CheckCircle2, Eye, HandCoins, Phone, RefreshCw } from 'lucide-react';
+import {
+  CalendarClock,
+  CheckCircle2,
+  Eye,
+  HandCoins,
+  MapPin,
+  MessageCircle,
+  Phone,
+  RefreshCw,
+  Route,
+} from 'lucide-react';
 import DashboardLayout from '@/shared/components/layout/DashboardLayout';
 import PageHeader from '@/shared/components/ui/PageHeader';
 import Card from '@/shared/components/ui/Card';
 import Button from '@/shared/components/ui/Button';
+import { Input, Select } from '@/shared/components/ui';
 import { formatCurrency, formatMoneyByCurrency } from '@/shared/utils/formatCurrency';
+import { buildMapsDestinationUrl, buildMapsRouteUrl } from '@/shared/utils/mapsRoute';
+import { buildTelHref, formatearTelefono } from '@/shared/utils/telefono';
 import { collectionsService } from '@/features/cobros/services/collectionsService';
 import PayFeeModal from '@/features/cobros/components/PayFeeModal';
 import CuotaEstadoBadge from '@/features/cobros/components/CuotaEstadoBadge';
+import RecordatorioRondaModal from '@/features/cobros/components/RecordatorioRondaModal';
 import { montoCobrableDeCuota } from '@/features/cobros/utils/montoCobrable';
+import { esRecordadoHoy, recordatorioHrefDeCuota } from '@/features/cobros/utils/recordatorio';
 import { sufijoTotalCuotas } from '@/features/cobros/utils/numeroCuota';
+import { salesService } from '@/features/ventas/services/salesServices';
+import type { Client } from '@/shared/types/client';
 import type { CobrosHoyResponse, CuotaItem } from '@/shared/types/business';
 import type { MontosPorMoneda } from '@/shared/types/money';
 
@@ -48,22 +65,126 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cuotaACobrar, setCuotaACobrar] = useState<CuotaItem | null>(null);
+  const [fecha, setFecha] = useState('');
+  const [sellerId, setSellerId] = useState('');
+  const [sellerOptions, setSellerOptions] = useState<Client[]>([]);
+  const [seleccionados, setSeleccionados] = useState<Set<number>>(new Set());
+  const [ocultarRecordados, setOcultarRecordados] = useState(false);
+  const [rondaCuotas, setRondaCuotas] = useState<CuotaItem[] | null>(null);
 
-  const cargar = async () => {
+  // Opciones del filtro por vendedor (se piden una vez)
+  useEffect(() => {
+    salesService
+      .getSellers()
+      .then(setSellerOptions)
+      .catch(() => setSellerOptions([]));
+  }, []);
+
+  const cargar = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      setData(await collectionsService.getCobrosHoy());
+      setData(
+        await collectionsService.getCobrosHoy({
+          fecha: fecha || undefined,
+          sellerId: sellerId ? Number(sellerId) : undefined,
+        }),
+      );
+      // La selección es efímera: al recargar la agenda se arranca limpio
+      setSeleccionados(new Set());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar los cobros del día');
     } finally {
       setLoading(false);
     }
-  };
+  }, [fecha, sellerId]);
 
   useEffect(() => {
     cargar();
-  }, []);
+  }, [cargar]);
+
+  const items = useMemo(() => data?.items ?? [], [data]);
+
+  // Sólo se puede recordar por WhatsApp una cuota impaga de un cliente con
+  // celular interpretable: el mensaje y el enlace salen de una única fuente.
+  const esRecordable = useCallback(
+    (cuota: CuotaItem) => !cuota.pagada && recordatorioHrefDeCuota(cuota) !== null,
+    [],
+  );
+
+  const recordables = useMemo(() => items.filter(esRecordable), [items, esRecordable]);
+
+  const visibles = useMemo(
+    () =>
+      ocultarRecordados
+        ? items.filter((cuota) => !esRecordadoHoy(cuota.ultimoRecordatorio, data?.fecha ?? ''))
+        : items,
+    [items, ocultarRecordados, data?.fecha],
+  );
+
+  const seleccionadas = useMemo(
+    () => recordables.filter((cuota) => seleccionados.has(cuota.id)),
+    [recordables, seleccionados],
+  );
+
+  const todosSeleccionados =
+    recordables.length > 0 && recordables.every((cuota) => seleccionados.has(cuota.id));
+
+  const alternarSeleccion = (id: number) => {
+    setSeleccionados((previos) => {
+      const siguientes = new Set(previos);
+      if (siguientes.has(id)) {
+        siguientes.delete(id);
+      } else {
+        siguientes.add(id);
+      }
+      return siguientes;
+    });
+  };
+
+  const alternarTodos = () => {
+    setSeleccionados(todosSeleccionados ? new Set() : new Set(recordables.map((cuota) => cuota.id)));
+  };
+
+  // El recordatorio de la fila ya abrió el chat: la marca se actualiza en la
+  // agenda para que el cliente no vuelva a aparecer como pendiente.
+  const registrarRecordatorio = async (cuota: CuotaItem) => {
+    try {
+      const marca = await collectionsService.marcarRecordatorio(cuota.id);
+      setData((previo) =>
+        previo
+          ? {
+              ...previo,
+              items: previo.items.map((item) =>
+                item.id === cuota.id
+                  ? {
+                      ...item,
+                      ultimoRecordatorio: marca.ultimoRecordatorio,
+                      recordatorios: marca.recordatorios,
+                    }
+                  : item,
+              ),
+            }
+          : previo,
+      );
+    } catch {
+      // Abrir WhatsApp ya es útil: no se bloquea al usuario porque falle la marca.
+    }
+  };
+
+  const cerrarRonda = () => {
+    setRondaCuotas(null);
+    setSeleccionados(new Set());
+    // La ronda registró recordatorios en el servidor: la agenda se refresca.
+    cargar();
+  };
+
+  // Ruta de cobro del listado actual (respeta los filtros): paradas únicas en
+  // el orden de la agenda, del vencimiento más viejo al más nuevo.
+  const urlRuta = useMemo(
+    () => buildMapsRouteUrl((data?.items ?? []).map((cuota) => cuota.clientAddress ?? '')),
+    [data],
+  );
 
   return (
     <DashboardLayout title="Cobros de hoy" user={user} onLogout={onLogout}>
@@ -77,11 +198,75 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
         }
         icon={<CalendarClock className="w-6 h-6 text-brand-600" />}
         actions={
-          <Button variant="secondary" onClick={cargar} isLoading={loading} leftIcon={<RefreshCw className="w-4 h-4" />}>
-            Actualizar
-          </Button>
+          <div className="flex items-center gap-2">
+            {urlRuta && (
+              <Button
+                variant="secondary"
+                onClick={() => window.open(urlRuta, '_blank', 'noopener,noreferrer')}
+                leftIcon={<Route className="w-4 h-4" />}
+              >
+                Abrir ruta en Maps
+              </Button>
+            )}
+            <Button variant="secondary" onClick={cargar} isLoading={loading} leftIcon={<RefreshCw className="w-4 h-4" />}>
+              Actualizar
+            </Button>
+          </div>
         }
       />
+
+      <Card className="p-4 mb-6">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="w-full sm:w-56">
+            <label htmlFor="agenda-vendedor" className="block text-sm font-medium text-gray-700 mb-2">
+              Vendedor
+            </label>
+            <Select
+              id="agenda-vendedor"
+              value={sellerId}
+              onChange={(e) => setSellerId(e.target.value)}
+            >
+              <option value="">Todos</option>
+              {sellerOptions.map((vendedor) => (
+                <option key={vendedor.id} value={String(vendedor.id)}>
+                  {vendedor.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <label htmlFor="agenda-hasta" className="block text-sm font-medium text-gray-700 mb-2">
+              Cobrar hasta
+            </label>
+            <Input
+              id="agenda-hasta"
+              type="date"
+              value={fecha}
+              onChange={(e) => setFecha(e.target.value)}
+            />
+          </div>
+          <label className="flex cursor-pointer items-center gap-2 pb-2.5 text-sm font-medium text-gray-700">
+            <input
+              type="checkbox"
+              checked={ocultarRecordados}
+              onChange={(e) => setOcultarRecordados(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+            />
+            Ocultar recordados hoy
+          </label>
+          {(fecha || sellerId) && (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setFecha('');
+                setSellerId('');
+              }}
+            >
+              Limpiar filtros
+            </Button>
+          )}
+        </div>
+      </Card>
 
       {error && (
         <Card className="mb-4 border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">{error}</Card>
@@ -100,55 +285,158 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
                 <CheckCircle2 className="w-10 h-10 text-emerald-500 mb-3" />
                 <h2 className="font-display text-lg font-bold text-heading">No hay cuotas por cobrar</h2>
                 <p className="mt-1 text-sm text-gray-500">
-                  No tenés cuotas vencidas ni con vencimiento en el día de la fecha.
+                  {fecha || sellerId
+                    ? 'Ninguna cuota coincide con los filtros elegidos.'
+                    : 'No tenés cuotas vencidas ni con vencimiento en el día de la fecha.'}
+                </p>
+              </div>
+            ) : visibles.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                <CheckCircle2 className="w-10 h-10 text-emerald-500 mb-3" />
+                <h2 className="font-display text-lg font-bold text-heading">Agenda al día</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Todas las cuotas de la agenda ya tienen recordatorio hoy.
                 </p>
               </div>
             ) : (
-              <ul className="divide-y divide-dashed divide-gray-100">
-                {data.items.map((cuota) => (
-                  <li key={cuota.id} className="flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">
-                    <div className="min-w-[180px] flex-1">
-                      <p className="font-semibold text-heading">{cuota.clientName}</p>
-                      <p className="mt-0.5 text-xs text-gray-500 truncate max-w-[280px]">
-                        {cuota.saleDescription || 'Venta'}
-                      </p>
-                      {cuota.clientPhone && (
-                        <p className="mt-1 flex items-center gap-1 text-xs text-gray-400">
-                          <Phone className="w-3 h-3" />
-                          {cuota.clientPhone}
+              <>
+                {recordables.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-3">
+                    <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={todosSeleccionados}
+                        onChange={alternarTodos}
+                        aria-label="Seleccionar todos"
+                        className="h-4 w-4 rounded border-gray-300 text-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+                      />
+                      Seleccionar todos
+                    </label>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setRondaCuotas(recordables)}
+                      leftIcon={<MessageCircle className="w-4 h-4" />}
+                    >
+                      Recordar a todos ({recordables.length})
+                    </Button>
+                  </div>
+                )}
+                <ul className="divide-y divide-dashed divide-gray-100">
+                  {visibles.map((cuota) => {
+                    const urlMapa = cuota.clientAddress
+                      ? buildMapsDestinationUrl(cuota.clientAddress)
+                      : null;
+                    const telHref = buildTelHref(cuota.clientPhone);
+                    const telefonoVisible = formatearTelefono(cuota.clientPhone);
+                    const recordatorioHref = esRecordable(cuota) ? recordatorioHrefDeCuota(cuota) : null;
+                    const recordadoHoy = esRecordadoHoy(cuota.ultimoRecordatorio, data.fecha);
+                    return (
+                      <li key={cuota.id} className="flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">
+                        {recordatorioHref && (
+                          <input
+                            type="checkbox"
+                            checked={seleccionados.has(cuota.id)}
+                            onChange={() => alternarSeleccion(cuota.id)}
+                            aria-label={`Seleccionar a ${cuota.clientName}`}
+                            className="h-4 w-4 shrink-0 rounded border-gray-300 text-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+                          />
+                        )}
+                        <div className="min-w-[180px] flex-1">
+                          <p className="font-semibold text-heading">{cuota.clientName}</p>
+                          <p className="mt-0.5 text-xs text-gray-500 truncate max-w-[280px]">
+                            {cuota.saleDescription || 'Venta'}
+                          </p>
+                          <div className="mt-1.5 flex max-w-[300px] flex-col items-start gap-1">
+                            {cuota.clientPhone && (
+                              telHref ? (
+                                <a
+                                  href={telHref}
+                                  aria-label={`Llamar a ${cuota.clientName} al ${telefonoVisible}`}
+                                  className="-mx-1 inline-flex max-w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-xs font-medium text-gray-600 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600"
+                                >
+                                  <Phone className="w-3.5 h-3.5 shrink-0" />
+                                  <span className="min-w-0 truncate">{telefonoVisible}</span>
+                                </a>
+                              ) : (
+                                <p className="inline-flex max-w-full items-center gap-1.5 text-xs text-gray-500">
+                                  <Phone className="w-3.5 h-3.5 shrink-0" />
+                                  <span className="min-w-0 truncate">{telefonoVisible}</span>
+                                </p>
+                              )
+                            )}
+                            {urlMapa && (
+                              <a
+                                href={urlMapa}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={`Abrir ${cuota.clientAddress} en Google Maps`}
+                                className="-mx-1 inline-flex max-w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-50 hover:text-brand-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600"
+                              >
+                                <MapPin className="w-3.5 h-3.5 shrink-0" />
+                                <span className="min-w-0 truncate">{cuota.clientAddress}</span>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="text-sm text-gray-600 whitespace-nowrap">
+                          Cuota <span className="font-semibold text-brand-800">{cuota.numeroCuota}</span>
+                          {sufijoTotalCuotas(cuota.numeroCuota, cuota.totalCuotas, 'de')}
+                          <span className="block text-xs text-gray-400 mt-0.5">
+                            Vencía el {formatearFecha(cuota.fechaVencimiento)}
+                          </span>
+                        </div>
+
+                        <CuotaEstadoBadge cuota={cuota} />
+
+                        {recordadoHoy && (
+                          <span
+                            title="Último recordatorio de hoy"
+                            className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700"
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            {cuota.recordatorios && cuota.recordatorios > 1
+                              ? `Recordado ${cuota.recordatorios}×`
+                              : 'Recordado'}
+                          </span>
+                        )}
+
+                        <p className="font-mono text-base font-semibold tabular-nums text-heading min-w-[110px] text-right">
+                          {formatCurrency(montoCobrableDeCuota(cuota), cuota.currency ?? undefined)}
                         </p>
-                      )}
-                    </div>
 
-                    <div className="text-sm text-gray-600 whitespace-nowrap">
-                      Cuota <span className="font-semibold text-brand-800">{cuota.numeroCuota}</span>
-                      {sufijoTotalCuotas(cuota.numeroCuota, cuota.totalCuotas, 'de')}
-                      <span className="block text-xs text-gray-400 mt-0.5">
-                        Vencía el {formatearFecha(cuota.fechaVencimiento)}
-                      </span>
-                    </div>
-
-                    <CuotaEstadoBadge cuota={cuota} />
-
-                    <p className="font-mono text-base font-semibold tabular-nums text-heading min-w-[110px] text-right">
-                      {formatCurrency(montoCobrableDeCuota(cuota), cuota.currency ?? undefined)}
-                    </p>
-
-                    <div className="flex items-center gap-2 ml-auto">
-                      <Link
-                        to={`/dashboard/ventas/${cuota.saleId}`}
-                        aria-label={`Ver detalle de la venta de ${cuota.clientName}`}
-                        className="p-2 rounded-lg text-gray-400 hover:text-brand-700 hover:bg-brand-50 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Link>
-                      <Button size="sm" leftIcon={<HandCoins className="w-4 h-4" />} onClick={() => setCuotaACobrar(cuota)}>
-                        Cobrar
-                      </Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                        <div className="flex flex-wrap items-center gap-2 ml-auto">
+                          {recordatorioHref && (
+                            <a
+                              href={recordatorioHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => void registrarRecordatorio(cuota)}
+                              aria-label={`Recordar a ${cuota.clientName} por WhatsApp`}
+                              title="Abrir WhatsApp con el recordatorio ya escrito"
+                              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              Recordar
+                            </a>
+                          )}
+                          <Link
+                            to={`/dashboard/ventas/${cuota.saleId}`}
+                            aria-label={`Ver detalle de la venta de ${cuota.clientName}`}
+                            className="p-2 rounded-lg text-gray-400 hover:text-brand-700 hover:bg-brand-50 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                          <Button size="sm" leftIcon={<HandCoins className="w-4 h-4" />} onClick={() => setCuotaACobrar(cuota)}>
+                            Cobrar
+                          </Button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
             )}
           </Card>
 
@@ -158,6 +446,28 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
             </p>
           )}
         </>
+      )}
+
+      {seleccionadas.length > 0 && (
+        <div className="fixed bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border border-gray-200 bg-surface px-4 py-2 shadow-xl">
+          <span className="text-sm font-medium text-gray-700">
+            {seleccionadas.length} {seleccionadas.length === 1 ? 'seleccionado' : 'seleccionados'}
+          </span>
+          <Button
+            size="sm"
+            onClick={() => setRondaCuotas(seleccionadas)}
+            leftIcon={<MessageCircle className="w-4 h-4" />}
+          >
+            Recordar por WhatsApp
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setSeleccionados(new Set())}>
+            Limpiar
+          </Button>
+        </div>
+      )}
+
+      {rondaCuotas && (
+        <RecordatorioRondaModal cuotas={rondaCuotas} onClose={cerrarRonda} />
       )}
 
       <PayFeeModal

@@ -45,6 +45,8 @@ export interface CuotaItem {
   clientId: number;
   clientName: string;
   clientPhone?: string | null;
+  /** Dirección del cliente: la usa la agenda para armar la ruta de cobro */
+  clientAddress?: string | null;
   saleDescription?: string | null;
   saleKind?: SaleKindParam | null;
   numeroCuota: number;
@@ -62,6 +64,10 @@ export interface CuotaItem {
   estado: CuotaEstado;
   /** Moneda ISO 4217 heredada de la venta (snapshot de la transacción) */
   currency?: string | null;
+  /** Último recordatorio de pago registrado (envío manual por WhatsApp) */
+  ultimoRecordatorio?: string | null;
+  /** Cuántas veces se le reclamó esta cuota al cliente */
+  recordatorios?: number | null;
 }
 
 export type CuotaEstadoFiltro = "PENDING" | "TODAY" | "DELAYED" | "UPCOMING" | "PAID" | "A_COBRAR";

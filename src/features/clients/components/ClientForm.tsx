@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Client } from '@/shared/types/client';
 import InputWithIcon from '@/features/crearVentas/components/InputWithIcon';
+import SelectWithIcon from '@/features/crearVentas/components/SelectWithIcon';
 import AutocompleteSeller from '@/shared/components/AutocompleteSeller';
 import SubmitBar from '@/features/crearVentas/components/SubmitBar';
 import { clientService } from '@features/clients/services/clientServices';
 import useFormErrorA11y from '@/shared/hooks/useFormErrorA11y';
 import ErrorAnnouncer from '@/shared/components/feedback/ErrorAnnouncer';
+import { PROVINCIAS } from '@/shared/utils/provincias';
+import { normalizarTelefonoArgentino } from '@/shared/utils/telefono';
 
 // Definimos la estructura de los datos del formulario
 export interface ClientFormData {
@@ -13,6 +16,9 @@ export interface ClientFormData {
   email: string;
   telefono: string;
   direccion: string;
+  localidad: string;
+  provincia: string;
+  codigoPostal: string;
   sellerId: string | number;
   dni: string;
 }
@@ -38,6 +44,9 @@ const ClientForm: React.FC<ClientFormProps> = ({
     email: '',
     telefono: '',
     direccion: '',
+    localidad: '',
+    provincia: '',
+    codigoPostal: '',
     sellerId: '',
     dni: ''
   };
@@ -97,16 +106,24 @@ const ClientForm: React.FC<ClientFormProps> = ({
 
     if (!formData.telefono.trim()) {
       newErrors.telefono = 'El teléfono es obligatorio';
-    } else if (!/^[0-9]{10,15}$/.test(formData.telefono)) {
-      newErrors.telefono = 'El teléfono debe contener solo números y tener entre 10 y 15 dígitos';
+    } else if (!normalizarTelefonoArgentino(formData.telefono)) {
+      newErrors.telefono = 'Ingresá un celular argentino sin 0 ni 15. Ejemplo: 11 5555-1234';
     }
 
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'El email debe tener un formato válido';
     }
 
-    if (formData.direccion && formData.direccion.length > 20) {
-      newErrors.direccion = 'La dirección no puede exceder los 20 caracteres';
+    if (formData.direccion && formData.direccion.length > 120) {
+      newErrors.direccion = 'La dirección no puede exceder los 120 caracteres';
+    }
+
+    if (formData.localidad && formData.localidad.length > 80) {
+      newErrors.localidad = 'La localidad no puede exceder los 80 caracteres';
+    }
+
+    if (formData.codigoPostal && formData.codigoPostal.length > 10) {
+      newErrors.codigoPostal = 'El código postal no puede exceder los 10 caracteres';
     }
 
     if (!/^[0-9]{7,8}$/.test(formData.dni)) {
@@ -123,7 +140,10 @@ const ClientForm: React.FC<ClientFormProps> = ({
     if (loading) return;
     const newErrors = validateForm();
     if (Object.keys(newErrors).length === 0) {
-      onSubmit(formData);
+      onSubmit({
+        ...formData,
+        telefono: normalizarTelefonoArgentino(formData.telefono) ?? formData.telefono,
+      });
     } else {
       // Envío fallido: foco al primer campo inválido y resumen anunciado.
       reportErrors(newErrors);
@@ -186,25 +206,66 @@ const ClientForm: React.FC<ClientFormProps> = ({
               label="Teléfono *" 
               value={formData.telefono} 
               onChange={handleInputChange} 
-              placeholder="1234567890" 
+              placeholder="11 5555-1234" 
+              type="tel"
               error={errors.telefono} 
-              maxLength={15}
+              maxLength={20}
             />
           </div>
         </div>
 
-        {/* Dirección */}
-        <div>
-          <InputWithIcon 
-            id="direccion" 
-            name="direccion" 
-            label="Dirección" 
-            value={formData.direccion} 
-            onChange={handleInputChange} 
-            placeholder="Dirección completa" 
-            error={errors.direccion} 
-            maxLength={20}
-          />
+        {/* Domicilio */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-3">
+            <InputWithIcon 
+              id="direccion" 
+              name="direccion" 
+              label="Dirección" 
+              value={formData.direccion} 
+              onChange={handleInputChange} 
+              placeholder="Calle y número, piso/depto" 
+              error={errors.direccion} 
+              maxLength={120}
+            />
+          </div>
+          <div>
+            <InputWithIcon 
+              id="localidad" 
+              name="localidad" 
+              label="Localidad" 
+              value={formData.localidad} 
+              onChange={handleInputChange} 
+              placeholder="Ciudad o barrio" 
+              error={errors.localidad} 
+              maxLength={80}
+            />
+          </div>
+          <div>
+            <SelectWithIcon
+              id="provincia"
+              name="provincia"
+              label="Provincia"
+              value={formData.provincia}
+              onChange={handleInputChange}
+              error={errors.provincia}
+              options={[
+                { value: '', label: 'Sin especificar' },
+                ...PROVINCIAS.map((provincia) => ({ value: provincia, label: provincia })),
+              ]}
+            />
+          </div>
+          <div>
+            <InputWithIcon 
+              id="codigoPostal" 
+              name="codigoPostal" 
+              label="Código postal" 
+              value={formData.codigoPostal} 
+              onChange={handleInputChange} 
+              placeholder="Ej. B1847" 
+              error={errors.codigoPostal} 
+              maxLength={10}
+            />
+          </div>
         </div>
 
         {/* Vendedor (Opcional) */}

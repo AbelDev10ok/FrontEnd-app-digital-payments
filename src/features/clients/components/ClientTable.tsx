@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { eyebrow, neutral, neutralBg, tones } from "@/shared/theme";
 import { CheckCircle2, AlertTriangle, Eye } from "lucide-react";
 import { hasMoney } from "@/shared/utils/formatCurrency";
-
+import { formatearDireccion } from "@/shared/utils/direccion";
+import { buildTelHref, formatearTelefono } from "@/shared/utils/telefono";
 type ClientTableProps = {
   clients: Client[];
   searchTerm?: string;
@@ -44,7 +45,9 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, searchTerm }) => {
                 </td>
               </tr>
             ) : (
-              clients.map((cliente: Client) => (
+              clients.map((cliente: Client) => {
+                const telHref = buildTelHref(cliente.telefono);
+                return (
                 <tr
                   key={cliente.id}
                   className="block mb-4 bg-surface rounded-card shadow-card border border-gray-200 md:table-row md:border-none md:shadow-none md:mb-0 md:hover:bg-gray-50/60 transition-colors duration-200"
@@ -83,7 +86,17 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, searchTerm }) => {
                       {cliente.email}
                     </div>
                     <div className={`text-sm ${neutral.muted}`}>
-                      {cliente.telefono}
+                      {telHref ? (
+                        <a
+                          href={telHref}
+                          aria-label={`Llamar a ${cliente.name}`}
+                          className="hover:text-brand-700 hover:underline"
+                        >
+                          {formatearTelefono(cliente.telefono)}
+                        </a>
+                      ) : (
+                        formatearTelefono(cliente.telefono)
+                      )}
                     </div>
                   </td>
                   <td
@@ -91,7 +104,7 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, searchTerm }) => {
                     data-label="Dirección"
                   >
                     <div className={`text-sm ${neutral.primary}`}>
-                      {cliente.direccion}
+                      {formatearDireccion(cliente)}
                     </div>
                   </td>
                   <td
@@ -122,7 +135,8 @@ const ClientTable: React.FC<ClientTableProps> = ({ clients, searchTerm }) => {
                     )}
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>
