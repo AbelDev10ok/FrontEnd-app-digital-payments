@@ -21,9 +21,12 @@ import { buildMapsDestinationUrl, buildMapsRouteUrl } from '@/shared/utils/mapsR
 import { buildTelHref, formatearTelefono } from '@/shared/utils/telefono';
 import { collectionsService } from '@/features/cobros/services/collectionsService';
 import PayFeeModal from '@/features/cobros/components/PayFeeModal';
+import PayClientModal from '@/features/cobros/components/PayClientModal';
 import CuotaEstadoBadge from '@/features/cobros/components/CuotaEstadoBadge';
 import RecordatorioRondaModal from '@/features/cobros/components/RecordatorioRondaModal';
 import { montoCobrableDeCuota } from '@/features/cobros/utils/montoCobrable';
+import { groupByClientAndCurrency } from '@/features/cobros/utils/clientGroups';
+import type { ClientGroup } from '@/features/cobros/utils/clientGroups';
 import { esRecordadoHoy, recordatorioHrefDeCuota } from '@/features/cobros/utils/recordatorio';
 import { sufijoTotalCuotas } from '@/features/cobros/utils/numeroCuota';
 import { salesService } from '@/features/ventas/services/salesServices';
@@ -65,6 +68,7 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cuotaACobrar, setCuotaACobrar] = useState<CuotaItem | null>(null);
+  const [grupoACobrar, setGrupoACobrar] = useState<ClientGroup | null>(null);
   const [fecha, setFecha] = useState('');
   const [sellerId, setSellerId] = useState('');
   const [sellerOptions, setSellerOptions] = useState<Client[]>([]);
@@ -121,6 +125,11 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
         : items,
     [items, ocultarRecordados, data?.fecha],
   );
+
+  // La agenda se lee por cliente y moneda: cada grupo tiene su encabezado con
+  // el cobrable de hoy (con tope en la deuda de cada venta) y su acción
+  // "Cobrar todo", sin perder el cobro individual de cada cuota.
+  const grupos = useMemo(() => groupByClientAndCurrency(visibles), [visibles]);
 
   const seleccionadas = useMemo(
     () => recordables.filter((cuota) => seleccionados.has(cuota.id)),
@@ -322,116 +331,142 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
                     </Button>
                   </div>
                 )}
-                <ul className="divide-y divide-dashed divide-gray-100">
-                  {visibles.map((cuota) => {
-                    const urlMapa = cuota.clientAddress
-                      ? buildMapsDestinationUrl(cuota.clientAddress)
+                <ul className="divide-y divide-gray-100">
+                  {grupos.map((grupo) => {
+                    const urlMapaGrupo = grupo.clientAddress
+                      ? buildMapsDestinationUrl(grupo.clientAddress)
                       : null;
-                    const telHref = buildTelHref(cuota.clientPhone);
-                    const telefonoVisible = formatearTelefono(cuota.clientPhone);
-                    const recordatorioHref = esRecordable(cuota) ? recordatorioHrefDeCuota(cuota) : null;
-                    const recordadoHoy = esRecordadoHoy(cuota.ultimoRecordatorio, data.fecha);
+                    const telHrefGrupo = buildTelHref(grupo.clientPhone);
+                    const telefonoGrupo = formatearTelefono(grupo.clientPhone);
                     return (
-                      <li key={cuota.id} className="flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">
-                        {recordatorioHref && (
-                          <input
-                            type="checkbox"
-                            checked={seleccionados.has(cuota.id)}
-                            onChange={() => alternarSeleccion(cuota.id)}
-                            aria-label={`Seleccionar a ${cuota.clientName}`}
-                            className="h-4 w-4 shrink-0 rounded border-gray-300 text-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
-                          />
-                        )}
-                        <div className="min-w-[180px] flex-1">
-                          <p className="font-semibold text-heading">{cuota.clientName}</p>
-                          <p className="mt-0.5 text-xs text-gray-500 truncate max-w-[280px]">
-                            {cuota.saleDescription || 'Venta'}
-                          </p>
-                          <div className="mt-1.5 flex max-w-[300px] flex-col items-start gap-1">
-                            {cuota.clientPhone && (
-                              telHref ? (
+                      <li key={grupo.key} className="divide-y divide-dashed divide-gray-100">
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 bg-gray-50/70 px-5 py-4">
+                          <div className="min-w-[180px] flex-1">
+                            <p className="font-semibold text-heading">{grupo.clientName}</p>
+                            <div className="mt-1.5 flex max-w-[300px] flex-col items-start gap-1">
+                              {grupo.clientPhone && (
+                                telHrefGrupo ? (
+                                  <a
+                                    href={telHrefGrupo}
+                                    aria-label={`Llamar a ${grupo.clientName} al ${telefonoGrupo}`}
+                                    className="-mx-1 inline-flex max-w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-xs font-medium text-gray-600 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600"
+                                  >
+                                    <Phone className="w-3.5 h-3.5 shrink-0" />
+                                    <span className="min-w-0 truncate">{telefonoGrupo}</span>
+                                  </a>
+                                ) : (
+                                  <p className="inline-flex max-w-full items-center gap-1.5 text-xs text-gray-500">
+                                    <Phone className="w-3.5 h-3.5 shrink-0" />
+                                    <span className="min-w-0 truncate">{telefonoGrupo}</span>
+                                  </p>
+                                )
+                              )}
+                              {urlMapaGrupo && (
                                 <a
-                                  href={telHref}
-                                  aria-label={`Llamar a ${cuota.clientName} al ${telefonoVisible}`}
-                                  className="-mx-1 inline-flex max-w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-xs font-medium text-gray-600 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600"
+                                  href={urlMapaGrupo}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label={`Abrir ${grupo.clientAddress} en Google Maps`}
+                                  className="-mx-1 inline-flex max-w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-50 hover:text-brand-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600"
                                 >
-                                  <Phone className="w-3.5 h-3.5 shrink-0" />
-                                  <span className="min-w-0 truncate">{telefonoVisible}</span>
+                                  <MapPin className="w-3.5 h-3.5 shrink-0" />
+                                  <span className="min-w-0 truncate">{grupo.clientAddress}</span>
                                 </a>
-                              ) : (
-                                <p className="inline-flex max-w-full items-center gap-1.5 text-xs text-gray-500">
-                                  <Phone className="w-3.5 h-3.5 shrink-0" />
-                                  <span className="min-w-0 truncate">{telefonoVisible}</span>
-                                </p>
-                              )
-                            )}
-                            {urlMapa && (
-                              <a
-                                href={urlMapa}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label={`Abrir ${cuota.clientAddress} en Google Maps`}
-                                className="-mx-1 inline-flex max-w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-50 hover:text-brand-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600"
-                              >
-                                <MapPin className="w-3.5 h-3.5 shrink-0" />
-                                <span className="min-w-0 truncate">{cuota.clientAddress}</span>
-                              </a>
-                            )}
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        <div className="text-sm text-gray-600 whitespace-nowrap">
-                          Cuota <span className="font-semibold text-brand-800">{cuota.numeroCuota}</span>
-                          {sufijoTotalCuotas(cuota.numeroCuota, cuota.totalCuotas, 'de')}
-                          <span className="block text-xs text-gray-400 mt-0.5">
-                            Vencía el {formatearFecha(cuota.fechaVencimiento)}
-                          </span>
-                        </div>
+                          <p className="text-sm font-medium text-gray-700">
+                            {`Cobrable hoy: ${formatCurrency(grupo.subtotal, grupo.currency || undefined)}`}
+                          </p>
 
-                        <CuotaEstadoBadge cuota={cuota} />
-
-                        {recordadoHoy && (
-                          <span
-                            title="Último recordatorio de hoy"
-                            className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700"
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            leftIcon={<HandCoins className="w-4 h-4" />}
+                            onClick={() => setGrupoACobrar(grupo)}
                           >
-                            <MessageCircle className="w-3 h-3" />
-                            {cuota.recordatorios && cuota.recordatorios > 1
-                              ? `Recordado ${cuota.recordatorios}×`
-                              : 'Recordado'}
-                          </span>
-                        )}
-
-                        <p className="font-mono text-base font-semibold tabular-nums text-heading min-w-[110px] text-right">
-                          {formatCurrency(montoCobrableDeCuota(cuota), cuota.currency ?? undefined)}
-                        </p>
-
-                        <div className="flex flex-wrap items-center gap-2 ml-auto">
-                          {recordatorioHref && (
-                            <a
-                              href={recordatorioHref}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={() => void registrarRecordatorio(cuota)}
-                              aria-label={`Recordar a ${cuota.clientName} por WhatsApp`}
-                              title="Abrir WhatsApp con el recordatorio ya escrito"
-                              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-                            >
-                              <MessageCircle className="w-4 h-4" />
-                              Recordar
-                            </a>
-                          )}
-                          <Link
-                            to={`/dashboard/ventas/${cuota.saleId}`}
-                            aria-label={`Ver detalle de la venta de ${cuota.clientName}`}
-                            className="p-2 rounded-lg text-gray-400 hover:text-brand-700 hover:bg-brand-50 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Link>
-                          <Button size="sm" leftIcon={<HandCoins className="w-4 h-4" />} onClick={() => setCuotaACobrar(cuota)}>
-                            Cobrar
+                            Cobrar todo a {grupo.clientName}
                           </Button>
                         </div>
+
+                        <ul className="divide-y divide-dashed divide-gray-100">
+                          {grupo.items.map((cuota) => {
+                            const recordatorioHref = esRecordable(cuota) ? recordatorioHrefDeCuota(cuota) : null;
+                            const recordadoHoy = esRecordadoHoy(cuota.ultimoRecordatorio, data.fecha);
+                            return (
+                              <li key={cuota.id} className="flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">
+                                {recordatorioHref && (
+                                  <input
+                                    type="checkbox"
+                                    checked={seleccionados.has(cuota.id)}
+                                    onChange={() => alternarSeleccion(cuota.id)}
+                                    aria-label={`Seleccionar a ${cuota.clientName}`}
+                                    className="h-4 w-4 shrink-0 rounded border-gray-300 text-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+                                  />
+                                )}
+                                <div className="min-w-[180px] flex-1">
+                                  <p className="text-xs text-gray-500 truncate max-w-[280px]">
+                                    {cuota.saleDescription || 'Venta'}
+                                  </p>
+                                </div>
+
+                                <div className="text-sm text-gray-600 whitespace-nowrap">
+                                  Cuota <span className="font-semibold text-brand-800">{cuota.numeroCuota}</span>
+                                  {sufijoTotalCuotas(cuota.numeroCuota, cuota.totalCuotas, 'de')}
+                                  <span className="block text-xs text-gray-400 mt-0.5">
+                                    Vencía el {formatearFecha(cuota.fechaVencimiento)}
+                                  </span>
+                                </div>
+
+                                <CuotaEstadoBadge cuota={cuota} />
+
+                                {recordadoHoy && (
+                                  <span
+                                    title="Último recordatorio de hoy"
+                                    className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700"
+                                  >
+                                    <MessageCircle className="w-3 h-3" />
+                                    {cuota.recordatorios && cuota.recordatorios > 1
+                                      ? `Recordado ${cuota.recordatorios}×`
+                                      : 'Recordado'}
+                                  </span>
+                                )}
+
+                                <p className="font-mono text-base font-semibold tabular-nums text-heading min-w-[110px] text-right">
+                                  {formatCurrency(montoCobrableDeCuota(cuota), cuota.currency ?? undefined)}
+                                </p>
+
+                                <div className="flex flex-wrap items-center gap-2 ml-auto">
+                                  {recordatorioHref && (
+                                    <a
+                                      href={recordatorioHref}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={() => void registrarRecordatorio(cuota)}
+                                      aria-label={`Recordar a ${cuota.clientName} por WhatsApp`}
+                                      title="Abrir WhatsApp con el recordatorio ya escrito"
+                                      className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                                    >
+                                      <MessageCircle className="w-4 h-4" />
+                                      Recordar
+                                    </a>
+                                  )}
+                                  <Link
+                                    to={`/dashboard/ventas/${cuota.saleId}`}
+                                    aria-label={`Ver detalle de la venta de ${cuota.clientName}`}
+                                    className="p-2 rounded-lg text-gray-400 hover:text-brand-700 hover:bg-brand-50 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </Link>
+                                  <Button size="sm" leftIcon={<HandCoins className="w-4 h-4" />} onClick={() => setCuotaACobrar(cuota)}>
+                                    Cobrar
+                                  </Button>
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
                       </li>
                     );
                   })}
@@ -475,6 +510,12 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
         onClose={() => setCuotaACobrar(null)}
         onPaid={cargar}
         deudaRestante={cuotaACobrar?.deudaVenta ?? undefined}
+      />
+
+      <PayClientModal
+        group={grupoACobrar}
+        onClose={() => setGrupoACobrar(null)}
+        onPaid={cargar}
       />
     </DashboardLayout>
   );

@@ -29,6 +29,7 @@ vi.mock('@/features/cobros/services/collectionsService', () => ({
     getCobrosHoy: vi.fn(),
     getCuotas: vi.fn(),
     marcarRecordatorio: vi.fn(),
+    payClient: vi.fn(),
   },
 }));
 
@@ -90,6 +91,7 @@ const renderPagina = () =>
 describe('CobrosDeHoy', () => {
   beforeEach(() => {
     vi.mocked(collectionsService.getCobrosHoy).mockReset();
+    vi.mocked(collectionsService.payClient).mockReset();
     vi.mocked(salesService.getSellers).mockReset();
     vi.mocked(salesService.getSellers).mockResolvedValue([vendedora]);
   });
@@ -106,8 +108,9 @@ describe('CobrosDeHoy', () => {
     expect(screen.getByText('Vencidas')).toBeInTheDocument();
     expect(screen.getAllByText('$ 15.000').length).toBeGreaterThan(0);
     expect(screen.getByText('Vencida · 5 días')).toBeInTheDocument();
-    // Botones de cobro
-    expect(screen.getAllByRole('button', { name: /Cobrar/ }).length).toBe(2);
+    // Botones de cobro: uno por cuota y uno por grupo
+    expect(screen.getAllByRole('button', { name: 'Cobrar' }).length).toBe(2);
+    expect(screen.getAllByRole('button', { name: /Cobrar todo/ }).length).toBe(2);
   });
 
   it('muestra el estado vacío cuando no hay cobros pendientes', async () => {
@@ -204,7 +207,7 @@ describe('CobrosDeHoy', () => {
 
     renderPagina();
 
-    await user.click(await screen.findByRole('button', { name: /Cobrar/ }));
+    await user.click(await screen.findByRole('button', { name: 'Cobrar' }));
 
     expect(screen.getByLabelText(/Monto cobrado/i)).toHaveValue(10000);
   });
@@ -220,7 +223,7 @@ describe('CobrosDeHoy', () => {
 
     renderPagina();
 
-    await user.click(await screen.findByRole('button', { name: /Cobrar/ }));
+    await user.click(await screen.findByRole('button', { name: 'Cobrar' }));
 
     expect(screen.getByLabelText(/Monto cobrado/i)).toHaveValue(25000);
   });
@@ -447,5 +450,142 @@ describe('CobrosDeHoy', () => {
     await user.click(screen.getByRole('button', { name: 'Cerrar' }));
 
     await waitFor(() => expect(collectionsService.getCobrosHoy).toHaveBeenCalledTimes(2));
+  });
+
+  // ── Cobro por cliente: agenda agrupada + "Cobrar todo" ─────────────────────
+
+  // Un cliente con tres cuotas en la misma moneda: un solo grupo y un subtotal.
+  const agendaAgrupada: CobrosHoyResponse = {
+    fecha: '2026-08-25',
+    hoy: { cantidad: 3, monto: { ARS: 40000 } },
+    vencidas: { cantidad: 0, monto: {} },
+    items: [
+      {
+        ...cobroVencido.items[0],
+        id: 20,
+        clientId: 9,
+        clientName: 'Rosa Diaz',
+        currency: 'ARS',
+        monto: 15000,
+        deudaVenta: 60000,
+      },
+      {
+        ...cobroVencido.items[0],
+        id: 21,
+        saleId: 3,
+        clientId: 9,
+        clientName: 'Rosa Diaz',
+        currency: 'ARS',
+        monto: 15000,
+        deudaVenta: 60000,
+      },
+      {
+        ...cobroVencido.items[0],
+        id: 22,
+        saleId: 4,
+        clientId: 9,
+        clientName: 'Rosa Diaz',
+        currency: 'ARS',
+        monto: 10000,
+        deudaVenta: 60000,
+      },
+    ],
+  };
+
+  it('agrupa las cuotas de un cliente con un solo subtotal', async () => {
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue(agendaAgrupada);
+
+    renderPagina();
+
+    expect(await screen.findAllByText('Rosa Diaz')).toHaveLength(1);
+    expect(screen.getAllByText(/Cobrable hoy:/)).toHaveLength(1);
+    expect(screen.getByText('Cobrable hoy: $ 40.000')).toBeInTheDocument();
+    // Las cuotas siguen visibles como filas con su cobro individual
+    expect(screen.getAllByRole('button', { name: 'Cobrar' })).toHaveLength(3);
+  });
+
+  it('separa en dos grupos la deuda del mismo cliente en dos monedas', async () => {
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue({
+      fecha: '2026-08-25',
+      hoy: { cantidad: 2, monto: { ARS: 15000, USD: 20 } },
+      vencidas: { cantidad: 0, monto: {} },
+      items: [
+        { ...cobroVencido.items[0], id: 30, currency: 'ARS', monto: 15000, deudaVenta: 15000 },
+        { ...cobroVencido.items[0], id: 31, saleId: 3, currency: 'USD', monto: 20, deudaVenta: 20 },
+      ],
+    });
+
+    renderPagina();
+
+    expect(await screen.findAllByText('Maria Lopez')).toHaveLength(2);
+    expect(screen.getAllByText(/Cobrable hoy:/)).toHaveLength(2);
+    expect(screen.getByText('Cobrable hoy: $ 15.000')).toBeInTheDocument();
+    expect(screen.getByText('Cobrable hoy: US$ 20')).toBeInTheDocument();
+    // Las monedas nunca se suman entre sí
+    expect(screen.queryByText('$ 15.020')).not.toBeInTheDocument();
+  });
+
+  it('acota el subtotal del grupo a la deuda de la venta', async () => {
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue({
+      fecha: '2026-08-25',
+      hoy: { cantidad: 2, monto: { ARS: 50000 } },
+      vencidas: { cantidad: 0, monto: {} },
+      items: [
+        { ...cobroVencido.items[0], id: 40, currency: 'ARS', monto: 25000, deudaVenta: 20000 },
+        { ...cobroVencido.items[0], id: 41, currency: 'ARS', monto: 25000, deudaVenta: 20000 },
+      ],
+    });
+
+    renderPagina();
+
+    expect(await screen.findByText('Cobrable hoy: $ 20.000')).toBeInTheDocument();
+    expect(screen.queryByText('Cobrable hoy: $ 50.000')).not.toBeInTheDocument();
+  });
+
+  it('abre el cobro por cliente con el subtotal del grupo precargado', async () => {
+    const user = userEvent.setup();
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue(agendaAgrupada);
+
+    renderPagina();
+
+    await user.click(await screen.findByRole('button', { name: 'Cobrar todo a Rosa Diaz' }));
+
+    expect(screen.getByRole('dialog', { name: 'Cobrar todo · Rosa Diaz' })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Monto cobrado/i)).toHaveValue(40000);
+  });
+
+  it('recarga la agenda al registrar el cobro por cliente', async () => {
+    const user = userEvent.setup();
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue(agendaAgrupada);
+    vi.mocked(collectionsService.payClient).mockResolvedValue({
+      clientId: 9,
+      clientName: 'Rosa Diaz',
+      currency: 'ARS',
+      appliedAmount: 40000,
+      remainingDebt: 0,
+      applications: [],
+    });
+
+    renderPagina();
+    await screen.findByText('Rosa Diaz');
+    expect(collectionsService.getCobrosHoy).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole('button', { name: 'Cobrar todo a Rosa Diaz' }));
+    await user.click(screen.getByRole('button', { name: /Registrar cobro/i }));
+
+    await waitFor(() => expect(collectionsService.getCobrosHoy).toHaveBeenCalledTimes(2));
+  });
+
+  it('mantiene el cobro individual de cada cuota dentro del grupo', async () => {
+    const user = userEvent.setup();
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue(agendaAgrupada);
+
+    renderPagina();
+    await screen.findByText('Rosa Diaz');
+
+    await user.click(screen.getAllByRole('button', { name: 'Cobrar' })[0]);
+
+    expect(screen.getByText('Cobrar cuota 1 · Rosa Diaz')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Monto cobrado/i)).toHaveValue(15000);
   });
 });

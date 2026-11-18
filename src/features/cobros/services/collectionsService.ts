@@ -31,6 +31,38 @@ export interface RecordatorioResponse {
   recordatorios: number;
 }
 
+/** Detalle del cobro aplicado sobre una operación del cliente. */
+export interface ClientPaymentApplication {
+  saleId: number;
+  saleDescription?: string | null;
+  saleKind?: string | null;
+  appliedAmount: number;
+  saleRemainingAmount: number;
+  feesPaid: number;
+  saleCompleted: boolean;
+}
+
+/** Resultado del cobro por cliente: un monto distribuido entre sus operaciones. */
+export interface ClientPaymentResult {
+  clientId: number;
+  clientName: string;
+  currency: string;
+  appliedAmount: number;
+  remainingDebt: number;
+  applications: ClientPaymentApplication[];
+}
+
+/** Parámetros del cobro por cliente. */
+export interface ClientPaymentParams {
+  amount: number;
+  /** Fecha del cobro (`YYYY-MM-DD`). */
+  date: string;
+  /** Moneda ISO 4217 del grupo que se está cobrando. */
+  currency: string;
+  /** Método de pago (`EFECTIVO` por defecto). */
+  paymentMethod?: string;
+}
+
 export const collectionsService = {
   /** Agenda de cobros: cuotas que vencen hasta la fecha (hoy por defecto) + vencidas, con resumen. */
   async getCobrosHoy(filters: CobrosHoyFilters = {}): Promise<CobrosHoyResponse> {
@@ -56,6 +88,24 @@ export const collectionsService = {
       method: "POST",
     });
     return handleResponse<RecordatorioResponse>(response);
+  },
+
+  /**
+   * Registra un cobro por cliente: el monto se distribuye entre sus
+   * operaciones con deuda en esa moneda, de la cuota impaga más antigua a la
+   * más nueva. Las monedas nunca se mezclan: siempre es un cobro por moneda.
+   */
+  async payClient(clientId: number, params: ClientPaymentParams): Promise<ClientPaymentResult> {
+    const search = new URLSearchParams();
+    search.append("amount", params.amount.toString());
+    search.append("date", params.date);
+    search.append("currency", params.currency);
+    search.append("paymentMethod", params.paymentMethod ?? "EFECTIVO");
+    const response = await authenticatedFetch(
+      `${LOANS_API_URL}/clients/${clientId}/pay?${search.toString()}`,
+      { method: "POST" },
+    );
+    return handleResponse<ClientPaymentResult>(response);
   },
 
   /** Vista global de cuotas con filtros combinables (paginada). */
