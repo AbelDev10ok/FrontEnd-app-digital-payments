@@ -6,7 +6,7 @@ import CobrosDeHoy from '../pages/CobrosDeHoy';
 import { collectionsService } from '@/features/cobros/services/collectionsService';
 import { salesService } from '@/features/ventas/services/salesServices';
 import type { Client } from '@/shared/types/client';
-import type { CobrosHoyResponse } from '@/shared/types/business';
+import type { CobrosHoyResponse, PaymentPromise } from '@/shared/types/business';
 
 vi.mock('@/features/ventas/services/salesServices', () => ({
   salesService: {
@@ -30,6 +30,10 @@ vi.mock('@/features/cobros/services/collectionsService', () => ({
     getCuotas: vi.fn(),
     marcarRecordatorio: vi.fn(),
     payClient: vi.fn(),
+    createPromise: vi.fn(),
+    cancelPromise: vi.fn(),
+    fulfillPromise: vi.fn(),
+    getPromises: vi.fn(),
   },
 }));
 
@@ -92,6 +96,9 @@ describe('CobrosDeHoy', () => {
   beforeEach(() => {
     vi.mocked(collectionsService.getCobrosHoy).mockReset();
     vi.mocked(collectionsService.payClient).mockReset();
+    vi.mocked(collectionsService.createPromise).mockReset();
+    vi.mocked(collectionsService.fulfillPromise).mockReset();
+    vi.mocked(collectionsService.cancelPromise).mockReset();
     vi.mocked(salesService.getSellers).mockReset();
     vi.mocked(salesService.getSellers).mockResolvedValue([vendedora]);
   });
@@ -587,5 +594,90 @@ describe('CobrosDeHoy', () => {
 
     expect(screen.getByText('Cobrar cuota 1 · Rosa Diaz')).toBeInTheDocument();
     expect(screen.getByLabelText(/Monto cobrado/i)).toHaveValue(15000);
+  });
+
+  // ── Promesas de pago: badge en la cabecera del grupo ────────────────────────
+
+  const promesa = (overrides: Partial<PaymentPromise> = {}): PaymentPromise => ({
+    id: 70,
+    clientId: 9,
+    clientName: 'Rosa Diaz',
+    currency: 'ARS',
+    amount: 40000,
+    promisedDate: '2026-09-05',
+    status: 'PENDING',
+    vencida: false,
+    diasAtraso: null,
+    note: null,
+    ...overrides,
+  });
+
+  // El grupo se arma por cliente + moneda: las cuotas necesitan su moneda para
+  // que la promesa (que siempre trae una) se encuentre en el índice.
+  const agendaConPromesa = (p: PaymentPromise): CobrosHoyResponse => ({
+    ...agendaAgrupada,
+    items: agendaAgrupada.items.map((item) => ({ ...item, currency: 'ARS' })),
+    promesas: [p],
+  });
+
+  it('muestra el badge de la promesa con la fecha comprometida', async () => {
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue(agendaConPromesa(promesa()));
+
+    renderPagina();
+
+    expect(await screen.findByText('Prometió pagar el 05/09/2026')).toBeInTheDocument();
+    // Con una promesa vigente no se ofrece cargar otra
+    expect(screen.queryByRole('button', { name: 'Promesa' })).not.toBeInTheDocument();
+  });
+
+  it('marca en rojo la promesa vencida', async () => {
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue(
+      agendaConPromesa(promesa({ vencida: true, diasAtraso: 4, promisedDate: '2026-09-01' })),
+    );
+
+    renderPagina();
+
+    const badge = await screen.findByRole('button', { name: /Promesa vencida/ });
+    expect(badge).toHaveTextContent('Promesa vencida · 01/09/2026');
+    expect(badge.className).toContain('text-red-700');
+  });
+
+  it('abre la gestión de la promesa desde el badge', async () => {
+    const user = userEvent.setup();
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue(agendaConPromesa(promesa()));
+
+    renderPagina();
+
+    await user.click(await screen.findByRole('button', { name: 'Prometió pagar el 05/09/2026' }));
+
+    expect(screen.getByRole('dialog', { name: 'Promesa de pago · Rosa Diaz' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Marcar cumplida/i })).toBeInTheDocument();
+  });
+
+  it('abre el alta de la promesa desde el botón Promesa', async () => {
+    const user = userEvent.setup();
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue(agendaAgrupada);
+
+    renderPagina();
+
+    await user.click(await screen.findByRole('button', { name: 'Promesa' }));
+
+    expect(screen.getByRole('dialog', { name: 'Promesa de pago · Rosa Diaz' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Registrar promesa/i })).toBeInTheDocument();
+  });
+
+  it('recarga la agenda al registrar la promesa', async () => {
+    const user = userEvent.setup();
+    vi.mocked(collectionsService.getCobrosHoy).mockResolvedValue(agendaAgrupada);
+    vi.mocked(collectionsService.createPromise).mockResolvedValue(promesa());
+
+    renderPagina();
+    await screen.findByText('Rosa Diaz');
+    expect(collectionsService.getCobrosHoy).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole('button', { name: 'Promesa' }));
+    await user.click(screen.getByRole('button', { name: /Registrar promesa/i }));
+
+    await waitFor(() => expect(collectionsService.getCobrosHoy).toHaveBeenCalledTimes(2));
   });
 });

@@ -5,6 +5,7 @@ import type {
   CobrosHoyResponse,
   CuotaEstadoFiltro,
   CuotaItem,
+  PaymentPromise,
 } from "@/shared/types/business";
 import type { Page } from "@/features/ventas/services/salesServices";
 
@@ -61,6 +62,16 @@ export interface ClientPaymentParams {
   currency: string;
   /** Método de pago (`EFECTIVO` por defecto). */
   paymentMethod?: string;
+}
+
+/** Alta de una promesa de pago: cliente + moneda + monto + fecha. */
+export interface PaymentPromiseParams {
+  /** Moneda ISO 4217 del grupo (el compromiso nunca cruza monedas). */
+  currency: string;
+  amount: number;
+  /** Fecha prometida (`YYYY-MM-DD`). */
+  promisedDate: string;
+  note?: string;
 }
 
 export const collectionsService = {
@@ -121,6 +132,49 @@ export const collectionsService = {
     const response = await authenticatedFetch(`${LOANS_API_URL}/fees?${params.toString()}`);
     if (!response.ok) {
       throw new Error("Error al cargar las cuotas");
+    }
+    return response.json();
+  },
+
+  /**
+   * Registra una promesa de pago: el cliente se compromete a pagar un monto de
+   * su deuda en una fecha. No mueve plata ni cuotas; es una gestión comercial.
+   */
+  async createPromise(clientId: number, params: PaymentPromiseParams): Promise<PaymentPromise> {
+    const response = await authenticatedFetch(`${LOANS_API_URL}/clients/${clientId}/promises`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    });
+    return handleResponse<PaymentPromise>(response);
+  },
+
+  /** Cancela una promesa pendiente (el cliente no la sostiene o se renegoció). */
+  async cancelPromise(promiseId: number): Promise<PaymentPromise> {
+    const response = await authenticatedFetch(`${LOANS_API_URL}/promises/${promiseId}/cancel`, {
+      method: "POST",
+    });
+    return handleResponse<PaymentPromise>(response);
+  },
+
+  /** Marca como cumplida una promesa pendiente (cobro registrado fuera del flujo). */
+  async fulfillPromise(promiseId: number): Promise<PaymentPromise> {
+    const response = await authenticatedFetch(`${LOANS_API_URL}/promises/${promiseId}/fulfill`, {
+      method: "POST",
+    });
+    return handleResponse<PaymentPromise>(response);
+  },
+
+  /** Historial de promesas del cliente, opcionalmente acotado a una moneda. */
+  async getPromises(clientId: number, currency?: string): Promise<PaymentPromise[]> {
+    const params = new URLSearchParams();
+    if (currency) params.append("currency", currency);
+    const query = params.toString();
+    const response = await authenticatedFetch(
+      `${LOANS_API_URL}/clients/${clientId}/promises${query ? `?${query}` : ""}`,
+    );
+    if (!response.ok) {
+      throw new Error("Error al cargar las promesas de pago");
     }
     return response.json();
   },

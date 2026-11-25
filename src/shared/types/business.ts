@@ -84,5 +84,30 @@ export interface CobrosHoyResponse {
   hoy: CobrosResumen;
   vencidas: CobrosResumen;
   items: CuotaItem[];
+  /** Promesas de pago pendientes de los clientes de la agenda (cliente + moneda). */
+  promesas?: PaymentPromise[];
   fecha: string;
+}
+
+export type PromiseStatus = "PENDING" | "FULFILLED" | "CANCELLED";
+
+/**
+ * Promesa de pago: un cliente se compromete a pagar un monto de su deuda en una
+ * fecha. Se registra por cliente + moneda y nunca se mezclan monedas.
+ */
+export interface PaymentPromise {
+  id: number;
+  clientId: number;
+  clientName?: string | null;
+  currency: string;
+  amount: number;
+  /** Fecha prometida (`YYYY-MM-DD`). */
+  promisedDate: string;
+  status: PromiseStatus;
+  /** Derivado: pendiente con fecha prometida ya pasada. */
+  vencida: boolean;
+  diasAtraso?: number | null;
+  note?: string | null;
+  createdAt?: string | null;
+  resolvedAt?: string | null;
 }

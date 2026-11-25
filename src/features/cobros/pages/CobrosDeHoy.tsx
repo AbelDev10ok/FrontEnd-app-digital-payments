@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Eye,
   HandCoins,
+  Handshake,
   MapPin,
   MessageCircle,
   Phone,
@@ -22,6 +23,7 @@ import { buildTelHref, formatearTelefono } from '@/shared/utils/telefono';
 import { collectionsService } from '@/features/cobros/services/collectionsService';
 import PayFeeModal from '@/features/cobros/components/PayFeeModal';
 import PayClientModal from '@/features/cobros/components/PayClientModal';
+import PaymentPromiseModal from '@/features/cobros/components/PaymentPromiseModal';
 import CuotaEstadoBadge from '@/features/cobros/components/CuotaEstadoBadge';
 import RecordatorioRondaModal from '@/features/cobros/components/RecordatorioRondaModal';
 import { montoCobrableDeCuota } from '@/features/cobros/utils/montoCobrable';
@@ -31,7 +33,7 @@ import { esRecordadoHoy, recordatorioHrefDeCuota } from '@/features/cobros/utils
 import { sufijoTotalCuotas } from '@/features/cobros/utils/numeroCuota';
 import { salesService } from '@/features/ventas/services/salesServices';
 import type { Client } from '@/shared/types/client';
-import type { CobrosHoyResponse, CuotaItem } from '@/shared/types/business';
+import type { CobrosHoyResponse, CuotaItem, PaymentPromise } from '@/shared/types/business';
 import type { MontosPorMoneda } from '@/shared/types/money';
 
 interface CobrosDeHoyProps {
@@ -69,6 +71,7 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
   const [error, setError] = useState<string | null>(null);
   const [cuotaACobrar, setCuotaACobrar] = useState<CuotaItem | null>(null);
   const [grupoACobrar, setGrupoACobrar] = useState<ClientGroup | null>(null);
+  const [grupoPromesa, setGrupoPromesa] = useState<ClientGroup | null>(null);
   const [fecha, setFecha] = useState('');
   const [sellerId, setSellerId] = useState('');
   const [sellerOptions, setSellerOptions] = useState<Client[]>([]);
@@ -130,6 +133,16 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
   // el cobrable de hoy (con tope en la deuda de cada venta) y su acción
   // "Cobrar todo", sin perder el cobro individual de cada cuota.
   const grupos = useMemo(() => groupByClientAndCurrency(visibles), [visibles]);
+
+  // Las promesas de pago viajan en la misma respuesta: se indexan por el mismo
+  // par cliente + moneda con el que se agrupa la agenda.
+  const promesasPorGrupo = useMemo(() => {
+    const index = new Map<string, PaymentPromise>();
+    for (const promesa of data?.promesas ?? []) {
+      index.set(`${promesa.clientId}:${promesa.currency}`, promesa);
+    }
+    return index;
+  }, [data]);
 
   const seleccionadas = useMemo(
     () => recordables.filter((cuota) => seleccionados.has(cuota.id)),
@@ -338,11 +351,33 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
                       : null;
                     const telHrefGrupo = buildTelHref(grupo.clientPhone);
                     const telefonoGrupo = formatearTelefono(grupo.clientPhone);
+                    const promesaGrupo = promesasPorGrupo.get(grupo.key);
                     return (
                       <li key={grupo.key} className="divide-y divide-dashed divide-gray-100">
                         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 bg-gray-50/70 px-5 py-4">
                           <div className="min-w-[180px] flex-1">
                             <p className="font-semibold text-heading">{grupo.clientName}</p>
+                            {promesaGrupo && (
+                              <button
+                                type="button"
+                                onClick={() => setGrupoPromesa(grupo)}
+                                title={
+                                  promesaGrupo.vencida
+                                    ? 'Promesa vencida: abrir para gestionar'
+                                    : 'Ver la promesa de pago'
+                                }
+                                className={`mt-1 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                                  promesaGrupo.vencida
+                                    ? 'bg-red-50 text-red-700 hover:bg-red-100 focus-visible:outline-red-600'
+                                    : 'bg-amber-50 text-amber-700 hover:bg-amber-100 focus-visible:outline-amber-600'
+                                }`}
+                              >
+                                <Handshake className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                                {promesaGrupo.vencida
+                                  ? `Promesa vencida · ${formatearFecha(promesaGrupo.promisedDate)}`
+                                  : `Prometió pagar el ${formatearFecha(promesaGrupo.promisedDate)}`}
+                              </button>
+                            )}
                             <div className="mt-1.5 flex max-w-[300px] flex-col items-start gap-1">
                               {grupo.clientPhone && (
                                 telHrefGrupo ? (
@@ -380,14 +415,26 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
                             {`Cobrable hoy: ${formatCurrency(grupo.subtotal, grupo.currency || undefined)}`}
                           </p>
 
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            leftIcon={<HandCoins className="w-4 h-4" />}
-                            onClick={() => setGrupoACobrar(grupo)}
-                          >
-                            Cobrar todo a {grupo.clientName}
-                          </Button>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {!promesaGrupo && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                leftIcon={<Handshake className="w-4 h-4" />}
+                                onClick={() => setGrupoPromesa(grupo)}
+                              >
+                                Promesa
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              leftIcon={<HandCoins className="w-4 h-4" />}
+                              onClick={() => setGrupoACobrar(grupo)}
+                            >
+                              Cobrar todo a {grupo.clientName}
+                            </Button>
+                          </div>
                         </div>
 
                         <ul className="divide-y divide-dashed divide-gray-100">
@@ -516,6 +563,13 @@ const CobrosDeHoy: React.FC<CobrosDeHoyProps> = ({ user, onLogout }) => {
         group={grupoACobrar}
         onClose={() => setGrupoACobrar(null)}
         onPaid={cargar}
+      />
+
+      <PaymentPromiseModal
+        group={grupoPromesa}
+        promise={grupoPromesa ? promesasPorGrupo.get(grupoPromesa.key) ?? null : null}
+        onClose={() => setGrupoPromesa(null)}
+        onChanged={cargar}
       />
     </DashboardLayout>
   );
