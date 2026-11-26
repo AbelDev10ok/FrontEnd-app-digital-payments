@@ -53,6 +53,9 @@ const VerifyEmail = lazy(
 const CobrosDeHoy = lazy(
   () => import("@/features/cobros/pages/CobrosDeHoy"),
 );
+const RondaDelDia = lazy(
+  () => import("@/features/cobros/pages/RondaDelDia"),
+);
 const Cuotas = lazy(() => import("@/features/cobros/pages/Cuotas"));
 const MiNegocio = lazy(() => import("@/features/negocio/pages/MiNegocio"));
 const Suscripcion = lazy(
@@ -107,6 +110,15 @@ function App() {
                 <ProtectedRoute
                   requiredRole="ROLE_USER"
                   component={CobrosDeHoy}
+                />
+              }
+            />
+            <Route
+              path="/dashboard/ronda"
+              element={
+                <ProtectedRoute
+                  requiredRole="ROLE_USER"
+                  component={RondaDelDia}
                 />
               }
             />

@@ -14,6 +14,7 @@ import {
   HandCoins,
   CalendarClock,
   ListChecks,
+  Route,
   Building2,
   BadgeCheck,
   TrendingUp,
@@ -356,6 +357,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
           >
             <CalendarClock strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
             <span>Cobros de hoy</span>
+          </NavLink>
+          <NavLink
+            to="/dashboard/ronda"
+            onClick={onNavigate}
+            className={({ isActive }) => navLinkClass(isActive)}
+          >
+            <Route strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
+            <span>Ronda del día</span>
           </NavLink>
           <NavLink
             to="/dashboard/cuotas"

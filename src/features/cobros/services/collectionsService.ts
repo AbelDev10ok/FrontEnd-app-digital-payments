@@ -6,6 +6,7 @@ import type {
   CuotaEstadoFiltro,
   CuotaItem,
   PaymentPromise,
+  RoundResponse,
 } from "@/shared/types/business";
 import type { Page } from "@/features/ventas/services/salesServices";
 
@@ -177,5 +178,35 @@ export const collectionsService = {
       throw new Error("Error al cargar las promesas de pago");
     }
     return response.json();
+  },
+
+  /**
+   * Ronda del día: el plan ordenado por riesgo que arma el backend una vez por
+   * día (job de las 6). Si todavía no existe, se arma en esta consulta.
+   */
+  async getRound(date?: string): Promise<RoundResponse> {
+    const params = new URLSearchParams();
+    if (date) params.append("date", date);
+    const query = params.toString();
+    const response = await authenticatedFetch(
+      `${LOANS_API_URL}/round/today${query ? `?${query}` : ""}`,
+    );
+    return handleResponse<RoundResponse>(response);
+  },
+
+  /**
+   * Marca la visita de una parada de la ronda: el cliente no estaba o se le
+   * dejó una nota. Devuelve la ronda completa con el estado recalculado.
+   */
+  async marcarVisitaRonda(
+    itemId: number,
+    params: { noEstaba: boolean; note?: string },
+  ): Promise<RoundResponse> {
+    const response = await authenticatedFetch(`${LOANS_API_URL}/round/items/${itemId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    });
+    return handleResponse<RoundResponse>(response);
   },
 };

@@ -111,3 +111,37 @@ export interface PaymentPromise {
   createdAt?: string | null;
   resolvedAt?: string | null;
 }
+
+export type RoundItemStatus = "PENDIENTE" | "COBRADO" | "NO_ESTABA";
+
+/**
+ * Parada de la ronda del día: un cliente con deuda en una moneda. El monto es
+ * el planificado al armar la ronda; `pendingAmount` es lo que sigue debiendo
+ * hoy (null si ya salió de la agenda, o sea si se cobró).
+ */
+export interface RoundItem {
+  id: number;
+  position: number;
+  clientId: number;
+  clientName: string;
+  clientPhone?: string | null;
+  clientAddress?: string | null;
+  currency: string;
+  amount: number;
+  pendingAmount?: number | null;
+  daysOverdue?: number | null;
+  estado: RoundItemStatus;
+  promiseId?: number | null;
+  promiseDate?: string | null;
+  promiseAmount?: number | null;
+  promiseOverdue?: boolean;
+  note?: string | null;
+}
+
+/** Ronda de cobro del día: el plan ordenado por riesgo. */
+export interface RoundResponse {
+  id: number;
+  fecha: string;
+  createdAt?: string | null;
+  items: RoundItem[];
+}
