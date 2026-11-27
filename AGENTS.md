@@ -89,4 +89,4 @@ SPA de cobros/ventas en React 18 + TypeScript + Vite. Consume un backend Spring 
 
 ## Reference docs (Spanish)
 
-- `PRODUCT.md` — verdad de producto (usuarios, propósito, principios); `DESIGN.md` — sistema visual Cobros&Ventas; `SAAS.md` — plan de monetización y deploy. `MEJORAS.md`/`ARREGLOS.md` ya no existen: no referenciarlos.
+- `README.md` — arranque, comandos y variables de entorno. `PRODUCT.md` — verdad de producto (usuarios, propósito, principios); `DESIGN.md` — sistema visual Cobros&Ventas; `SAAS.md` — monetización y multi-tenancy. `MEJORAS.md`/`ARREGLOS.md` ya no existen: no referenciarlos.
