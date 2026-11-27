@@ -10,6 +10,8 @@ export interface DashboardStatsDto {
   serie12Meses: MonthlySales[];
   topClientes: TopClient[];
   porTipoProducto: ProductTypeSales[];
+  porCategoriaProducto: CategorySales[];
+  topProductos: TopProduct[];
   clientes: DashboardClientes;
 }
 
@@ -56,6 +58,25 @@ export interface TopClient {
 export interface ProductTypeSales {
   tipo: string;
   totalVentas: number;
+  totalVendido: MontosPorMoneda;
+}
+
+/** Ventas de productos (solo VENTA) del mes agrupadas por categoría del catálogo */
+export interface CategorySales {
+  /** null = ventas legadas sin categoría sellada */
+  categoryId: number | null;
+  categoryName: string;
+  totalVentas: number;
+  unidades: number;
+  totalVendido: MontosPorMoneda;
+}
+
+/** Producto del catálogo con más unidades vendidas en el mes (suma sus variantes) */
+export interface TopProduct {
+  productId: number;
+  productName: string;
+  totalVentas: number;
+  unidades: number;
   totalVendido: MontosPorMoneda;
 }
 

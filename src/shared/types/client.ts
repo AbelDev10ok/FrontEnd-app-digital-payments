@@ -6,12 +6,18 @@ export interface Client {
   telefono: string;
   email: string;
   direccion: string;
+  /** Localidad o barrio: desambigua la dirección para la ruta de cobro */
+  localidad?: string | null;
+  provincia?: string | null;
+  codigoPostal?: string | null;
   sellerId?: number;
   sellerName?: string;
   seller: boolean;
   dni?: string;
   /** Deuda por moneda ISO 4217: las monedas distintas nunca se suman entre sí */
   deudaTotal?: MontosPorMoneda;
+  /** Clientes en cartera cuando este cliente es vendedor (sólo lo trae el detalle). */
+  clientesEnCartera?: number;
 }
 
 
@@ -20,15 +26,11 @@ export interface ClientRequest {
   telefono: string;
   email: string;
   direccion: string;
+  localidad?: string | null;
+  provincia?: string | null;
+  codigoPostal?: string | null;
   sellerId?: number;
   dni?: string
-}
-export interface ClientFormData {
-  name: string;
-  telefono: string;
-  email: string;
-  direccion: string;
-  ciudad: string;
 }
 
   export interface FetchParamsClients {

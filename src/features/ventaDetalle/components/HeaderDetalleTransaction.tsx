@@ -23,12 +23,15 @@ export default function HeaderDetalleTransaction({
 }: HeaderDetalleTransactionProps) {
     const isCanceled = transaction.status === 'CANCELED';
     const esPrestamo = transaction.kind === 'PRESTAMO';
+    // Editar solo tiene algo corregible en préstamos y ventas sin producto: una
+    // venta con producto tiene todo sellado (producto, categoría, precio y autoría).
+    const puedeEditar = !isCanceled && (esPrestamo || !transaction.product);
 
     // Mismo menú que la fila del listado: el detalle y la lista ofrecen las
     // mismas acciones y las reglas quedan en un solo lugar por pantalla. Una
     // venta anulada es terminal: no se edita ni se anula de nuevo.
     const acciones: ActionMenuItem[] = [
-        ...(isCanceled ? [] : [{ label: 'Editar', icon: Pencil, onSelect: onEdit }]),
+        ...(puedeEditar ? [{ label: 'Editar', icon: Pencil, onSelect: onEdit }] : []),
         ...(transaction.kind === 'VENTA'
             && onPrintRemito
             && (!isCanceled || transaction.remito)

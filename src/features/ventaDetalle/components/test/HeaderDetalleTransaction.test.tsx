@@ -72,6 +72,19 @@ describe('HeaderDetalleTransaction', () => {
     expect(screen.getByText('Anular venta')).toBeInTheDocument();
   });
 
+  it('no ofrece Editar una venta con producto: no queda nada corregible', () => {
+    renderConMocks(
+      vi.fn(),
+      vi.fn(),
+      vi.fn(),
+      crearTransaccion({ product: { id: 7, name: 'Televisor', variantId: 9 } }),
+    );
+    abrirMenu();
+
+    expect(screen.queryByText('Editar')).not.toBeInTheDocument();
+    expect(screen.getByText('Anular venta')).toBeInTheDocument();
+  });
+
   it('oculta Anular venta cuando la transacción ya está CANCELADA', () => {
     renderConMocks(vi.fn(), vi.fn(), vi.fn(), crearTransaccion({ status: 'CANCELED' }));
     abrirMenu();

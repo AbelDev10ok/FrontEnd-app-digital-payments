@@ -45,6 +45,8 @@ export interface CuotaItem {
   clientId: number;
   clientName: string;
   clientPhone?: string | null;
+  /** Dirección del cliente: la usa la agenda para armar la ruta de cobro */
+  clientAddress?: string | null;
   saleDescription?: string | null;
   saleKind?: SaleKindParam | null;
   numeroCuota: number;
@@ -62,6 +64,10 @@ export interface CuotaItem {
   estado: CuotaEstado;
   /** Moneda ISO 4217 heredada de la venta (snapshot de la transacción) */
   currency?: string | null;
+  /** Último recordatorio de pago registrado (envío manual por WhatsApp) */
+  ultimoRecordatorio?: string | null;
+  /** Cuántas veces se le reclamó esta cuota al cliente */
+  recordatorios?: number | null;
 }
 
 export type CuotaEstadoFiltro = "PENDING" | "TODAY" | "DELAYED" | "UPCOMING" | "PAID" | "A_COBRAR";
@@ -78,5 +84,64 @@ export interface CobrosHoyResponse {
   hoy: CobrosResumen;
   vencidas: CobrosResumen;
   items: CuotaItem[];
+  /** Promesas de pago pendientes de los clientes de la agenda (cliente + moneda). */
+  promesas?: PaymentPromise[];
   fecha: string;
+}
+
+export type PromiseStatus = "PENDING" | "FULFILLED" | "CANCELLED";
+
+/**
+ * Promesa de pago: un cliente se compromete a pagar un monto de su deuda en una
+ * fecha. Se registra por cliente + moneda y nunca se mezclan monedas.
+ */
+export interface PaymentPromise {
+  id: number;
+  clientId: number;
+  clientName?: string | null;
+  currency: string;
+  amount: number;
+  /** Fecha prometida (`YYYY-MM-DD`). */
+  promisedDate: string;
+  status: PromiseStatus;
+  /** Derivado: pendiente con fecha prometida ya pasada. */
+  vencida: boolean;
+  diasAtraso?: number | null;
+  note?: string | null;
+  createdAt?: string | null;
+  resolvedAt?: string | null;
+}
+
+export type RoundItemStatus = "PENDIENTE" | "COBRADO" | "NO_ESTABA";
+
+/**
+ * Parada de la ronda del día: un cliente con deuda en una moneda. El monto es
+ * el planificado al armar la ronda; `pendingAmount` es lo que sigue debiendo
+ * hoy (null si ya salió de la agenda, o sea si se cobró).
+ */
+export interface RoundItem {
+  id: number;
+  position: number;
+  clientId: number;
+  clientName: string;
+  clientPhone?: string | null;
+  clientAddress?: string | null;
+  currency: string;
+  amount: number;
+  pendingAmount?: number | null;
+  daysOverdue?: number | null;
+  estado: RoundItemStatus;
+  promiseId?: number | null;
+  promiseDate?: string | null;
+  promiseAmount?: number | null;
+  promiseOverdue?: boolean;
+  note?: string | null;
+}
+
+/** Ronda de cobro del día: el plan ordenado por riesgo. */
+export interface RoundResponse {
+  id: number;
+  fecha: string;
+  createdAt?: string | null;
+  items: RoundItem[];
 }

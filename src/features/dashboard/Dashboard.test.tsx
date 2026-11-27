@@ -54,6 +54,12 @@ const metrics: DashboardMetrics = {
     { clientId: 1, clientName: 'Ana', totalVentas: 3, totalVendido: { ARS: 900 }, totalCobrado: { ARS: 700 } },
   ],
   productTypeBreakdown: [{ tipo: 'Crédito', totalVentas: 2, totalVendido: { ARS: 800 } }],
+  categoryBreakdown: [
+    { categoryId: 2, categoryName: 'Celulares', totalVentas: 3, unidades: 7, totalVendido: { ARS: 42000 } },
+  ],
+  topProducts: [
+    { productId: 9, productName: 'Fundas', totalVentas: 10, unidades: 12, totalVendido: { ARS: 12000 } },
+  ],
   monedasDisponibles: ['ARS'],
 };
 
@@ -143,6 +149,16 @@ describe('Dashboard', () => {
     expect(screen.getAllByText('Vendido').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Cobrado').length).toBeGreaterThan(0);
     expect(screen.getByText('Ana')).toBeInTheDocument();
+  });
+
+  it('renderiza las ventas por categoría y los productos más vendidos del mes', () => {
+    renderDashboard();
+    expect(screen.getByText('Ventas por categoría')).toBeInTheDocument();
+    expect(screen.getByText('Celulares')).toBeInTheDocument();
+    expect(screen.getByText('3 ventas · 7 unidades')).toBeInTheDocument();
+    expect(screen.getByText('Productos más vendidos')).toBeInTheDocument();
+    expect(screen.getByText('Fundas')).toBeInTheDocument();
+    expect(screen.getByText('12 unidades · 10 ventas')).toBeInTheDocument();
   });
 
   it('muestra el estado de carga', () => {

@@ -1,4 +1,6 @@
 import { Client } from "@/shared/types/client"
+import { formatearDireccion } from "@/shared/utils/direccion"
+import { buildTelHref, formatearTelefono } from "@/shared/utils/telefono"
 import { Mail, MapPin, Phone, TrendingUp, User2, Fingerprint } from "lucide-react"
 
 type InfoClienteProps = {
@@ -7,6 +9,8 @@ type InfoClienteProps = {
 
 
 const InfoCliente: React.FC<InfoClienteProps> = ({ client }) => {
+  const telHref = buildTelHref(client.telefono);
+
   return (
         <div className="bg-surface rounded-card shadow-card border border-gray-100 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Información de Contacto</h3>
@@ -27,7 +31,19 @@ const InfoCliente: React.FC<InfoClienteProps> = ({ client }) => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Teléfono</p>
-                <p className="font-medium text-gray-900">{client.telefono}</p>
+                <p className="font-medium text-gray-900">
+                  {telHref ? (
+                    <a
+                      href={telHref}
+                      aria-label={`Llamar a ${client.name}`}
+                      className="hover:text-brand-700 hover:underline"
+                    >
+                      {formatearTelefono(client.telefono)}
+                    </a>
+                  ) : (
+                    formatearTelefono(client.telefono)
+                  )}
+                </p>
               </div>
             </div>
             
@@ -47,7 +63,7 @@ const InfoCliente: React.FC<InfoClienteProps> = ({ client }) => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Dirección</p>
-                <p className="font-medium text-gray-900">{client.direccion || 'No especificada'}</p>
+                <p className="font-medium text-gray-900">{formatearDireccion(client) || 'No especificada'}</p>
               </div>
             </div>
 

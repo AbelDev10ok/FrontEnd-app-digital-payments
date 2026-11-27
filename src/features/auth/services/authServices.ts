@@ -18,6 +18,19 @@ interface RefreshTokenResponse {
   refreshToken: string;
 }
 
+const RUTA_SUSCRIPCION = '/dashboard/suscripcion';
+
+/**
+ * Manda al usuario a pagar sin cerrarle la sesión. Si ya está en esa pantalla
+ * no recarga: otra petición con 402 reiniciaría la página en loop.
+ */
+function redirigirASuscripcion(): void {
+  if (window.location.pathname === RUTA_SUSCRIPCION) {
+    return;
+  }
+  window.location.href = RUTA_SUSCRIPCION;
+}
+
 // authServices.ts
 export async function login(email: string, password: string): Promise<LoginResponse> {
   const response = await fetch(`${AUTH_API_URL}/login`, {
@@ -58,6 +71,68 @@ export async function register(
     return apiResponse.message;
   }
   throw new Error(apiResponse.message || 'No se pudo completar el registro. Intente nuevamente.');
+}
+// Verificación de correo al registrarse. El endpoint responde envelope
+// { message, status, data } (a diferencia de forgot/reset que responden texto
+// plano) y el token viene como query param.
+export async function verifyEmail(token: string): Promise<string> {
+  const response = await fetch(
+    `${AUTH_API_URL}/verify?token=${encodeURIComponent(token)}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+
+  const apiResponse: ApiResponse<null> = await response.json();
+
+  if (response.ok && apiResponse.status === 'OK') {
+    return apiResponse.message;
+  }
+  throw new Error(apiResponse.message || 'No se pudo verificar el correo.');
+}
+// Solicitud de restablecimiento de contraseña. El backend responde texto plano
+// (sin envelope) y siempre con el mismo mensaje, exista o no el email.
+export async function forgotPassword(email: string): Promise<string> {
+  const response = await fetch(`${AUTH_API_URL}/forgot-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  const text = await response.text();
+  if (response.ok) {
+    return text;
+  }
+  throw new Error(text || 'No se pudo enviar el enlace. Intentá nuevamente.');
+}
+
+// Cambia la contraseña con el token que llegó por email. Responde texto plano
+// (sin envelope): el mensaje de éxito o de error viene directo en el cuerpo.
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+): Promise<string> {
+  const response = await fetch(
+    `${AUTH_API_URL}/reset-password?token=${encodeURIComponent(token)}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ newPassword }),
+    },
+  );
+
+  const text = await response.text();
+  if (response.ok) {
+    return text;
+  }
+  throw new Error(text || 'No se pudo restablecer la contraseña.');
 }
 // Función para refrescar el token
 // El endpoint /auth/refresh-token responde raw ({ accessToken, refreshToken }), sin envelope
@@ -138,11 +213,14 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
       headers,
     });
 
-    // Si recibimos 402, el backend indica que la suscripcion no esta activa
+    // 402: el negocio no tiene suscripción activa (trial vencido o pago caído).
+    // No es un problema de sesión: la suscripción se paga desde
+    // /dashboard/suscripcion, que necesita el token para cargar (/api/billing
+    // está exento del gate). Cerrar sesión acá dejaba esa página inalcanzable y
+    // el login volvía a chocar con el 402, en loop hasta el rate limit.
     if (response.status === 402) {
-      logout();
-      window.location.href = '/dashboard/suscripcion';
-      throw new Error('Suscripcion requerida. Redirigiendo a la pagina de pago.');
+      redirigirASuscripcion();
+      throw new Error('Suscripción requerida. Redirigiendo a la página de pago.');
     }
 
     // Si el token es válido, o el error no es 401, devolver la respuesta para ser manejada por el service

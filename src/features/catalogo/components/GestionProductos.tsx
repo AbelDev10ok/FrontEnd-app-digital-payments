@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, Package, Pencil, Plus, RefreshCw, Search, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, History, Package, Pencil, Plus, RefreshCw, Search, Tags, Trash2 } from 'lucide-react';
 import { Alert, Badge, Button, Card, Input, Select } from '@/shared/components/ui';
 import ConfirmDialog from '@/features/catalogo/components/ConfirmDialog';
+import BulkPriceModal from '@/features/catalogo/components/BulkPriceModal';
+import PriceHistoryModal from '@/features/catalogo/components/PriceHistoryModal';
 import ProductFormModal from '@/features/catalogo/components/ProductFormModal';
 import { salesService } from '@/features/ventas/services/salesServices';
 import type { AttributeDto, ProductDto, ProductTypeDto } from '@/shared/types/sales';
+import { normalizarBusqueda } from '@/shared/utils/busqueda';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
 import { especificacionesDe, resumenEspecificaciones } from '@/shared/utils/productSpecs';
 import { aplanarCategorias, categoriaYDescendientes } from '@/shared/utils/categoryTree';
@@ -20,12 +23,6 @@ interface GestionProductosProps {
   feedback: string | null;
   onFeedback: (mensaje: string | null) => void;
 }
-
-const normalizar = (texto: string | null | undefined) =>
-  (texto ?? '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '');
 
 /** Cada producto base agrupa sus variantes: el listado devuelve una fila por SKU. */
 const agruparPorProducto = (products: ProductDto[]) => {
@@ -60,6 +57,8 @@ const GestionProductos: React.FC<GestionProductosProps> = ({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState<ProductDto | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<number | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [historial, setHistorial] = useState<{ id: number; nombre: string } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   // El aviso de éxito se retira solo: informa sin estorbar en la próxima tarea.
@@ -78,7 +77,7 @@ const GestionProductos: React.FC<GestionProductosProps> = ({
   );
 
   const filtrados = useMemo(() => {
-    const consulta = normalizar(search.trim());
+    const consulta = normalizarBusqueda(search);
     return productosAgrupados.filter(({ base, variantes }) => {
       if (ramaFiltrada && (base.productTypeId == null || !ramaFiltrada.has(base.productTypeId))) {
         return false;
@@ -86,7 +85,7 @@ const GestionProductos: React.FC<GestionProductosProps> = ({
       if (filterActive === 'activo' && base.productActive === false) return false;
       if (filterActive === 'inactivo' && base.productActive !== false) return false;
       if (!consulta) return true;
-      const haystack = normalizar(
+      const haystack = normalizarBusqueda(
         [
           base.name,
           base.brand,
@@ -198,6 +197,13 @@ const GestionProductos: React.FC<GestionProductosProps> = ({
             <option value="activo">Activos</option>
             <option value="inactivo">Inactivos</option>
           </Select>
+          <Button
+            variant="secondary"
+            leftIcon={<Tags className="w-4 h-4" />}
+            onClick={() => { setActionError(null); setBulkOpen(true); }}
+          >
+            Ajuste masivo
+          </Button>
           <Button leftIcon={<Plus className="w-4 h-4" />} onClick={() => { setActionError(null); setEditingId(null); setFormOpen(true); }}>
             Nuevo producto
           </Button>
@@ -273,6 +279,15 @@ const GestionProductos: React.FC<GestionProductosProps> = ({
                       <Button
                         variant="ghost"
                         size="sm"
+                        aria-label={`Historial de precios de ${base.name}`}
+                        onClick={() => setHistorial({ id: base.id, nombre: base.name })}
+                        className="text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      >
+                        <History className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         aria-label={`Editar producto ${base.name}`}
                         onClick={() => handleStartEdit(base.id)}
                         className="text-gray-600 hover:bg-gray-100 hover:text-gray-900"
@@ -343,6 +358,23 @@ const GestionProductos: React.FC<GestionProductosProps> = ({
           onFeedback(mensaje);
           void onReload();
         }}
+      />
+
+      <BulkPriceModal
+        isOpen={bulkOpen}
+        products={products}
+        categories={categories}
+        onClose={() => setBulkOpen(false)}
+        onApplied={(mensaje) => {
+          onFeedback(mensaje);
+          void onReload();
+        }}
+      />
+
+      <PriceHistoryModal
+        productId={historial?.id ?? null}
+        productName={historial?.nombre ?? ''}
+        onClose={() => setHistorial(null)}
       />
 
       <ConfirmDialog

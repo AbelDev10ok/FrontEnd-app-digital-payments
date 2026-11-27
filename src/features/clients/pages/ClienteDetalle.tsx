@@ -4,6 +4,7 @@ import { ArrowLeft, Loader2, ShoppingBag, Trash2, CheckCircle2, AlertTriangle } 
 import Load from '@/shared/components/feedback/Load';
 import { Client } from '@/shared/types/client';
 import InfoCliente from '@features/clients/components/InfoCliente';
+import DeshabilitarVendedorModal from '@features/clients/components/DeshabilitarVendedorModal';
 import ClientEstadoFinansa from '@features/clients/components/ClientEstadoFinansa';
 import ClientResumenFinansas from '@features/clients/components/ClientResumenFinansas';
 import { clientService } from '@features/clients/services/clientServices';
@@ -36,6 +37,8 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
     prestamosPagados: {}
   });
   const [loadingStats, setLoadingStats] = useState(true);
+  // Baja de vendedor: si tiene cartera, el modal decide a dónde va.
+  const [isDeshabilitarOpen, setIsDeshabilitarOpen] = useState(false);
 
 
 
@@ -64,19 +67,14 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
     }
   }
 
-  const handleDeshabilitarVendedor = async () => {
+  const handleDeshabilitarVendedor = () => {
     if (!id || !client) return;
-    try {
-      // TODO: Asegúrate de que `deshabilitarVendedor` exista en tu clientService.
-      await clientService.desabilitarVendedor(parseInt(id));
-      setClient((prev) => (prev ? { ...prev, seller: false } : prev));
-    } catch (err) {
-      let errorMessage = 'Ocurrió un error inesperado.';
-      if (err && typeof err === 'object' && 'message' in err) {
-        errorMessage = err.message as string;
-      }
-      setError(`Error al deshabilitar como vendedor: ${errorMessage}`);
-    }
+    setIsDeshabilitarOpen(true);
+  };
+
+  const handleVendedorDeshabilitado = () => {
+    setClient((prev) => (prev ? { ...prev, seller: false, clientesEnCartera: 0 } : prev));
+    setIsDeshabilitarOpen(false);
   };
 
   const handleEliminarCliente = async () => {
@@ -247,6 +245,13 @@ const ClienteDetalle: React.FC<PageProps> = ({ user, onLogout }) => {
             Eliminar Cliente
           </Button>
         </div>
+
+        <DeshabilitarVendedorModal
+          isOpen={isDeshabilitarOpen}
+          client={client}
+          onClose={() => setIsDeshabilitarOpen(false)}
+          onDisabled={handleVendedorDeshabilitado}
+        />
       </div>
     </DashboardLayout>
   );

@@ -19,6 +19,7 @@ vi.mock('@/features/ventas/services/salesServices', () => ({
     createProduct: vi.fn(),
     updateProduct: vi.fn(),
     deleteProduct: vi.fn(),
+    registrarAjusteStock: vi.fn(),
     getSalesCounts: vi.fn().mockResolvedValue({
       total: 0,
       active: 0,
@@ -103,6 +104,7 @@ describe('Productos (Catálogo)', () => {
     vi.mocked(salesService.createProduct).mockReset();
     vi.mocked(salesService.updateProduct).mockReset();
     vi.mocked(salesService.deleteProduct).mockReset();
+    vi.mocked(salesService.registrarAjusteStock).mockReset();
   });
 
   // ------------------------------------------------------------------
@@ -458,8 +460,8 @@ describe('Productos (Catálogo)', () => {
     await user.selectOptions(within(dialog).getByLabelText('Categoría *'), '1');
     await user.type(within(dialog).getByLabelText('Costo *'), '700');
     await user.type(within(dialog).getByLabelText('Precio de venta *'), '900');
-    await user.clear(within(dialog).getByLabelText('Stock *'));
-    await user.type(within(dialog).getByLabelText('Stock *'), '10');
+    await user.clear(within(dialog).getByLabelText('Stock inicial *'));
+    await user.type(within(dialog).getByLabelText('Stock inicial *'), '10');
     await user.click(within(dialog).getByRole('button', { name: 'Crear producto' }));
 
     await waitFor(() =>
@@ -573,7 +575,7 @@ describe('Productos (Catálogo)', () => {
     );
   });
 
-  it('edita un producto y envía el stock modificado de su variante', async () => {
+  it('edita un producto sin enviar el stock y lo muestra como dato de sólo lectura', async () => {
     const user = userEvent.setup();
     vi.mocked(salesService.updateProduct).mockResolvedValue(undefined);
     renderPagina();
@@ -582,9 +584,11 @@ describe('Productos (Catálogo)', () => {
       await screen.findByRole('button', { name: 'Editar producto HELADERA SAMSUNG 320L' }),
     );
     const dialog = screen.getByRole('dialog');
-    const stockInput = within(dialog).getByLabelText('Stock *');
-    await user.clear(stockInput);
-    await user.type(stockInput, '8');
+
+    // El stock no se edita desde el producto: se muestra y se ajusta por conteo.
+    expect(within(dialog).queryByLabelText('Stock *')).not.toBeInTheDocument();
+    expect(within(dialog).getByText('12 unidades')).toBeInTheDocument();
+
     await user.click(within(dialog).getByRole('button', { name: 'Guardar cambios' }));
 
     await waitFor(() =>
@@ -593,13 +597,70 @@ describe('Productos (Catálogo)', () => {
         expect.objectContaining({
           name: 'HELADERA SAMSUNG 320L',
           productTypeId: 1,
-          variants: [
-            expect.objectContaining({ id: 11, sku: 'HELADERA-1', cost: 400, price: 500, stock: 8 }),
-          ],
+          variants: [expect.objectContaining({ id: 11, sku: 'HELADERA-1', cost: 400, price: 500 })],
         }),
       ),
     );
+    const payload = vi.mocked(salesService.updateProduct).mock.calls[0][1];
+    expect(payload.variants[0]).not.toHaveProperty('stock');
     expect(await screen.findByText('Producto actualizado')).toBeInTheDocument();
+  });
+
+  it('ajusta el stock por conteo desde la fila de la variante', async () => {
+    const user = userEvent.setup();
+    vi.mocked(salesService.updateProduct).mockResolvedValue(undefined);
+    vi.mocked(salesService.registrarAjusteStock).mockResolvedValue({
+      id: 1,
+      variantId: 11,
+      sku: 'HELADERA-1',
+      type: 'AJUSTE',
+      delta: -4,
+      unitCost: null,
+      reason: 'Conteo físico',
+      saleId: null,
+      createdAt: '2026-01-01T10:00:00',
+      createdBy: null,
+      stockAfter: 8,
+    });
+    renderPagina();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Editar producto HELADERA SAMSUNG 320L' }),
+    );
+    const dialog = screen.getByRole('dialog');
+
+    await user.click(within(dialog).getByRole('button', { name: 'Ajustar' }));
+    await user.type(within(dialog).getByLabelText('Stock contado *'), '8');
+    await user.type(within(dialog).getByLabelText('Motivo *'), 'Conteo físico');
+    await user.click(within(dialog).getByRole('button', { name: 'Guardar ajuste' }));
+
+    await waitFor(() =>
+      expect(salesService.registrarAjusteStock).toHaveBeenCalledWith({
+        variantId: 11,
+        countedQuantity: 8,
+        reason: 'Conteo físico',
+      }),
+    );
+    expect(await within(dialog).findByText('8 unidades')).toBeInTheDocument();
+    // El ajuste no guarda el producto: es una operación aparte del formulario.
+    expect(salesService.updateProduct).not.toHaveBeenCalled();
+  });
+
+  it('pide el motivo antes de registrar un ajuste de stock', async () => {
+    const user = userEvent.setup();
+    renderPagina();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Editar producto HELADERA SAMSUNG 320L' }),
+    );
+    const dialog = screen.getByRole('dialog');
+
+    await user.click(within(dialog).getByRole('button', { name: 'Ajustar' }));
+    await user.type(within(dialog).getByLabelText('Stock contado *'), '9');
+    await user.click(within(dialog).getByRole('button', { name: 'Guardar ajuste' }));
+
+    expect(await screen.findByText('Indicá el motivo del ajuste')).toBeInTheDocument();
+    expect(salesService.registrarAjusteStock).not.toHaveBeenCalled();
   });
 
   it('al activar el producto conserva activa la variante y la envía activa', async () => {
@@ -670,7 +731,7 @@ describe('Productos (Catálogo)', () => {
     await user.selectOptions(within(dialog).getByLabelText('Categoría *'), '1');
     await user.type(within(dialog).getByLabelText('Costo *'), '100');
     await user.type(within(dialog).getByLabelText('Precio de venta *'), '200');
-    const stockInput = within(dialog).getByLabelText('Stock *') as HTMLInputElement;
+    const stockInput = within(dialog).getByLabelText('Stock inicial *') as HTMLInputElement;
     const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
     setter.call(stockInput, '-1');
     fireEvent.input(stockInput, { target: { value: '-1' } });

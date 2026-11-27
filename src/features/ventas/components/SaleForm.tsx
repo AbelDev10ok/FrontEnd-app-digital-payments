@@ -3,9 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import InputWithIcon from '@/features/crearVentas/components/InputWithIcon';
 import SubmitBar from '@/features/crearVentas/components/SubmitBar';
-import AutocompleteSeller from '@/shared/components/AutocompleteSeller';
 import { SaleResponseDto, ProductTypeDto } from '@/shared/types/sales';
-import type { Client } from '@/shared/types/client';
 import { formatCurrency, getCurrencySymbol } from '@/shared/utils/formatCurrency';
 import { getLocalDateString, toInputDate } from '@/shared/utils/formatDate';
 import SelectWithIcon from '@/features/crearVentas/components/SelectWithIcon';
@@ -23,8 +21,6 @@ export interface SaleFormData {
   payments: string;
   cost: number;
   productTypeId: number | null;
-  /** Vendedor sellado de la operación ("null" = sin atribuir) */
-  sellerId?: number | null;
 }
 
 interface SaleFormState {
@@ -36,7 +32,6 @@ interface SaleFormState {
   payments: string;
   cost: string | number;
   productTypeId: number | null;
-  sellerId: string;
 }
 
 interface SaleFormProps {
@@ -50,8 +45,6 @@ interface SaleFormProps {
   showFinancialFields?: boolean;
   productTypeLocked?: boolean;
   descriptionProductLocked?: boolean;
-  /** Vendedores habilitados: habilita la corrección de la atribución sellada */
-  sellers?: Client[];
 }
 
 const SaleForm: React.FC<SaleFormProps> = ({
@@ -64,8 +57,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
   onDelete,
   showFinancialFields = true,
   productTypeLocked = false,
-  descriptionProductLocked = false,
-  sellers
+  descriptionProductLocked = false
 }) => {
   const [formData, setFormData] = useState<SaleFormState>({
     descriptionProduct: '',
@@ -74,8 +66,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
     quantityFees: '',
     payments: 'MENSUAL',
     cost: '',
-    productTypeId: null,
-    sellerId: ''
+    productTypeId: null
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -98,9 +89,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
         quantityFees: initialValues.quantityFees || 1,
         payments: initialValues.typePayments,
         cost: initialValues.cost,
-        productTypeId: initialValues.productType?.id ?? null,
-        // Autoría sellada al crear la operación (vacío = sin atribuir)
-        sellerId: initialValues.sellerId != null ? String(initialValues.sellerId) : ''
+        productTypeId: initialValues.productType?.id ?? null
       });
     }
   }, [initialValues]);
@@ -186,9 +175,7 @@ const SaleForm: React.FC<SaleFormProps> = ({
         amountFee: Number(formData.amountFee),
         quantityFees: Number(formData.quantityFees),
         cost: Number(formData.cost),
-        clientId: formData.clientId,
-        // Vacío = corrección que deja la operación sin vendedor asignado
-        sellerId: formData.sellerId === '' ? null : Number(formData.sellerId)
+        clientId: formData.clientId
       };
       await onSubmit(submitData);
     } else {
@@ -342,23 +329,8 @@ const SaleForm: React.FC<SaleFormProps> = ({
              </div>
           )}
 
-          {/* Vendedor sellado: corrección deliberada de la autoría. Reasignar la
-              cartera del cliente no mueve esta operación; acá se ajusta puntual. */}
-          {initialValues && sellers && (
-            <div className="md:col-span-2">
-              <AutocompleteSeller
-                value={formData.sellerId}
-                sellers={sellers}
-                onChange={(id: string | number) =>
-                  setFormData(prev => ({ ...prev, sellerId: String(id) }))
-                }
-                error={errors.sellerId}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Vacío = operación sin vendedor asignado; reasignar la cartera del cliente no cambia esta autoría.
-              </p>
-            </div>
-          )}
+          {/* El vendedor es la autoría sellada al crear la operación: no se
+              edita. Reasignar la cartera del cliente tampoco la reescribe. */}
         </div>
 
           <div className="flex-1">

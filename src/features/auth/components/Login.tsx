@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "@features/auth/store/authStore";
 import useNoIndex from "@hooks/useNoIndex";
@@ -167,6 +167,15 @@ const Login: React.FC = () => {
                 </button>
               </div>
             </Field>
+
+            <div className="flex justify-end">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-brand-600 hover:text-brand-500 font-medium"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
 
             {error && <Alert tone="danger">{error}</Alert>}
 

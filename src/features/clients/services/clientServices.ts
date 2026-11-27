@@ -115,10 +115,19 @@ export const clientService = {
     }
   },
 
-  // Desabilitar cliente como vendedor
-  async desabilitarVendedor(id: number):Promise<void>{
+  // Deshabilitar cliente como vendedor. Si tiene clientes en cartera hay que
+  // decir qué hacer con ellos: traspasarlos a otro vendedor o dejarlos sin
+  // vendedor (los cobra el negocio, fila "Sin vendedor" del tablero).
+  async desabilitarVendedor(
+    id: number,
+    destino?: { transferToSellerId?: number; leaveClientsUnassigned?: boolean },
+  ): Promise<void> {
     const response = await authenticatedFetch(`${CLIENTS_API_URL}/${id}/desabilitar`, {
       method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(destino ?? {}),
     });
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Error al deshabilitar como vendedor'));

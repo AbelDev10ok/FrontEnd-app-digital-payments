@@ -10,9 +10,11 @@ import {
   Eye,
   Plus,
   Package,
+  Boxes,
   HandCoins,
   CalendarClock,
   ListChecks,
+  Route,
   Building2,
   BadgeCheck,
   TrendingUp,
@@ -357,6 +359,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
             <span>Cobros de hoy</span>
           </NavLink>
           <NavLink
+            to="/dashboard/ronda"
+            onClick={onNavigate}
+            className={({ isActive }) => navLinkClass(isActive)}
+          >
+            <Route strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
+            <span>Ronda del día</span>
+          </NavLink>
+          <NavLink
             to="/dashboard/cuotas"
             onClick={onNavigate}
             className={({ isActive }) => navLinkClass(isActive)}
@@ -476,6 +486,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onNavigate }) => {
           >
             <Package strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
             <span>Productos</span>
+          </NavLink>
+
+          <NavLink
+            to="/dashboard/inventario"
+            onClick={onNavigate}
+            className={({ isActive }) => navLinkClass(isActive)}
+          >
+            <Boxes strokeWidth={1.5} className="w-4 h-4 flex-shrink-0" />
+            <span>Inventario</span>
           </NavLink>
 
           <NavLink

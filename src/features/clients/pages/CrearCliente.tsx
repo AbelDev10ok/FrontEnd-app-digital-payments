@@ -28,6 +28,9 @@ const CrearCliente: React.FC<PageProps> = ({ user, onLogout }) => {
         telefono: string;
         email: string;
         direccion: string;
+        localidad: string;
+        provincia: string;
+        codigoPostal: string;
         sellerId?: number;
         dni?: string;
       } = {
@@ -36,6 +39,9 @@ const CrearCliente: React.FC<PageProps> = ({ user, onLogout }) => {
         telefono: formData.telefono.trim(),
         email: formData.email.trim() || '',
         direccion: formData.direccion.trim() || '',
+        localidad: formData.localidad.trim() || '',
+        provincia: formData.provincia.trim() || '',
+        codigoPostal: formData.codigoPostal.trim() || '',
       };
 
       if (formData.sellerId) {

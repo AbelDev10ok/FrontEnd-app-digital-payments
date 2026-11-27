@@ -40,6 +40,12 @@ const dashStats: DashboardStatsDto = {
   serie12Meses: [{ year: 2026, month: 1, vendido: { ARS: 100 }, cobrado: { ARS: 80 }, ganancia: { ARS: 20 } }],
   topClientes: [{ clientId: 1, clientName: 'Ana', totalVentas: 2, totalVendido: { ARS: 500 }, totalCobrado: { ARS: 300 } }],
   porTipoProducto: [{ tipo: 'Crédito', totalVentas: 1, totalVendido: { ARS: 300 } }],
+  porCategoriaProducto: [
+    { categoryId: 4, categoryName: 'Celulares', totalVentas: 2, unidades: 5, totalVendido: { ARS: 900 } },
+  ],
+  topProductos: [
+    { productId: 9, productName: 'A16', totalVentas: 2, unidades: 5, totalVendido: { ARS: 900 } },
+  ],
   clientes: { totalClientes: 20, activos: 12 },
 };
 
@@ -69,6 +75,9 @@ describe('useDashboardMetrics', () => {
     });
     expect(result.current.metrics?.anual).toEqual(dashStats.anual);
     expect(result.current.metrics?.totalActiveClients).toBe(12);
+    // Las métricas de catálogo del mes viajan tal cual (sin recomputar nada)
+    expect(result.current.metrics?.categoryBreakdown).toEqual(dashStats.porCategoriaProducto);
+    expect(result.current.metrics?.topProducts).toEqual(dashStats.topProductos);
   });
 
   it('setea error si la petición falla', async () => {

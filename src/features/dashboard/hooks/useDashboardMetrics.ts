@@ -2,10 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { salesService } from '@/features/ventas/services/salesServices';
 import type {
+  CategorySales,
   DashboardAnual,
   MonthlySales,
   ProductTypeSales,
   TopClient,
+  TopProduct,
 } from '@/shared/types/dashboard';
 import type { MontosPorMoneda } from '@/shared/types/money';
 
@@ -32,6 +34,8 @@ export interface DashboardMetrics {
   monthlySeries: MonthlySales[];
   topClients: TopClient[];
   productTypeBreakdown: ProductTypeSales[];
+  categoryBreakdown: CategorySales[];
+  topProducts: TopProduct[];
   monedasDisponibles: string[];
 }
 
@@ -186,6 +190,8 @@ export const useDashboardMetrics = () => {
         monthlySeries: dashStats.serie12Meses,
         topClients: dashStats.topClientes,
         productTypeBreakdown: dashStats.porTipoProducto,
+        categoryBreakdown: dashStats.porCategoriaProducto ?? [],
+        topProducts: dashStats.topProductos ?? [],
         monedasDisponibles: dashStats.monedasDisponibles ?? [],
       };
 

@@ -41,8 +41,20 @@ const Privacidad = lazy(() => import("@/features/landing/pages/Privacidad"));
 const Register = lazy(
   () => import("@/features/auth/components/Register"),
 );
+const ForgotPassword = lazy(
+  () => import("@/features/auth/components/ForgotPassword"),
+);
+const ResetPassword = lazy(
+  () => import("@/features/auth/components/ResetPassword"),
+);
+const VerifyEmail = lazy(
+  () => import("@/features/auth/components/VerifyEmail"),
+);
 const CobrosDeHoy = lazy(
   () => import("@/features/cobros/pages/CobrosDeHoy"),
+);
+const RondaDelDia = lazy(
+  () => import("@/features/cobros/pages/RondaDelDia"),
 );
 const Cuotas = lazy(() => import("@/features/cobros/pages/Cuotas"));
 const MiNegocio = lazy(() => import("@/features/negocio/pages/MiNegocio"));
@@ -50,6 +62,9 @@ const Suscripcion = lazy(
   () => import("@/features/negocio/pages/Suscripcion"),
 );
 const Productos = lazy(() => import("@/features/catalogo/pages/Productos"));
+const Inventario = lazy(
+  () => import("@/features/inventario/pages/Inventario"),
+);
 const Vendedores = lazy(() => import("@/features/vendedores/pages/Vendedores"));
 
 function App() {
@@ -67,6 +82,9 @@ function App() {
 
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify" element={<VerifyEmail />} />
 
             {/* Ruta protegida para usuarios */}
             <Route
@@ -92,6 +110,15 @@ function App() {
                 <ProtectedRoute
                   requiredRole="ROLE_USER"
                   component={CobrosDeHoy}
+                />
+              }
+            />
+            <Route
+              path="/dashboard/ronda"
+              element={
+                <ProtectedRoute
+                  requiredRole="ROLE_USER"
+                  component={RondaDelDia}
                 />
               }
             />
@@ -125,6 +152,16 @@ function App() {
                 <ProtectedRoute
                   requiredRole="ROLE_USER"
                   component={Productos}
+                />
+              }
+            />
+
+            <Route
+              path="/dashboard/inventario"
+              element={
+                <ProtectedRoute
+                  requiredRole="ROLE_USER"
+                  component={Inventario}
                 />
               }
             />

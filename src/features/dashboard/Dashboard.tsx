@@ -24,10 +24,12 @@ import type { StatTone } from "@/shared/components/ui";
 import type { MontosPorMoneda } from "@/shared/types/money";
 import {
   AnnualSummary,
+  CategoryBreakdownList,
   MonthlyBarChart,
   OverdueFeesAlert,
   SalesStatusBreakdown,
   TopClientsList,
+  TopProductsList,
 } from "@/features/dashboard/components";
 
 interface PageProps {
@@ -385,6 +387,28 @@ const Dashboard: React.FC<PageProps> = ({ user, onLogout }) => {
                   Con más operaciones en {year}
                 </p>
                 <TopClientsList clients={metrics.topClients} />
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:items-start">
+              <Card className="lg:col-span-2 p-6">
+                <h3 className="text-lg font-display font-bold tracking-tight text-gray-900 mb-1">
+                  Ventas por categoría
+                </h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Productos vendidos en {mesLabel} {year}, por categoría del catálogo
+                </p>
+                <CategoryBreakdownList categories={metrics.categoryBreakdown} />
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="text-lg font-display font-bold tracking-tight text-gray-900 mb-1">
+                  Productos más vendidos
+                </h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Los 5 con más unidades en {mesLabel} {year}
+                </p>
+                <TopProductsList products={metrics.topProducts} />
               </Card>
             </div>
 
