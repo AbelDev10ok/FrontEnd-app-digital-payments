@@ -9,7 +9,7 @@ SPA de cobros/ventas en React 18 + TypeScript + Vite. Consume un backend Spring 
 - `npm run lint` - `eslint .` (flat config `eslint.config.js`)
 - `npm test` / `npm run test:watch` - Vitest + React Testing Library (config `vitest.config.ts`, setup `src/test/setupTests.ts`)
 - Typecheck: `npx tsc -p tsconfig.app.json` (`noEmit` is set) — also typechecks `*.test.*` files under `src`
-- No formatter, no CI, no `.env` files.
+- No formatter, no CI. Only `.env.example` (documents `VITE_API_URL`); no `.env` is committed.
 
 **Package manager gotcha:** `package.json` declares `packageManager: pnpm@9.15.4`, but the repo only ships `package-lock.json` (no `pnpm-lock.yaml`). Use `npm`, not `pnpm`.
 

@@ -2,6 +2,8 @@
 
 Plan para convertir la app en un SaaS multi-usuario con suscripciones de pago, landing pública y despliegue en producción.
 
+> **Estado: implementado.** Las fases 11–14 están en producción: `Business`, `Plan`, `Subscription`, `BillingController`, `PaymentGateFilter`, landing `/`, `/precios`, términos y privacidad. Este documento se conserva como registro del plan. El estado real del código está en `AGENTS.md`; los pasos de deploy, en `docs/DEPLOY.md` del backend.
+
 ## Decisiones tomadas
 
 | Decisión | Elección | Motivo |
@@ -10,11 +12,12 @@ Plan para convertir la app en un SaaS multi-usuario con suscripciones de pago, l
 | Modelo multi-tenant | **Columna `business_id` en DB compartida** | Estándar de la industria; 1 migración, 1 backup, 1 deploy. BD física por usuario descartada (migraciones/backups ×N clientes) |
 | Precios | **Un único plan mensual** + trial gratis 14 días | Simple de vender y de implementar; la entidad `Plan` se mantiene igualmente para poder cambiar el precio sin redeploy |
 
-## Estado actual del backend (levantamiento)
+## Estado real del backend (verificado)
 
-- **PostgreSQL + Flyway** (`V1`–`V4`): base sólida para migraciones de tenancy.
+- **PostgreSQL sin Flyway.** Flyway está deshabilitado; el esquema lo genera Hibernate con `ddl-auto=update`. No hay archivos de migración. Es deuda técnica conocida (ver `docs/DEPLOY.md`).
 - **Auth completa**: registro con verificación por email, forgot/reset password, JWT con rotación de refresh token, rate limiting.
-- **Brechas críticas**: no existe ningún concepto de negocio/propietario — `Usuario` no tiene FK hacia datos del dominio; todo es un namespace plano compartido. `ProductType.name` es `UNIQUE` global (colisionaría entre negocios). El JWT solo lleva email + rol.
+- **Multi-tenancy resuelta**: `Business` es el tenant; las entidades de dominio llevan `business` y los servicios resuelven el tenant con `TenantContext` + `TenantGuard`.
+- **Billing completo**: `Plan`, `Subscription`, `BillingController`, `PaymentGateFilter` (402 sin acceso), webhooks de MP con validación de firma y reconciliación por polling.
 
 ## Arquitectura objetivo
 
@@ -93,7 +96,7 @@ La más grande. Nadie ve datos ajenos ni por accidente.
 
 Checklist:
 - [ ] Variables de entorno: credenciales MP (producción), secreto de webhook, `VITE_API_URL`, orígenes CORS del dominio real.
-- [ ] CORS multi-origen y CSP/HSTS en `SecurityHeadersFilter` (cierra el Bloque C pendiente de la Fase 4 de `MEJORAS.md`).
+- [ ] CORS multi-origen y CSP/HSTS en `SecurityHeadersFilter` (hoy aplica `nosniff`, `X-Frame-Options`, `Referrer-Policy` y `Permissions-Policy`; faltan CSP y HSTS).
 - [ ] Monitoreo: Sentry (frontend + backend, tier gratuito).
 - [ ] Backups verificados (restore de prueba al menos una vez).
 - [ ] Términos y Política de Privacidad publicados; política de retención de datos tras cancelación.
@@ -109,4 +112,4 @@ Checklist:
 3. **Fase 12**: depende directamente de 11 (Subscription referencia Business).
 4. **Fase 14**: el deploy final tiene sentido cuando el ciclo completo funciona; dominio y Sentry pueden avanzar en paralelo desde la Fase 13.
 
-Cada fase implementada se documenta como nueva fase numerada en `MEJORAS.md`, siguiendo el formato existente (motivación, cambios frontend/backend, tests, verificación con vitest/tsc/lint y compilación backend con `mvnw.cmd -q compile -o`).
+Cada cambio relevante se documenta en el `AGENTS.md` del proyecto afectado (convenciones y decisiones) y en `docs/` del backend cuando involucra contrato de API o deploy.
